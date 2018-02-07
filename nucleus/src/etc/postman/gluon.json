@@ -417,7 +417,7 @@
 			"response": []
 		},
 		{
-			"name": "New BItbucket project request",
+			"name": "New Bitbucket project request",
 			"request": {
 				"method": "PUT",
 				"header": [
@@ -487,7 +487,7 @@
 			"response": []
 		},
 		{
-			"name": "Confirm BItbucket project created",
+			"name": "Confirm Bitbucket project created",
 			"request": {
 				"method": "PUT",
 				"header": [
