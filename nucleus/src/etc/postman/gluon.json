@@ -1,0 +1,604 @@
+{
+	"info": {
+		"name": "Gluon",
+		"_postman_id": "6c0b66c1-4a1b-6d69-9bc5-39d58a2da889",
+		"description": "Gluon API resources",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "New Team",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test Team\",\n\t\"description\": \"A test team\",\n\t\"createdBy\": \"eae4fc04-d4a9-4626-9988-614d82f3d651\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/teams",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"teams"
+					]
+				},
+				"description": "Create a new Team resource"
+			},
+			"response": []
+		},
+		{
+			"name": "Get all Teams",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "localhost:8080/teams",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"teams"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Find Teams with name filter",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test 2\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/teams?name=Test Team",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"teams"
+					],
+					"query": [
+						{
+							"equals": true,
+							"key": "name",
+							"value": "Test Team"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Find Teams with Slack screen name filter",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test 2\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/teams?slackScreenName=?",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"teams"
+					],
+					"query": [
+						{
+							"equals": true,
+							"key": "slackScreenName",
+							"value": "?"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Add Slack identity to Team",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"slack\": {\n\t\t\"teamChannel\": \"test-team\"\n\t}\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/teams/fbf94e45-f4d2-4ecf-a7c6-af1d8f06f390",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"teams",
+						"fbf94e45-f4d2-4ecf-a7c6-af1d8f06f390"
+					]
+				},
+				"description": "Add Slack identity to a Team. This call would normally be invoked from the Atomist bot from Slack."
+			},
+			"response": []
+		},
+		{
+			"name": "New Team Member",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"firstName\": \"Bob\",\n\t\"lastName\": \"Smith\",\n\t\"email\": \"bob@test.com\",\n\t\"domainUsername\": \"domain\\\\bob\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/members",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"members"
+					]
+				},
+				"description": "Add a Team Member to an existing Team. This request would come from Photon and NOT Slack. Hence the reason there is no Slack details."
+			},
+			"response": []
+		},
+		{
+			"name": "Add Slack details to Team Member",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"slack\": {\n    \"screenName\": \"?\",\n    \"userId\": \"?\"\n  }\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/members/04800c34-9941-4ff4-87a7-69904b53c410",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"members",
+						"04800c34-9941-4ff4-87a7-69904b53c410"
+					]
+				},
+				"description": "Add Slack details to a Team Member. This call would normally be invoked from the Atomist bot from Slack."
+			},
+			"response": []
+		},
+		{
+			"name": "New Team Slack channel",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"slack\": {\n\t\t\"teamChannel\": \"test-team\"\n\t}\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/teams/4c046c42-5044-4479-8300-ab7ee6f4f281",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"teams",
+						"4c046c42-5044-4479-8300-ab7ee6f4f281"
+					]
+				},
+				"description": "Add a Team Member to an existing Team. This request would come from Photon and NOT Slack. Hence the reason there is no Slack details."
+			},
+			"response": []
+		},
+		{
+			"name": "Add Team Member to Team",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"members\": [\n\t\t{\n\t\t\t\"memberId\": \"04800c34-9941-4ff4-87a7-69904b53c410\"\n\t\t}\n\t]\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8080/teams/60250f90-383b-4f88-82e9-723386972a98",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"teams",
+						"60250f90-383b-4f88-82e9-723386972a98"
+					]
+				},
+				"description": "Add a existing Team Member to and existing Team"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Team Member",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test 2\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/members/56b50dbd-2f51-4e13-872e-89773e478dda",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"members",
+						"56b50dbd-2f51-4e13-872e-89773e478dda"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Get all Team Members",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "localhost:8080/members",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"members"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Find Team Members with email filter",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test 2\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/members?email=bob@test.com",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"members"
+					],
+					"query": [
+						{
+							"equals": true,
+							"key": "email",
+							"value": "bob@test.com"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Find Team Members with Slack screen name filter",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test 2\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/members?email=bob@test.com",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"members"
+					],
+					"query": [
+						{
+							"equals": true,
+							"key": "email",
+							"value": "bob@test.com"
+						}
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "New Project",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test Project\",\n\t\"description\": \"A test project\",\n\t\"createdBy\": \"eae4fc04-d4a9-4626-9988-614d82f3d651\",\n\t\"teams\": [\n\t\t{\n\t\t\t\"teamId\": \"3ab9c883-d3fc-46c3-b4e3-57a4e77a8aa3\" \n\t\t}\n\t]\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/projects",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"projects"
+					]
+				},
+				"description": "Create a new Project resource"
+			},
+			"response": []
+		},
+		{
+			"name": "New Bitbucket project request",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"bitbucketProject\": {\n\t\t\"name\": \"Test project\",\n\t\t\"description\": \"Testing...\"\n\t},\n\t\"createdBy\": \"245ed68e-634b-4841-92d7-931369f3cdd4\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/projects/3e5bb82a-e7c2-4ddf-b919-bd2e50077aab",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"projects",
+						"3e5bb82a-e7c2-4ddf-b919-bd2e50077aab"
+					]
+				},
+				"description": "Create a new Project resource"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Project",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "localhost:8080/projects/b955f24a-3d0a-493c-89be-966a96363d59",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"projects",
+						"b955f24a-3d0a-493c-89be-966a96363d59"
+					]
+				},
+				"description": "Get an existing Project"
+			},
+			"response": []
+		},
+		{
+			"name": "Get all Projects",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "localhost:8080/projects",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"projects"
+					]
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "Confirm Bitbucket project created",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"bitbucketProject\": {\n\t\t\"bitbucketProjectId\": \"1\",\n\t\t\"url\": \"https://bitbucket.local/projects/TST\"\n\t}\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/projects/0715e052-dce6-435f-b1ea-64efa08a7494",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"projects",
+						"0715e052-dce6-435f-b1ea-64efa08a7494"
+					]
+				},
+				"description": "Create a new Project resource"
+			},
+			"response": []
+		},
+		{
+			"name": "New Application",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test Application\",\n\t\"description\": \"A test application\",\n\t\"projectId\": \"0ea3a839-d8a3-4a32-82c7-cba6c64e987f\",\n\t\"createdBy\": \"eae4fc04-d4a9-4626-9988-614d82f3d651\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/applications",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"applications"
+					]
+				},
+				"description": "Create a new Project resource"
+			},
+			"response": []
+		},
+		{
+			"name": "New Application environment request",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"projectId\": \"xxx\",\n\t\"bitbucketRepository\": {\n\t\t\"name\": \"Test project\",\n\t\t\"repoUrl\": \"https://bitbucket.local/projects/TST/repos/test-application\"\n\t},\n\t\"createdBy\": \"245ed68e-634b-4841-92d7-931369f3cdd4\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/applications/xxx",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"applications",
+						"xxx"
+					]
+				},
+				"description": "Create a new Project resource"
+			},
+			"response": []
+		},
+		{
+			"name": "Get all Applications",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"name\": \"Test Application\",\n\t\"description\": \"A test application\",\n\t\"projectId\": \"\",\n\t\"createdBy\": \"f61f017d-f81a-4205-bf33-8824943d608d\"\n}"
+				},
+				"url": {
+					"raw": "localhost:8080/applications",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"applications"
+					]
+				},
+				"description": "Create a new Project resource"
+			},
+			"response": []
+		}
+	]
+}
