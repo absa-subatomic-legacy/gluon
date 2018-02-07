@@ -3,3 +3,21 @@
 A supporting domain applying logic and emitting events to indicate indicate desired state.
 
 > A gluon is an elementary particle that acts as the exchange particle for the strong force between quarks. It is analogous to the exchange of photons in the electromagnetic force between two charged particles. - [Wikipedia](https://g.co/kgs/tuyx3j)
+
+## Development setup
+
+To run Gluon locally using an in memory H2 database:
+
+```console
+$ ./mvnw spring-boot:run -pl nucleus
+```
+
+By default Gluon will be available at: http://localhost:8080
+
+### Postman
+
+There are Postman collections located in the `nucleus/src/etc/postman` directory.
+These can be imported and used to test the available API resources.
+
+See the Postman [reference documentation](https://www.getpostman.com/docs/postman/collections/data_formats)
+for more information.
