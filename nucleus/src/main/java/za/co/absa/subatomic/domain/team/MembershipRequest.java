@@ -1,10 +1,9 @@
-package za.co.absa.subatomic.domain.membership_request;
+package za.co.absa.subatomic.domain.team;
 
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
-import za.co.absa.subatomic.domain.team.TeamMemberId;
 
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
 

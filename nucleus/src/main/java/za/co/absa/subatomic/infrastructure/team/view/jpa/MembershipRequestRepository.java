@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.infrastructure.membership_request.view.jpa;
+package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

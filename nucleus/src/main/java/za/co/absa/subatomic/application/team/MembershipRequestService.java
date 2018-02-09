@@ -1,13 +1,13 @@
-package za.co.absa.subatomic.application.membership_request;
+package za.co.absa.subatomic.application.team;
 
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import za.co.absa.subatomic.domain.membership_request.NewMembershipRequest;
+import za.co.absa.subatomic.domain.team.NewMembershipRequest;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
-import za.co.absa.subatomic.infrastructure.membership_request.view.jpa.MembershipRequestEntity;
-import za.co.absa.subatomic.infrastructure.membership_request.view.jpa.MembershipRequestRepository;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 
 import java.util.List;
 import java.util.UUID;

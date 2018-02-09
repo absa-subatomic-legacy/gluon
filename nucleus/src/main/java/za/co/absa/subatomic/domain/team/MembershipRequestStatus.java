@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.domain.membership_request;
+package za.co.absa.subatomic.domain.team;
 
 public enum MembershipRequestStatus {
     OPEN, DENIED, APPROVED

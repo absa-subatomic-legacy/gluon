@@ -1,10 +1,10 @@
-package za.co.absa.subatomic.infrastructure.membership_request.view.jpa;
+package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import za.co.absa.subatomic.domain.membership_request.MembershipRequestStatus;
-import za.co.absa.subatomic.domain.membership_request.NewMembershipRequest;
+import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
+import za.co.absa.subatomic.domain.team.NewMembershipRequest;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 

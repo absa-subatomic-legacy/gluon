@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.domain.membership_request;
+package za.co.absa.subatomic.domain.team;
 
 import lombok.Value;
 import org.axonframework.commandhandling.TargetAggregateIdentifier;

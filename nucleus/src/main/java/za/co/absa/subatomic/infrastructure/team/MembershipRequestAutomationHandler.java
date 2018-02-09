@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.infrastructure.membership_request;
+package za.co.absa.subatomic.infrastructure.team;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -6,7 +6,7 @@ import org.axonframework.eventhandling.EventHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import za.co.absa.subatomic.domain.membership_request.NewMembershipRequest;
+import za.co.absa.subatomic.domain.team.NewMembershipRequest;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;

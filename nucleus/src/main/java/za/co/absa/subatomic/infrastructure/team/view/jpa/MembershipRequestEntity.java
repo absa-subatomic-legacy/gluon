@@ -1,7 +1,7 @@
-package za.co.absa.subatomic.infrastructure.membership_request.view.jpa;
+package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
 import lombok.*;
-import za.co.absa.subatomic.domain.membership_request.MembershipRequestStatus;
+import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 
 import javax.persistence.*;

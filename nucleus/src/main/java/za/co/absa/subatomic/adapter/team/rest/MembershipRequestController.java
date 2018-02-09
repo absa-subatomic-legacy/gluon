@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.adapter.membership_request.rest;
+package za.co.absa.subatomic.adapter.team.rest;
 
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
@@ -6,9 +6,8 @@ import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import za.co.absa.subatomic.adapter.team.rest.TeamResource;
-import za.co.absa.subatomic.application.membership_request.MembershipRequestService;
-import za.co.absa.subatomic.infrastructure.membership_request.view.jpa.MembershipRequestEntity;
+import za.co.absa.subatomic.application.team.MembershipRequestService;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 
 import java.net.URI;
 import java.util.ArrayList;
