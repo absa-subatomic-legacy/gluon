@@ -10,6 +10,7 @@ import za.co.absa.subatomic.infrastructure.membership_request.view.jpa.Membershi
 import za.co.absa.subatomic.infrastructure.membership_request.view.jpa.MembershipRequestRepository;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -26,10 +27,11 @@ public class MembershipRequestService {
         this.requestRepository = requestRepository;
     }
 
-    public String newMembershipRequest(String requestByMemberId, String teamId) {
+    public String newMembershipRequest(String teamId, String requestByMemberId) {
 
         return commandGateway.sendAndWait(
                 new NewMembershipRequest(
+                        UUID.randomUUID().toString(),
                         teamId,
                         new TeamMemberId(requestByMemberId)),
                 1,
