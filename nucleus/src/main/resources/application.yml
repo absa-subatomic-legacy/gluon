@@ -4,3 +4,14 @@ spring:
       enabled: true
       path: /h2-console
   data.rest.detection-strategy: visibility
+atomist:
+  slackIdentityUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/SlackIdentity/6aac4452-c1b5-4a44-92d4-f2cbfa51f770"
+  teamUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/Team/807237e5-8815-42be-8c8c-380ab0b44362"
+  teamCreatedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/TeamCreatedEvent/f149e964-3dfc-4119-8412-f1d949f722f8"
+  teamMemberCreatedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/TeamMemberCreatedEvent/98b25900-82b2-48b5-855e-039fa7fb71f5"
+  projectCreatedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/ProjectCreatedEvent/34fca98f-f68c-4915-9516-c31db1fb9d56"
+  bitbucketProjectRequestedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/BitbucketProjectRequestedEvent/42f4661b-10db-4481-a9dc-73d517eae1c8"
+  bitbucketProjectAddedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/BitbucketProjectAddedEvent/cab0b024-aaf5-4267-8b44-743bc24051e6"
+  devOpsEnvironmentRequestedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/DevOpsEnvironmentRequestedEvent/8ec8227f-eef6-4f34-9cb5-5c275ebd4593"
+  projectEnvironmentsRequestedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/ProjectEnvironmentsRequestedEvent/a1f188d7-379b-45fd-9b3b-39958d081fe9"
+  applicationCreatedEventUrl: "https://webhook.atomist.com/atomist/teams/T8VRK780Z/ingestion/ApplicationCreatedEvent/6b9be572-2f36-42d4-8534-343c46f5c790"
