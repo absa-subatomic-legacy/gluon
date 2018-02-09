@@ -12,6 +12,7 @@ import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
 import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.domain.project.ProjectEnvironmentRequested;
+import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
@@ -39,16 +40,20 @@ public class ProjectAutomationHandler {
 
     private BitbucketProjectRepository bitbucketProjectRepository;
 
+    private AtomistConfiguration atomistConfiguration;
+
     public ProjectAutomationHandler(RestTemplate restTemplate,
-            TeamRepository teamRepository,
-            TeamMemberRepository teamMemberRepository,
-            ProjectRepository projectRepository,
-            BitbucketProjectRepository bitbucketProjectRepository) {
+                                    TeamRepository teamRepository,
+                                    TeamMemberRepository teamMemberRepository,
+                                    ProjectRepository projectRepository,
+                                    BitbucketProjectRepository bitbucketProjectRepository,
+                                    AtomistConfiguration atomistConfiguration) {
         this.restTemplate = restTemplate;
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.projectRepository = projectRepository;
         this.bitbucketProjectRepository = bitbucketProjectRepository;
+        this.atomistConfiguration = atomistConfiguration;
     }
 
     @EventHandler
@@ -86,7 +91,7 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/ProjectCreatedEvent/6941caa4-c0fd-487c-baf6-292014c89e45",
+                atomistConfiguration.getProjectCreatedEventUrl(),
                 newProject,
                 String.class);
 
@@ -143,7 +148,7 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/BitbucketProjectRequestedEvent/1e68e580-256d-4523-911d-9080e87753dd",
+                atomistConfiguration.getBitbucketProjectRequestedEventUrl(),
                 bitbucketProjectRequested,
                 String.class);
 
@@ -203,7 +208,7 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/BitbucketProjectAddedEvent/cb30a072-ba62-4f08-b89f-00a4f24304ba",
+                atomistConfiguration.getBitbucketProjectAddedEventUrl(),
                 bitbucketProjectRequested,
                 String.class);
 
@@ -288,7 +293,7 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/ProjectEnvironmentsRequestedEvent/fe93f013-8547-45f8-92fd-6e4b145de3da",
+                atomistConfiguration.getProjectEnvironmentsRequestedEventUrl(),
                 bitbucketProjectRequested,
                 String.class);
 
