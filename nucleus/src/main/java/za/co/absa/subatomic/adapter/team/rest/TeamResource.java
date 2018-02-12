@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.Data;
 
 import org.springframework.hateoas.ResourceSupport;
+import za.co.absa.subatomic.domain.team.MembershipRequest;
 
 @Data
 public class TeamResource extends ResourceSupport {
@@ -24,6 +25,8 @@ public class TeamResource extends ResourceSupport {
     private final List<TeamMemberIdResource> members = new ArrayList<>();
 
     private final List<TeamMemberIdResource> owners = new ArrayList<>();
+
+    private final List<MembershipRequest> membershipRequests = new ArrayList<>();
 
     private Slack slack;
 

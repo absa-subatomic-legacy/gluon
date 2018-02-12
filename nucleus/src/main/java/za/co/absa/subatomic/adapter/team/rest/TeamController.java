@@ -1,34 +1,28 @@
 package za.co.absa.subatomic.adapter.team.rest;
 
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
-import za.co.absa.subatomic.application.team.TeamService;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
+import za.co.absa.subatomic.application.team.TeamService;
+import za.co.absa.subatomic.domain.team.MembershipRequest;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @RestController
 @RequestMapping("/teams")
@@ -86,6 +80,14 @@ public class TeamController {
         if (request.getDevOpsEnvironment() != null) {
             teamService.newDevOpsEnvironment(id,
                     request.getDevOpsEnvironment().getRequestedBy());
+        }
+
+        if (request.getMembershipRequests() != null) {
+            for (MembershipRequest membershipRequest : request
+                    .getMembershipRequests()) {
+                teamService.newMembershipRequest(id,
+                        membershipRequest.getRequestedBy().getTeamMemberId());
+            }
         }
 
         return ResponseEntity.accepted()

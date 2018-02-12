@@ -5,15 +5,9 @@ import lombok.Value;
 @Value
 public class MembershipRequestCreated {
 
-    private String requestId;
 
     private String teamId;
 
-    private final TeamMemberId requestedBy;
+    private MembershipRequest membershipRequest;
 
-    public MembershipRequestCreated(String requestId, String teamId, TeamMemberId requestedBy) {
-        this.requestId = requestId;
-        this.teamId = teamId;
-        this.requestedBy = requestedBy;
-    }
 }

@@ -4,21 +4,15 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
-import za.co.absa.subatomic.application.member.TeamMemberService;
-import za.co.absa.subatomic.domain.team.AddSlackIdentity;
-import za.co.absa.subatomic.domain.team.AddTeamMembers;
-import za.co.absa.subatomic.domain.team.NewDevOpsEnvironment;
-import za.co.absa.subatomic.domain.team.NewTeam;
-import za.co.absa.subatomic.domain.team.NewTeamFromSlack;
-import za.co.absa.subatomic.domain.team.SlackIdentity;
-import za.co.absa.subatomic.domain.team.TeamMemberId;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
+import za.co.absa.subatomic.application.member.TeamMemberService;
+import za.co.absa.subatomic.domain.team.*;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 
 @Service
 @Slf4j
@@ -91,6 +85,20 @@ public class TeamService {
     public String newDevOpsEnvironment(String teamId, String requestedBy) {
         return commandGateway.sendAndWait(
                 new NewDevOpsEnvironment(teamId, new TeamMemberId(requestedBy)),
+                1,
+                TimeUnit.SECONDS);
+    }
+
+    public String newMembershipRequest(String teamId,
+            String requestByMemberId) {
+
+        return commandGateway.sendAndWait(
+                new NewMembershipRequest(
+                        teamId,
+                        new MembershipRequest(UUID.randomUUID().toString(),
+                                new TeamMemberId(requestByMemberId),
+                                null,
+                                MembershipRequestStatus.OPEN)),
                 1,
                 TimeUnit.SECONDS);
     }

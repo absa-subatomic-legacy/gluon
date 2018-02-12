@@ -19,6 +19,8 @@ public class MembershipRequestEntity {
     @GeneratedValue
     private Long id;
 
+    private String membershipRequestId;
+
     private String teamId;
 
     @OneToOne

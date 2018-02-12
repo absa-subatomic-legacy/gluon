@@ -1,16 +1,17 @@
 package za.co.absa.subatomic.domain.team;
 
+import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.github.slugify.Slugify;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
 
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+import com.github.slugify.Slugify;
 
 @Aggregate
 public class Team {
@@ -25,6 +26,8 @@ public class Team {
     private Set<TeamMemberId> teamMembers = new HashSet<>();
 
     private Set<TeamMemberId> owners = new HashSet<>();
+
+    private Set<MembershipRequest> membershipRequests = new HashSet<>();
 
     private SlackIdentity slackIdentity;
 
@@ -52,6 +55,13 @@ public class Team {
                 newTeam.getDescription(),
                 newTeam.getCreatedBy(),
                 command.getSlackIdentity()));
+    }
+
+    @CommandHandler
+    public void when(NewMembershipRequest command) {
+        apply(new MembershipRequestCreated(
+                command.getTeamId(),
+                command.getMembershipRequest()));
     }
 
     @EventSourcingHandler
@@ -107,6 +117,12 @@ public class Team {
     @EventSourcingHandler
     void on(DevOpsEnvironmentRequested event) {
         this.devOpsEnvironment = event.getDevOpsEnvironment();
+    }
+
+    @EventSourcingHandler
+    void on(MembershipRequestCreated event) {
+        this.teamId = event.getTeamId();
+        this.membershipRequests.add(event.getMembershipRequest());
     }
 
     private String buidDevOpsEnvironmentName(String teamName) {
