@@ -1,0 +1,13 @@
+{
+    "url": "wss://somelink",
+    "jwt": "token",
+    "endpoints": [
+        {
+            "team_id": "TEAMID",
+            "url": "https://webhook",
+            "name": "webhookname"
+        }
+    ],
+    "name": "quantum-mechanic",
+    "version": "0.1.0"
+}

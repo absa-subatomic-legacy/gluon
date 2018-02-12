@@ -1,0 +1,3 @@
+1. Copy the atomist registration output from the quantum mechanic/atomist client start up log into atomist-registration.json.
+2. Run main.py - "python main.py"
+3. Output will be generated in output.yml. This yaml config can be placed in the application.yml file to configure the atomist webhooks.
