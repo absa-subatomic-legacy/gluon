@@ -1,11 +1,11 @@
 package za.co.absa.subatomic.domain.team;
 
+import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
-
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
 
 @Aggregate
 public class MembershipRequest {
@@ -27,11 +27,14 @@ public class MembershipRequest {
 
     @CommandHandler
     public MembershipRequest(NewMembershipRequest command) {
-        apply(command);
+        apply(new MembershipRequestCreated(
+                command.getRequestId(),
+                command.getTeamId(),
+                command.getRequestedBy()));
     }
 
     @EventSourcingHandler
-    void on(NewMembershipRequest event) {
+    void on(MembershipRequestCreated event) {
         this.requestId = event.getRequestId();
         this.requestedBy = event.getRequestedBy();
         this.teamId = event.getTeamId();
