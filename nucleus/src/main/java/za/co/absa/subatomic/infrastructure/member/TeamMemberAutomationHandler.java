@@ -7,15 +7,18 @@ import za.co.absa.subatomic.domain.member.TeamMemberCreated;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
 
 @Component
 @Slf4j
 public class TeamMemberAutomationHandler {
 
     private RestTemplate restTemplate;
+    private AtomistConfiguration atomistConfiguration;
 
-    public TeamMemberAutomationHandler(RestTemplate restTemplate) {
+    public TeamMemberAutomationHandler(RestTemplate restTemplate, AtomistConfiguration atomistConfiguration) {
         this.restTemplate = restTemplate;
+        this.atomistConfiguration = atomistConfiguration;
     }
 
     @EventHandler
@@ -24,7 +27,7 @@ public class TeamMemberAutomationHandler {
                 event);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/TeamMemberCreatedEvent/f9089184-8399-4faf-bcb8-9c39b921ee14",
+                atomistConfiguration.getTeamCreatedEventUrl(),
                 event,
                 String.class);
 

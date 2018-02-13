@@ -199,3 +199,6 @@ modules.xml
 .idea/misc.xml
 *.ipr
 
+#atomist-config
+src/etc/atomist-registration.json
+application-local.yml

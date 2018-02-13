@@ -12,6 +12,7 @@ import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepository;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -34,15 +35,18 @@ public class ApplicationAutomationHandler {
     private ProjectRepository projectRepository;
 
     private TeamMemberRepository teamMemberRepository;
+    private AtomistConfiguration atomistConfiguration;
 
     public ApplicationAutomationHandler(RestTemplate restTemplate,
-            ApplicationRepository applicationRepository,
-            ProjectRepository projectRepository,
-            TeamMemberRepository teamMemberRepository) {
+                                        ApplicationRepository applicationRepository,
+                                        ProjectRepository projectRepository,
+                                        TeamMemberRepository teamMemberRepository,
+                                        AtomistConfiguration atomistConfiguration) {
         this.restTemplate = restTemplate;
         this.applicationRepository = applicationRepository;
         this.projectRepository = projectRepository;
         this.teamMemberRepository = teamMemberRepository;
+        this.atomistConfiguration = atomistConfiguration;
     }
 
     @EventHandler
@@ -108,7 +112,7 @@ public class ApplicationAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/ApplicationCreatedEvent/441f2583-8637-4047-b125-71a23900e444",
+                atomistConfiguration.getApplicationCreatedEventUrl(),
                 environmentRequested,
                 String.class);
 
