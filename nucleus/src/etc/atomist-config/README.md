@@ -1,4 +1,4 @@
-#Atomist Configuration
+# Atomist Configuration
 
 This Python script parses the Atomist log output and generates a Spring compatible YAML file that can be used with Spring configuration.
 
