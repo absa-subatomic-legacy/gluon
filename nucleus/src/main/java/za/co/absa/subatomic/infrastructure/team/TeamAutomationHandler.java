@@ -10,6 +10,7 @@ import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.team.DevOpsEnvironmentRequested;
 import za.co.absa.subatomic.domain.team.TeamCreated;
+import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -29,11 +30,14 @@ public class TeamAutomationHandler {
 
     private RestTemplate restTemplate;
 
+    private AtomistConfiguration atomistConfiguration;
+
     public TeamAutomationHandler(TeamMemberRepository teamMemberRepository,
-            TeamRepository teamRepository, RestTemplate restTemplate) {
+                                 TeamRepository teamRepository, RestTemplate restTemplate, AtomistConfiguration atomistConfiguration) {
         this.teamMemberRepository = teamMemberRepository;
         this.teamRepository = teamRepository;
         this.restTemplate = restTemplate;
+        this.atomistConfiguration = atomistConfiguration;
     }
 
     @EventHandler
@@ -62,7 +66,7 @@ public class TeamAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/TeamCreatedEvent/cfd69c30-5ba0-453a-bf61-2314af439428",
+                atomistConfiguration.getTeamCreatedEventUrl(),
                 newTeam,
                 String.class);
 
@@ -119,7 +123,7 @@ public class TeamAutomationHandler {
                         .collect(Collectors.toList()));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/DevOpsEnvironmentRequestedEvent/2254e03f-abaa-4ce2-9fd4-482a59fda821",
+                atomistConfiguration.getDevOpsEnvironmentRequestedEventUrl(),
                 newDevOpsEnvironmentRequested,
                 String.class);
 
