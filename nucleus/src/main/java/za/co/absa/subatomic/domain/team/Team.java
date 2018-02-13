@@ -57,13 +57,6 @@ public class Team {
                 command.getSlackIdentity()));
     }
 
-    @CommandHandler
-    public void when(NewMembershipRequest command) {
-        apply(new MembershipRequestCreated(
-                command.getTeamId(),
-                command.getMembershipRequest()));
-    }
-
     @EventSourcingHandler
     void on(TeamCreated event) {
         this.teamId = event.getTeamId();
@@ -119,8 +112,29 @@ public class Team {
         this.devOpsEnvironment = event.getDevOpsEnvironment();
     }
 
+
+    @CommandHandler
+    public void when(NewMembershipRequest command) {
+        apply(new MembershipRequestCreated(
+                command.getTeamId(),
+                command.getMembershipRequest()));
+    }
+
     @EventSourcingHandler
     void on(MembershipRequestCreated event) {
+        this.teamId = event.getTeamId();
+        this.membershipRequests.add(event.getMembershipRequest());
+    }
+
+    @CommandHandler
+    public void when(UpdateMembershipRequest command) {
+        apply(new MembershipRequestUpdated(
+                command.getTeamId(),
+                command.getMembershipRequest()));
+    }
+
+    @EventSourcingHandler
+    void on(MembershipRequestUpdated event) {
         this.teamId = event.getTeamId();
         this.membershipRequests.add(event.getMembershipRequest());
     }

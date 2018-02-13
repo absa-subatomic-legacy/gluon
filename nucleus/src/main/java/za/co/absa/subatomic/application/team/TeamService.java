@@ -11,8 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.domain.team.*;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
+
+import javax.xml.ws.http.HTTPException;
 
 @Service
 @Slf4j
@@ -24,12 +28,16 @@ public class TeamService {
 
     private TeamMemberService teamMemberService;
 
+    private MembershipRequestRepository membershipRequestRepository;
+
     public TeamService(CommandGateway commandGateway,
             TeamRepository teamRepository,
-            TeamMemberService teamMemberService) {
+            TeamMemberService teamMemberService,
+            MembershipRequestRepository membershipRequestRepository) {
         this.commandGateway = commandGateway;
         this.teamRepository = teamRepository;
         this.teamMemberService = teamMemberService;
+        this.membershipRequestRepository = membershipRequestRepository;
     }
 
     public String newTeam(String name, String description, String createdBy) {
@@ -89,6 +97,24 @@ public class TeamService {
                 TimeUnit.SECONDS);
     }
 
+    public String updateMembershipRequest(String teamId,
+            MembershipRequest membershipRequest) {
+
+        MembershipRequestEntity membershipRequestEntity = this.findMembershipRequestById(membershipRequest.getMembershipRequestId());
+        if(membershipRequestEntity != null && membershipRequestEntity.getRequestStatus() == MembershipRequestStatus.OPEN) {
+            return commandGateway.sendAndWait(
+                    new NewMembershipRequest(
+                            teamId,
+                            membershipRequest),
+                    1,
+                    TimeUnit.SECONDS);
+        }
+        else {
+            //TODO: add a proper exception here
+            throw new HTTPException(500);
+        }
+    }
+
     public String newMembershipRequest(String teamId,
             String requestByMemberId) {
 
@@ -116,6 +142,11 @@ public class TeamService {
     @Transactional(readOnly = true)
     public TeamEntity findByName(String name) {
         return teamRepository.findByName(name);
+    }
+
+    @Transactional(readOnly = true)
+    public MembershipRequestEntity findMembershipRequestById(String id) {
+        return membershipRequestRepository.findByMembershipRequestId(id);
     }
 
 }

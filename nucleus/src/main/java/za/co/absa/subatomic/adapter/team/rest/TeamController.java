@@ -85,8 +85,17 @@ public class TeamController {
         if (request.getMembershipRequests() != null) {
             for (MembershipRequest membershipRequest : request
                     .getMembershipRequests()) {
-                teamService.newMembershipRequest(id,
-                        membershipRequest.getRequestedBy().getTeamMemberId());
+                if (membershipRequest.getMembershipRequestId() != null &&
+                        membershipRequest.getRequestStatus() != null &&
+                        membershipRequest.getApprovedBy() != null) {
+                    teamService.updateMembershipRequest(id, membershipRequest);
+                }
+                else if (membershipRequest.getMembershipRequestId() == null
+                        && membershipRequest.getRequestedBy() != null) {
+                    teamService.newMembershipRequest(id,
+                            membershipRequest.getRequestedBy()
+                                    .getTeamMemberId());
+                }
             }
         }
 
