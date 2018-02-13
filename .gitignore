@@ -201,3 +201,4 @@ modules.xml
 
 #atomist-config
 src/etc/atomist-registration.json
+application-local.yml

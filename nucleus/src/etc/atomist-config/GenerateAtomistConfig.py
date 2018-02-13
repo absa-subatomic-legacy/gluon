@@ -5,5 +5,5 @@ output = "atomist:\n"
 for endpoint in data["endpoints"]:
     output += "  " + endpoint["name"][0].lower() + endpoint["name"][1:] + "Url: \"" + endpoint["url"] + "\"\n"
 
-with open("output.yml", "w") as fh:
+with open("application-local.yml", "w") as fh:
     fh.write(output)
