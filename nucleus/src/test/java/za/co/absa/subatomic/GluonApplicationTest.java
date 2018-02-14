@@ -2,7 +2,7 @@ package za.co.absa.subatomic;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import za.co.absa.subatomic.infrastructure.NucleusConfigurarion;
+import za.co.absa.subatomic.infrastructure.NucleusConfiguration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,10 +15,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class GluonApplicationTest {
 
     @Autowired
-    private NucleusConfigurarion nucleusConfigurarion;
+    private NucleusConfiguration nucleusConfiguration;
 
     @Test
     public void spring_context_loads_successfully() {
-        assertThat(nucleusConfigurarion).isNotNull();
+        assertThat(nucleusConfiguration).isNotNull();
     }
 }

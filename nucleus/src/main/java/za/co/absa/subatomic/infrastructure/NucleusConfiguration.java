@@ -11,7 +11,7 @@ import java.util.Collections;
 
 @Configuration
 @EnableConfigurationProperties(AtomistConfigurationProperties.class)
-public class NucleusConfigurarion {
+public class NucleusConfiguration {
 
     @Bean
     public RestTemplate restTemplate() {
