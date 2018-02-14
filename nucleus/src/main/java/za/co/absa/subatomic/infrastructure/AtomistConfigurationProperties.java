@@ -1,12 +1,12 @@
 package za.co.absa.subatomic.infrastructure;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
 @ConfigurationProperties("atomist")
-public class AtomistConfiguration {
+public class AtomistConfigurationProperties {
 
     private String slackIdentityUrl;
 

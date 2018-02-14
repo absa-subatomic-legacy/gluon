@@ -3,22 +3,24 @@ package za.co.absa.subatomic.infrastructure.member;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.member.TeamMemberCreated;
+import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
 
 @Component
 @Slf4j
 public class TeamMemberAutomationHandler {
 
     private RestTemplate restTemplate;
-    private AtomistConfiguration atomistConfiguration;
 
-    public TeamMemberAutomationHandler(RestTemplate restTemplate, AtomistConfiguration atomistConfiguration) {
+    private AtomistConfigurationProperties atomistConfigurationProperties;
+
+    public TeamMemberAutomationHandler(RestTemplate restTemplate,
+            AtomistConfigurationProperties atomistConfigurationProperties) {
         this.restTemplate = restTemplate;
-        this.atomistConfiguration = atomistConfiguration;
+        this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
     @EventHandler
@@ -27,7 +29,7 @@ public class TeamMemberAutomationHandler {
                 event);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getTeamCreatedEventUrl(),
+                atomistConfigurationProperties.getTeamCreatedEventUrl(),
                 event,
                 String.class);
 

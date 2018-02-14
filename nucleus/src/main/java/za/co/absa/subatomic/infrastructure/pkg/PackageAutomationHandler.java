@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.pkg.PackageCreated;
-import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
+import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 
@@ -20,14 +20,15 @@ public class PackageAutomationHandler {
     private RestTemplate restTemplate;
 
     private TeamMemberRepository teamMemberRepository;
-    private AtomistConfiguration atomistConfiguration;
+
+    private AtomistConfigurationProperties atomistConfigurationProperties;
 
     public PackageAutomationHandler(RestTemplate restTemplate,
-                                    TeamMemberRepository teamMemberRepository,
-                                    AtomistConfiguration atomistConfiguration) {
+            TeamMemberRepository teamMemberRepository,
+            AtomistConfigurationProperties atomistConfigurationProperties) {
         this.restTemplate = restTemplate;
         this.teamMemberRepository = teamMemberRepository;
-        this.atomistConfiguration = atomistConfiguration;
+        this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
     @EventHandler
@@ -57,7 +58,7 @@ public class PackageAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getProjectCreatedEventUrl(),
+                atomistConfigurationProperties.getProjectCreatedEventUrl(),
                 newProject,
                 String.class);
 
