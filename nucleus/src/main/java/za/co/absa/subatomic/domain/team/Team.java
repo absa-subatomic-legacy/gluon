@@ -2,6 +2,7 @@ package za.co.absa.subatomic.domain.team;
 
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
 
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -112,7 +113,6 @@ public class Team {
         this.devOpsEnvironment = event.getDevOpsEnvironment();
     }
 
-
     @CommandHandler
     public void when(NewMembershipRequest command) {
         apply(new MembershipRequestCreated(
@@ -128,6 +128,43 @@ public class Team {
 
     @CommandHandler
     public void when(UpdateMembershipRequest command) {
+        MembershipRequest existingMembershipRequest = this
+                .findMembershipRequestById(command.getMembershipRequest()
+                        .getMembershipRequestId());
+        if (existingMembershipRequest == null) {
+            throw new NullPointerException(MessageFormat.format(
+                    "Membership Request with id {0} does not exist for team {1}.",
+                    command.getMembershipRequest().getMembershipRequestId(),
+                    this.name));
+        }
+
+        if (existingMembershipRequest
+                .getRequestStatus() != MembershipRequestStatus.OPEN) {
+            throw new IllegalStateException(MessageFormat.format(
+                    "Cannot update MembershipRequest with id {0} which is not in OPEN state.",
+                    command.getMembershipRequest().getMembershipRequestId()));
+        }
+
+        if (!this.owners.contains(existingMembershipRequest.getApprovedBy())) {
+            throw new IllegalArgumentException(MessageFormat.format(
+                    "Member {0} is not an owner of team {1} so cannot close request {2}",
+                    command.getMembershipRequest().getApprovedBy()
+                            .getTeamMemberId(),
+                    this.name,
+                    command.getMembershipRequest().getMembershipRequestId()));
+        }
+
+        if (command.getMembershipRequest()
+                .getRequestStatus() == MembershipRequestStatus.APPROVED) {
+            Set<TeamMemberId> newOwnerList = new HashSet<>(this.owners);
+            Set<TeamMemberId> newTeamMemberList = new HashSet<>(
+                    this.teamMembers);
+            newTeamMemberList
+                    .add(command.getMembershipRequest().getRequestedBy());
+            apply(new TeamMembersAdded(teamId, newOwnerList,
+                    newTeamMemberList));
+        }
+
         apply(new MembershipRequestUpdated(
                 command.getTeamId(),
                 command.getMembershipRequest()));
@@ -141,5 +178,15 @@ public class Team {
 
     private String buidDevOpsEnvironmentName(String teamName) {
         return String.format("%s-devops", new Slugify().slugify(teamName));
+    }
+
+    private MembershipRequest findMembershipRequestById(String id) {
+        MembershipRequest membershipRequest = null;
+        for (MembershipRequest existingRequest : this.membershipRequests) {
+            if (existingRequest.getMembershipRequestId().equals(id)) {
+                membershipRequest = existingRequest;
+            }
+        }
+        return membershipRequest;
     }
 }

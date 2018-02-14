@@ -5,7 +5,6 @@ import lombok.Value;
 @Value
 public class MembershipRequestUpdated {
 
-
     private String teamId;
 
     private MembershipRequest membershipRequest;

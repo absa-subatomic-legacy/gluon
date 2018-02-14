@@ -44,7 +44,7 @@ public class TeamAutomationHandler {
 
     @EventHandler
     public void on(TeamCreated event) {
-        log.info("A team was created, sending event to Atomist...");
+        log.info("A team was created, sending event to Atomist...{}", event);
 
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getCreatedBy().getTeamMemberId());
@@ -173,7 +173,7 @@ public class TeamAutomationHandler {
                 member);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/TeamCreatedEvent/cfd69c30-5ba0-453a-bf61-2314af439428",
+                atomistConfiguration.getMembershipRequestCreatedEventUrl(),
                 newRequest,
                 String.class);
 
@@ -186,7 +186,7 @@ public class TeamAutomationHandler {
     @EventHandler
     public void on(MembershipRequestUpdated event) {
         log.info(
-                "Membership to a team has been requested, sending event to Atomist...");
+                "A team membership request has been updated, sending event to Atomist...");
 
         TeamMemberEntity requestedBy = teamMemberRepository.findByMemberId(
                 event.getMembershipRequest().getRequestedBy()

@@ -9,14 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
+import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.domain.team.*;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
-
-import javax.xml.ws.http.HTTPException;
 
 @Service
 @Slf4j
@@ -98,21 +97,20 @@ public class TeamService {
     }
 
     public String updateMembershipRequest(String teamId,
-            MembershipRequest membershipRequest) {
+            MembershipRequestResource membershipRequest) {
 
-        MembershipRequestEntity membershipRequestEntity = this.findMembershipRequestById(membershipRequest.getMembershipRequestId());
-        if(membershipRequestEntity != null && membershipRequestEntity.getRequestStatus() == MembershipRequestStatus.OPEN) {
-            return commandGateway.sendAndWait(
-                    new NewMembershipRequest(
-                            teamId,
-                            membershipRequest),
-                    1,
-                    TimeUnit.SECONDS);
-        }
-        else {
-            //TODO: add a proper exception here
-            throw new HTTPException(500);
-        }
+        return commandGateway.sendAndWait(
+                new UpdateMembershipRequest(
+                        teamId,
+                        new MembershipRequest(
+                                membershipRequest.getMembershipRequestId(),
+                                new TeamMemberId(membershipRequest
+                                        .getRequestedBy().getMemberId()),
+                                new TeamMemberId(membershipRequest
+                                        .getApprovedBy().getMemberId()),
+                                membershipRequest.getRequestStatus())),
+                1,
+                TimeUnit.SECONDS);
     }
 
     public String newMembershipRequest(String teamId,

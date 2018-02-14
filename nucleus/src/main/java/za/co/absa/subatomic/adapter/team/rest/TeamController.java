@@ -20,7 +20,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
 import za.co.absa.subatomic.application.team.TeamService;
-import za.co.absa.subatomic.domain.team.MembershipRequest;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
@@ -83,7 +82,7 @@ public class TeamController {
         }
 
         if (request.getMembershipRequests() != null) {
-            for (MembershipRequest membershipRequest : request
+            for (MembershipRequestResource membershipRequest : request
                     .getMembershipRequests()) {
                 if (membershipRequest.getMembershipRequestId() != null &&
                         membershipRequest.getRequestStatus() != null &&
@@ -93,8 +92,7 @@ public class TeamController {
                 else if (membershipRequest.getMembershipRequestId() == null
                         && membershipRequest.getRequestedBy() != null) {
                     teamService.newMembershipRequest(id,
-                            membershipRequest.getRequestedBy()
-                                    .getTeamMemberId());
+                            membershipRequest.getRequestedBy().getMemberId());
                 }
             }
         }

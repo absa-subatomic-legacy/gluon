@@ -200,4 +200,5 @@ modules.xml
 *.ipr
 
 # Local Spring config
+atomist-registration.json
 application-local.yml
