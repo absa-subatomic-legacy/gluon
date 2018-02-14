@@ -10,12 +10,11 @@
         <version>0.1.0.BUILD-SNAPSHOT</version>
     </parent>
 
-    <artifactId>gluon-domain</artifactId>
-    <name>Gluon domain model</name>
-    <description>The Gluon domain model following principles of DDD</description>
+    <artifactId>nucleus</artifactId>
+    <name>Subatomic domain implementation</name>
 
     <properties>
-        <spring.boot.version>1.5.9.RELEASE</spring.boot.version>
+        <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
         <axon.version>3.1.2</axon.version>
     </properties>
 
