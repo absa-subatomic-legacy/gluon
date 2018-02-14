@@ -12,7 +12,7 @@ import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
 import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.domain.project.ProjectEnvironmentRequested;
-import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
+import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
@@ -40,20 +40,20 @@ public class ProjectAutomationHandler {
 
     private BitbucketProjectRepository bitbucketProjectRepository;
 
-    private AtomistConfiguration atomistConfiguration;
+    private AtomistConfigurationProperties atomistConfigurationProperties;
 
     public ProjectAutomationHandler(RestTemplate restTemplate,
-                                    TeamRepository teamRepository,
-                                    TeamMemberRepository teamMemberRepository,
-                                    ProjectRepository projectRepository,
-                                    BitbucketProjectRepository bitbucketProjectRepository,
-                                    AtomistConfiguration atomistConfiguration) {
+            TeamRepository teamRepository,
+            TeamMemberRepository teamMemberRepository,
+            ProjectRepository projectRepository,
+            BitbucketProjectRepository bitbucketProjectRepository,
+            AtomistConfigurationProperties atomistConfigurationProperties) {
         this.restTemplate = restTemplate;
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.projectRepository = projectRepository;
         this.bitbucketProjectRepository = bitbucketProjectRepository;
-        this.atomistConfiguration = atomistConfiguration;
+        this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
     @EventHandler
@@ -91,7 +91,7 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getProjectCreatedEventUrl(),
+                atomistConfigurationProperties.getProjectCreatedEventUrl(),
                 newProject,
                 String.class);
 
@@ -148,7 +148,8 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getBitbucketProjectRequestedEventUrl(),
+                atomistConfigurationProperties
+                        .getBitbucketProjectRequestedEventUrl(),
                 bitbucketProjectRequested,
                 String.class);
 
@@ -208,7 +209,8 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getBitbucketProjectAddedEventUrl(),
+                atomistConfigurationProperties
+                        .getBitbucketProjectAddedEventUrl(),
                 bitbucketProjectRequested,
                 String.class);
 
@@ -293,7 +295,8 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getProjectEnvironmentsRequestedEventUrl(),
+                atomistConfigurationProperties
+                        .getProjectEnvironmentsRequestedEventUrl(),
                 bitbucketProjectRequested,
                 String.class);
 
