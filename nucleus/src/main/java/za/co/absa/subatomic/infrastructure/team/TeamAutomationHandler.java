@@ -16,7 +16,7 @@ import za.co.absa.subatomic.domain.team.DevOpsEnvironmentRequested;
 import za.co.absa.subatomic.domain.team.MembershipRequestCreated;
 import za.co.absa.subatomic.domain.team.MembershipRequestUpdated;
 import za.co.absa.subatomic.domain.team.TeamCreated;
-import za.co.absa.subatomic.infrastructure.AtomistConfiguration;
+import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -32,14 +32,15 @@ public class TeamAutomationHandler {
 
     private RestTemplate restTemplate;
 
-    private AtomistConfiguration atomistConfiguration;
+    private AtomistConfigurationProperties atomistConfigurationProperties;
 
     public TeamAutomationHandler(TeamMemberRepository teamMemberRepository,
-                                 TeamRepository teamRepository, RestTemplate restTemplate, AtomistConfiguration atomistConfiguration) {
+            TeamRepository teamRepository, RestTemplate restTemplate,
+            AtomistConfigurationProperties atomistConfigurationProperties) {
         this.teamMemberRepository = teamMemberRepository;
         this.teamRepository = teamRepository;
         this.restTemplate = restTemplate;
-        this.atomistConfiguration = atomistConfiguration;
+        this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
     @EventHandler
@@ -68,7 +69,7 @@ public class TeamAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getTeamCreatedEventUrl(),
+                atomistConfigurationProperties.getTeamCreatedEventUrl(),
                 newTeam,
                 String.class);
 
@@ -125,7 +126,8 @@ public class TeamAutomationHandler {
                         .collect(Collectors.toList()));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getDevOpsEnvironmentRequestedEventUrl(),
+                atomistConfigurationProperties
+                        .getDevOpsEnvironmentRequestedEventUrl(),
                 newDevOpsEnvironmentRequested,
                 String.class);
 
