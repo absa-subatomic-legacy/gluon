@@ -3,8 +3,7 @@ jdk:
   - oraclejdk8
 
 script:
- - "./mvnw install -B -V"
- - "./mvnw cobertura:cobertura"
+ - "./mvnw install -Dmaven.test.redirectTestOutputToFile=true"
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
