@@ -183,13 +183,23 @@ public class Team {
 
         apply(new MembershipRequestUpdated(
                 command.getTeamId(),
+                existingMembershipRequest,
                 command.getMembershipRequest()));
     }
 
     @EventSourcingHandler
     void on(MembershipRequestUpdated event) {
         this.teamId = event.getTeamId();
-        this.membershipRequests.add(event.getMembershipRequest());
+        MembershipRequest originalRequest = event
+                .getOriginalMembershipRequest();
+        MembershipRequest updatedRequest = event.getUpdatedMembershipRequest();
+
+        this.membershipRequests.remove(originalRequest);
+        this.membershipRequests.add(
+                new MembershipRequest(originalRequest.getMembershipRequestId(),
+                        originalRequest.getRequestedBy(),
+                        updatedRequest.getApprovedBy(),
+                        updatedRequest.getRequestStatus()));
     }
 
     private String buidDevOpsEnvironmentName(String teamName) {

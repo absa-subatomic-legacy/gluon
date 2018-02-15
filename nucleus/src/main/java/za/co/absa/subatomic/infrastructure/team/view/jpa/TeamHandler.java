@@ -90,22 +90,6 @@ public class TeamHandler {
 
     @EventHandler
     @Transactional
-    void on(MembershipRequestUpdated event) {
-
-        MembershipRequest updatedMembershipRequest = event.getMembershipRequest();
-
-        TeamMemberEntity approvedBy = teamMemberRepository.findByMemberId(updatedMembershipRequest.getApprovedBy().getTeamMemberId());
-        MembershipRequestStatus status = updatedMembershipRequest.getRequestStatus();
-
-        MembershipRequestEntity existingMembershipEntity = membershipRequestRepository.findByMembershipRequestId(event.getMembershipRequest().getMembershipRequestId());
-        existingMembershipEntity.setApprovedBy(approvedBy);
-        existingMembershipEntity.setRequestStatus(status);
-
-        membershipRequestRepository.save(existingMembershipEntity);
-    }
-
-    @EventHandler
-    @Transactional
     void on(MembershipRequestCreated event) {
         TeamMemberEntity requestedBy = teamMemberRepository
                 .findByMemberId(event.getMembershipRequest().getRequestedBy()

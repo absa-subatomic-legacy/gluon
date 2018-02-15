@@ -7,6 +7,8 @@ public class MembershipRequestUpdated {
 
     private String teamId;
 
-    private MembershipRequest membershipRequest;
+    private MembershipRequest originalMembershipRequest;
+
+    private MembershipRequest updatedMembershipRequest;
 
 }
