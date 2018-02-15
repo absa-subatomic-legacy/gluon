@@ -115,6 +115,21 @@ public class Team {
 
     @CommandHandler
     public void when(NewMembershipRequest command) {
+        if (this.teamMembers
+                .contains(command.getMembershipRequest().getRequestedBy()) ||
+                this.owners.contains(
+                        command.getMembershipRequest().getRequestedBy())) {
+            throw new IllegalArgumentException(
+                    "Requesting user is already a member of the team.");
+        }
+        for (MembershipRequest request : this.membershipRequests) {
+            if (request.getRequestStatus() == MembershipRequestStatus.OPEN &&
+                    request.getRequestedBy().equals(
+                            command.getMembershipRequest().getRequestedBy())) {
+                throw new IllegalStateException(
+                        "An open membership request already exists for requesting user");
+            }
+        }
         apply(new MembershipRequestCreated(
                 command.getTeamId(),
                 command.getMembershipRequest()));
@@ -131,6 +146,7 @@ public class Team {
         MembershipRequest existingMembershipRequest = this
                 .findMembershipRequestById(command.getMembershipRequest()
                         .getMembershipRequestId());
+
         if (existingMembershipRequest == null) {
             throw new NullPointerException(MessageFormat.format(
                     "Membership Request with id {0} does not exist for team {1}.",
@@ -145,7 +161,8 @@ public class Team {
                     command.getMembershipRequest().getMembershipRequestId()));
         }
 
-        if (!this.owners.contains(existingMembershipRequest.getApprovedBy())) {
+        if (!this.owners
+                .contains(command.getMembershipRequest().getApprovedBy())) {
             throw new IllegalArgumentException(MessageFormat.format(
                     "Member {0} is not an owner of team {1} so cannot close request {2}",
                     command.getMembershipRequest().getApprovedBy()
@@ -156,13 +173,12 @@ public class Team {
 
         if (command.getMembershipRequest()
                 .getRequestStatus() == MembershipRequestStatus.APPROVED) {
-            Set<TeamMemberId> newOwnerList = new HashSet<>(this.owners);
-            Set<TeamMemberId> newTeamMemberList = new HashSet<>(
-                    this.teamMembers);
-            newTeamMemberList
-                    .add(command.getMembershipRequest().getRequestedBy());
-            apply(new TeamMembersAdded(teamId, newOwnerList,
-                    newTeamMemberList));
+            Set<TeamMemberId> newOwners = new HashSet<>();
+            Set<TeamMemberId> newTeamMembers = new HashSet<>();
+            newTeamMembers
+                    .add(existingMembershipRequest.getRequestedBy());
+            apply(new TeamMembersAdded(teamId, newOwners,
+                    newTeamMembers));
         }
 
         apply(new MembershipRequestUpdated(

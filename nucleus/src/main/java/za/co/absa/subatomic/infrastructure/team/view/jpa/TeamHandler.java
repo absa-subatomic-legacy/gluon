@@ -113,6 +113,7 @@ public class TeamHandler {
 
         MembershipRequestEntity membershipRequestEntity = MembershipRequestEntity
                 .builder()
+                .membershipRequestId(event.getMembershipRequest().getMembershipRequestId())
                 .teamId(event.getTeamId())
                 .requestedBy(requestedBy)
                 .requestStatus(event.getMembershipRequest().getRequestStatus())

@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.team.DevOpsEnvironmentRequested;
 import za.co.absa.subatomic.domain.team.MembershipRequestCreated;
-import za.co.absa.subatomic.domain.team.MembershipRequestUpdated;
 import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -139,8 +138,6 @@ public class TeamAutomationHandler {
 
     @EventHandler
     public void on(MembershipRequestCreated event) {
-        log.info(
-                "Membership to a team has been requested, sending event to Atomist...");
 
         TeamMemberEntity requestedBy = teamMemberRepository.findByMemberId(
                 event.getMembershipRequest().getRequestedBy()
@@ -170,69 +167,15 @@ public class TeamAutomationHandler {
                 requestedBySlackIdentity);
 
         MembershipRequestCreatedWithDetails newRequest = new MembershipRequestCreatedWithDetails(
-                event,
+                event.getMembershipRequest().getMembershipRequestId(),
                 team,
                 member);
 
-        ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfiguration.getMembershipRequestCreatedEventUrl(),
-                newRequest,
-                String.class);
-
-        if (response.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested event successfully: {} -> {}",
-                    response.getHeaders(), response.getBody());
-        }
-    }
-
-    @EventHandler
-    public void on(MembershipRequestUpdated event) {
         log.info(
-                "A team membership request has been updated, sending event to Atomist...");
-
-        TeamMemberEntity requestedBy = teamMemberRepository.findByMemberId(
-                event.getMembershipRequest().getRequestedBy()
-                        .getTeamMemberId());
-        TeamMemberEntity approvedBy = teamMemberRepository.findByMemberId(
-                event.getMembershipRequest().getApprovedBy()
-                        .getTeamMemberId());
-        za.co.absa.subatomic.domain.member.SlackIdentity requestedBySlackIdentity = null;
-        if (requestedBy.getSlackDetails() != null) {
-            requestedBySlackIdentity = new za.co.absa.subatomic.domain.member.SlackIdentity(
-                    requestedBy.getSlackDetails()
-                            .getScreenName(),
-                    requestedBy.getSlackDetails()
-                            .getUserId());
-        }
-
-        TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
-        za.co.absa.subatomic.domain.team.SlackIdentity teamEntitySlackIdentity = null;
-        if (teamEntity.getSlackDetails() != null) {
-            teamEntitySlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
-                    teamEntity.getSlackDetails()
-                            .getTeamChannel());
-        }
-
-        Team team = new Team(teamEntity.getTeamId(), teamEntity.getName(),
-                teamEntitySlackIdentity);
-        TeamMember requestedByMember = new TeamMember(requestedBy.getMemberId(),
-                requestedBy.getDomainUsername(), requestedBy.getFirstName(),
-                requestedBy.getLastName(), requestedBy.getEmail(),
-                requestedBySlackIdentity);
-        TeamMember approvedByMember = new TeamMember(approvedBy.getMemberId(),
-                requestedBy.getDomainUsername(), requestedBy.getFirstName(),
-                requestedBy.getLastName(), requestedBy.getEmail(),
-                requestedBySlackIdentity);
-
-        MembershipRequestUpdatedWithDetails newRequest = new MembershipRequestUpdatedWithDetails(
-                event,
-                team,
-                requestedByMember,
-                approvedByMember
-                );
+                "A team membership request has been updated, sending event to Atomist...{}", newRequest);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "https://webhook.atomist.com/atomist/teams/T8RGCS6T0/ingestion/TeamCreatedEvent/cfd69c30-5ba0-453a-bf61-2314af439428",
+                atomistConfigurationProperties.getMembershipRequestCreatedEventUrl(),
                 newRequest,
                 String.class);
 
@@ -241,6 +184,8 @@ public class TeamAutomationHandler {
                     response.getHeaders(), response.getBody());
         }
     }
+
+
 
     @Value
     private class TeamCreatedWithDetails {
@@ -300,21 +245,12 @@ public class TeamAutomationHandler {
 
     @Value
     private class MembershipRequestCreatedWithDetails {
-        MembershipRequestCreated membershipRequestCreated;
+
+        String membershipRequestId;
 
         Team team;
 
         TeamMember requestedBy;
     }
 
-    @Value
-    private class MembershipRequestUpdatedWithDetails {
-        MembershipRequestUpdated membershipRequestUpdated;
-
-        Team team;
-
-        TeamMember requestedBy;
-
-        TeamMember approvedBy;
-    }
 }

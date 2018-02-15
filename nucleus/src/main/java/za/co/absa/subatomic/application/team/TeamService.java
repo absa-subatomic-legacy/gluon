@@ -104,8 +104,7 @@ public class TeamService {
                         teamId,
                         new MembershipRequest(
                                 membershipRequest.getMembershipRequestId(),
-                                new TeamMemberId(membershipRequest
-                                        .getRequestedBy().getMemberId()),
+                                null, //requested by is not required
                                 new TeamMemberId(membershipRequest
                                         .getApprovedBy().getMemberId()),
                                 membershipRequest.getRequestStatus())),

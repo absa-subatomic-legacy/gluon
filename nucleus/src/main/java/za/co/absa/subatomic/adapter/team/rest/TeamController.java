@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
@@ -26,6 +27,7 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 @RestController
 @RequestMapping("/teams")
 @ExposesResourceFor(TeamResource.class)
+@Slf4j
 public class TeamController {
 
     private final TeamResourceAssembler assembler;
@@ -61,6 +63,7 @@ public class TeamController {
     @PutMapping("/{id}")
     ResponseEntity<TeamResource> update(@PathVariable String id,
             @RequestBody TeamResource request) {
+        log.info("Trying to update Team with: {}", request);
         if (!request.getOwners().isEmpty() || !request.getMembers().isEmpty()) {
             teamService.addTeamMembers(id,
                     request.getOwners().stream()
@@ -87,6 +90,7 @@ public class TeamController {
                 if (membershipRequest.getMembershipRequestId() != null &&
                         membershipRequest.getRequestStatus() != null &&
                         membershipRequest.getApprovedBy() != null) {
+                    log.info("Updating membership request with approval status: " + membershipRequest.getRequestStatus());
                     teamService.updateMembershipRequest(id, membershipRequest);
                 }
                 else if (membershipRequest.getMembershipRequestId() == null
