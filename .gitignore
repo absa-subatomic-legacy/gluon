@@ -199,6 +199,6 @@ modules.xml
 .idea/misc.xml
 *.ipr
 
-#atomist-config
-src/etc/atomist-registration.json
+# Local Spring config
+atomist-registration.json
 application-local.yml

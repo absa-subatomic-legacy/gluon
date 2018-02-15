@@ -4,21 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.axonframework.eventhandling.EventHandler;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.team.DevOpsEnvironmentRequested;
+import za.co.absa.subatomic.domain.team.MembershipRequestCreated;
 import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 @Component
 @Slf4j
@@ -43,7 +44,7 @@ public class TeamAutomationHandler {
 
     @EventHandler
     public void on(TeamCreated event) {
-        log.info("A team was created, sending event to Atomist...");
+        log.info("A team was created, sending event to Atomist...{}", event);
 
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getCreatedBy().getTeamMemberId());
@@ -135,6 +136,56 @@ public class TeamAutomationHandler {
         }
     }
 
+    @EventHandler
+    public void on(MembershipRequestCreated event) {
+        TeamMemberEntity requestedBy = teamMemberRepository.findByMemberId(
+                event.getMembershipRequest().getRequestedBy()
+                        .getTeamMemberId());
+        za.co.absa.subatomic.domain.member.SlackIdentity requestedBySlackIdentity = null;
+        if (requestedBy.getSlackDetails() != null) {
+            requestedBySlackIdentity = new za.co.absa.subatomic.domain.member.SlackIdentity(
+                    requestedBy.getSlackDetails()
+                            .getScreenName(),
+                    requestedBy.getSlackDetails()
+                            .getUserId());
+        }
+
+        TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
+        za.co.absa.subatomic.domain.team.SlackIdentity teamEntitySlackIdentity = null;
+        if (teamEntity.getSlackDetails() != null) {
+            teamEntitySlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                    teamEntity.getSlackDetails()
+                            .getTeamChannel());
+        }
+
+        Team team = new Team(teamEntity.getTeamId(), teamEntity.getName(),
+                teamEntitySlackIdentity);
+        TeamMember member = new TeamMember(requestedBy.getMemberId(),
+                requestedBy.getDomainUsername(), requestedBy.getFirstName(),
+                requestedBy.getLastName(), requestedBy.getEmail(),
+                requestedBySlackIdentity);
+
+        MembershipRequestCreatedWithDetails newRequest = new MembershipRequestCreatedWithDetails(
+                event.getMembershipRequest().getMembershipRequestId(),
+                team,
+                member);
+
+        log.info(
+                "A team membership request has been updated, sending event to Atomist...{}",
+                newRequest);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getMembershipRequestCreatedEventUrl(),
+                newRequest,
+                String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("Atomist has ingested event successfully: {} -> {}",
+                    response.getHeaders(), response.getBody());
+        }
+    }
+
     @Value
     private class TeamCreatedWithDetails {
 
@@ -190,4 +241,15 @@ public class TeamAutomationHandler {
 
         private SlackIdentity slackIdentity;
     }
+
+    @Value
+    private class MembershipRequestCreatedWithDetails {
+
+        String membershipRequestId;
+
+        Team team;
+
+        TeamMember requestedBy;
+    }
+
 }

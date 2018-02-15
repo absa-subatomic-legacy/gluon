@@ -1,16 +1,18 @@
 package za.co.absa.subatomic.domain.team;
 
+import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.github.slugify.Slugify;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
 
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+import com.github.slugify.Slugify;
 
 @Aggregate
 public class Team {
@@ -25,6 +27,8 @@ public class Team {
     private Set<TeamMemberId> teamMembers = new HashSet<>();
 
     private Set<TeamMemberId> owners = new HashSet<>();
+
+    private Set<MembershipRequest> membershipRequests = new HashSet<>();
 
     private SlackIdentity slackIdentity;
 
@@ -109,7 +113,106 @@ public class Team {
         this.devOpsEnvironment = event.getDevOpsEnvironment();
     }
 
+    @CommandHandler
+    public void when(NewMembershipRequest command) {
+        if (this.teamMembers
+                .contains(command.getMembershipRequest().getRequestedBy()) ||
+                this.owners.contains(
+                        command.getMembershipRequest().getRequestedBy())) {
+            throw new IllegalArgumentException(
+                    "Requesting user is already a member of the team.");
+        }
+        for (MembershipRequest request : this.membershipRequests) {
+            if (request.getRequestStatus() == MembershipRequestStatus.OPEN &&
+                    request.getRequestedBy().equals(
+                            command.getMembershipRequest().getRequestedBy())) {
+                throw new IllegalStateException(
+                        "An open membership request already exists for requesting user");
+            }
+        }
+        apply(new MembershipRequestCreated(
+                command.getTeamId(),
+                command.getMembershipRequest()));
+    }
+
+    @EventSourcingHandler
+    void on(MembershipRequestCreated event) {
+        this.teamId = event.getTeamId();
+        this.membershipRequests.add(event.getMembershipRequest());
+    }
+
+    @CommandHandler
+    public void when(UpdateMembershipRequest command) {
+        MembershipRequest existingMembershipRequest = this
+                .findMembershipRequestById(command.getMembershipRequest()
+                        .getMembershipRequestId());
+
+        if (existingMembershipRequest == null) {
+            throw new NullPointerException(MessageFormat.format(
+                    "Membership Request with id {0} does not exist for team {1}.",
+                    command.getMembershipRequest().getMembershipRequestId(),
+                    this.name));
+        }
+
+        if (existingMembershipRequest
+                .getRequestStatus() != MembershipRequestStatus.OPEN) {
+            throw new IllegalStateException(MessageFormat.format(
+                    "Cannot update MembershipRequest with id {0} which is not in OPEN state.",
+                    command.getMembershipRequest().getMembershipRequestId()));
+        }
+
+        if (!this.owners
+                .contains(command.getMembershipRequest().getApprovedBy())) {
+            throw new IllegalArgumentException(MessageFormat.format(
+                    "Member {0} is not an owner of team {1} so cannot close request {2}",
+                    command.getMembershipRequest().getApprovedBy()
+                            .getTeamMemberId(),
+                    this.name,
+                    command.getMembershipRequest().getMembershipRequestId()));
+        }
+
+        if (command.getMembershipRequest()
+                .getRequestStatus() == MembershipRequestStatus.APPROVED) {
+            Set<TeamMemberId> newOwners = new HashSet<>();
+            Set<TeamMemberId> newTeamMembers = new HashSet<>();
+            newTeamMembers
+                    .add(existingMembershipRequest.getRequestedBy());
+            apply(new TeamMembersAdded(teamId, newOwners,
+                    newTeamMembers));
+        }
+
+        apply(new MembershipRequestUpdated(
+                command.getTeamId(),
+                existingMembershipRequest,
+                command.getMembershipRequest()));
+    }
+
+    @EventSourcingHandler
+    void on(MembershipRequestUpdated event) {
+        this.teamId = event.getTeamId();
+        MembershipRequest originalRequest = event
+                .getOriginalMembershipRequest();
+        MembershipRequest updatedRequest = event.getUpdatedMembershipRequest();
+
+        this.membershipRequests.remove(originalRequest);
+        this.membershipRequests.add(
+                new MembershipRequest(originalRequest.getMembershipRequestId(),
+                        originalRequest.getRequestedBy(),
+                        updatedRequest.getApprovedBy(),
+                        updatedRequest.getRequestStatus()));
+    }
+
     private String buidDevOpsEnvironmentName(String teamName) {
         return String.format("%s-devops", new Slugify().slugify(teamName));
+    }
+
+    private MembershipRequest findMembershipRequestById(String id) {
+        MembershipRequest membershipRequest = null;
+        for (MembershipRequest existingRequest : this.membershipRequests) {
+            if (existingRequest.getMembershipRequestId().equals(id)) {
+                membershipRequest = existingRequest;
+            }
+        }
+        return membershipRequest;
     }
 }

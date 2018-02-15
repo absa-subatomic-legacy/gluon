@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -56,5 +57,8 @@ public class TeamEntity {
 
     @ManyToMany
     private Set<TeamMemberEntity> owners = new HashSet<>();
+
+    @OneToMany
+    private Set<MembershipRequestEntity> membershipRequests = new HashSet<>();
 
 }
