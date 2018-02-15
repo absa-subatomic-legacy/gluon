@@ -87,13 +87,18 @@ public class TeamController {
         if (request.getMembershipRequests() != null) {
             for (MembershipRequestResource membershipRequest : request
                     .getMembershipRequests()) {
-                if (membershipRequest.getMembershipRequestId() != null &&
+                if (StringUtils
+                        .isNotBlank(membershipRequest.getMembershipRequestId())
+                        &&
                         membershipRequest.getRequestStatus() != null &&
                         membershipRequest.getApprovedBy() != null) {
-                    log.info("Updating membership request with approval status: " + membershipRequest.getRequestStatus());
+                    log.info(
+                            "Updating membership request with approval status: {}",
+                            membershipRequest.getRequestStatus());
                     teamService.updateMembershipRequest(id, membershipRequest);
                 }
-                else if (membershipRequest.getMembershipRequestId() == null
+                else if (StringUtils
+                        .isBlank(membershipRequest.getMembershipRequestId())
                         && membershipRequest.getRequestedBy() != null) {
                     teamService.newMembershipRequest(id,
                             membershipRequest.getRequestedBy().getMemberId());

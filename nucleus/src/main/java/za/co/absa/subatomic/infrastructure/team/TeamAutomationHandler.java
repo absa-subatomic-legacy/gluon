@@ -138,7 +138,6 @@ public class TeamAutomationHandler {
 
     @EventHandler
     public void on(MembershipRequestCreated event) {
-
         TeamMemberEntity requestedBy = teamMemberRepository.findByMemberId(
                 event.getMembershipRequest().getRequestedBy()
                         .getTeamMemberId());
@@ -172,10 +171,12 @@ public class TeamAutomationHandler {
                 member);
 
         log.info(
-                "A team membership request has been updated, sending event to Atomist...{}", newRequest);
+                "A team membership request has been updated, sending event to Atomist...{}",
+                newRequest);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfigurationProperties.getMembershipRequestCreatedEventUrl(),
+                atomistConfigurationProperties
+                        .getMembershipRequestCreatedEventUrl(),
                 newRequest,
                 String.class);
 
@@ -184,8 +185,6 @@ public class TeamAutomationHandler {
                     response.getHeaders(), response.getBody());
         }
     }
-
-
 
     @Value
     private class TeamCreatedWithDetails {

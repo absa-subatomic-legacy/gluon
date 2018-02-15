@@ -98,13 +98,12 @@ public class TeamService {
 
     public String updateMembershipRequest(String teamId,
             MembershipRequestResource membershipRequest) {
-
         return commandGateway.sendAndWait(
                 new UpdateMembershipRequest(
                         teamId,
                         new MembershipRequest(
                                 membershipRequest.getMembershipRequestId(),
-                                null, //requested by is not required
+                                null, // requested by is not required
                                 new TeamMemberId(membershipRequest
                                         .getApprovedBy().getMemberId()),
                                 membershipRequest.getRequestStatus())),

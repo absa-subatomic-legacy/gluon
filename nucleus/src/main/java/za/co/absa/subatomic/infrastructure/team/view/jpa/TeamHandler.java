@@ -97,13 +97,15 @@ public class TeamHandler {
 
         MembershipRequestEntity membershipRequestEntity = MembershipRequestEntity
                 .builder()
-                .membershipRequestId(event.getMembershipRequest().getMembershipRequestId())
+                .membershipRequestId(
+                        event.getMembershipRequest().getMembershipRequestId())
                 .teamId(event.getTeamId())
                 .requestedBy(requestedBy)
                 .requestStatus(event.getMembershipRequest().getRequestStatus())
                 .build();
 
-        membershipRequestEntity = membershipRequestRepository.save(membershipRequestEntity);
+        membershipRequestEntity = membershipRequestRepository
+                .save(membershipRequestEntity);
 
         TeamEntity team = teamRepository.findByTeamId(event.getTeamId());
         team.getMembershipRequests().add(membershipRequestEntity);

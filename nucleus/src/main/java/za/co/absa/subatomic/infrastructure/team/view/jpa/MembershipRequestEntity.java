@@ -1,10 +1,19 @@
 package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
-import lombok.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-
-import javax.persistence.*;
 
 @Entity
 @Table(name = "membership_request")
