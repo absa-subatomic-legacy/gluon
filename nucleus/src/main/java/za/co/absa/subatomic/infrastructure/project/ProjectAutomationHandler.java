@@ -132,13 +132,45 @@ public class ProjectAutomationHandler {
                         event.getBitbucketProject().getKey(),
                         event.getBitbucketProject().getName(),
                         event.getBitbucketProject().getDescription()),
-                teamMemberEntity.getTeams().stream()
-                        .map(teamEntity -> new Team(
-                                teamEntity.getTeamId(),
-                                teamEntity.getName(),
-                                new za.co.absa.subatomic.domain.team.SlackIdentity(
-                                        teamEntity.getSlackDetails()
-                                                .getTeamChannel())))
+                projectEntity.getTeams().stream()
+                        .map(teamEntity -> {
+                            Team team = new Team(
+                                    teamEntity.getTeamId(),
+                                    teamEntity.getName(),
+                                    new za.co.absa.subatomic.domain.team.SlackIdentity(
+                                            teamEntity.getSlackDetails()
+                                                    .getTeamChannel()));
+                            team.getOwners().addAll(
+                                    teamEntity.getOwners().stream()
+                                            .map(memberEntity -> new TeamMember(
+                                                    memberEntity
+                                                            .getDomainUsername(),
+                                                    memberEntity
+                                                            .getFirstName(),
+                                                    new SlackIdentity(
+                                                            memberEntity
+                                                                    .getSlackDetails()
+                                                                    .getScreenName(),
+                                                            memberEntity
+                                                                    .getSlackDetails()
+                                                                    .getUserId())))
+                                            .collect(Collectors.toList()));
+                            team.getMembers().addAll(
+                                    teamEntity.getMembers().stream()
+                                            .map(memberEntity -> new TeamMember(
+                                                    memberEntity
+                                                            .getDomainUsername(),
+                                                    memberEntity.getFirstName(),
+                                                    new SlackIdentity(
+                                                            memberEntity
+                                                                    .getSlackDetails()
+                                                                    .getScreenName(),
+                                                            memberEntity
+                                                                    .getSlackDetails()
+                                                                    .getUserId())))
+                                            .collect(Collectors.toList()));
+                            return team;
+                        })
                         .collect(Collectors.toList()),
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
@@ -193,7 +225,7 @@ public class ProjectAutomationHandler {
                         event.getBitbucketProject().getName(),
                         event.getBitbucketProject().getDescription(),
                         event.getBitbucketProject().getUrl()),
-                createdBy.getTeams().stream()
+                projectEntity.getTeams().stream()
                         .map(teamEntity -> new Team(
                                 teamEntity.getTeamId(),
                                 teamEntity.getName(),
@@ -247,7 +279,7 @@ public class ProjectAutomationHandler {
                         .description(projectEntity.getDescription())
                         .build(),
                 null,
-                createdBy.getTeams().stream()
+                projectEntity.getTeams().stream()
                         .map(teamEntity -> {
                             Team team = new Team(
                                     teamEntity.getTeamId(),
