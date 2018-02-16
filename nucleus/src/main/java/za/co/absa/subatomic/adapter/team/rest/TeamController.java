@@ -117,7 +117,8 @@ public class TeamController {
 
     @GetMapping
     Resources<TeamResource> list(
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String slackScreenName) {
         List<TeamResource> teams = new ArrayList<>();
 
         // TODO see if we can't use that functional library for Java that has pattern matching?
@@ -126,14 +127,20 @@ public class TeamController {
                     assembler.toResource(teamService.findByName(name)));
         }
 
-        if (StringUtils.isAllBlank(name)) {
+        if (StringUtils.isNotBlank(slackScreenName)) {
+            teams.addAll(teamService.findByMemberOrOwner(
+                    slackScreenName).stream()
+                    .map(assembler::toResource).collect(Collectors.toList()));
+        }
+
+        if (StringUtils.isAllBlank(name, slackScreenName)) {
             teams.addAll(teamService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
         return new Resources<>(teams,
                 linkTo(TeamController.class).withRel("self"),
-                linkTo(methodOn(TeamController.class).list(name))
+                linkTo(methodOn(TeamController.class).list(name, slackScreenName))
                         .withRel("self"));
     }
 
