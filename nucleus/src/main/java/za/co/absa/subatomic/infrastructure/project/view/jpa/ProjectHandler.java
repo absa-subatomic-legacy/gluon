@@ -56,23 +56,27 @@ public class ProjectHandler {
     @EventHandler
     @Transactional
     void on(BitbucketProjectRequested event) {
-        TeamMemberEntity createdBy = teamMemberRepository
-                .findByMemberId(event.getRequestedBy().getTeamMemberId());
+        BitbucketProjectEntity bitbucketProjectEntity = bitbucketProjectRepository
+                .findByKey(event.getBitbucketProject().getKey());
+        if (bitbucketProjectEntity == null) {
+            TeamMemberEntity createdBy = teamMemberRepository
+                    .findByMemberId(event.getRequestedBy().getTeamMemberId());
 
-        BitbucketProject bitbucketProject = event.getBitbucketProject();
-        BitbucketProjectEntity bitbucketProjectEntity = BitbucketProjectEntity
-                .builder()
-                .key(bitbucketProject.getKey())
-                .name(bitbucketProject.getName())
-                .description(bitbucketProject.getDescription())
-                .createdBy(createdBy)
-                .build();
+            BitbucketProject bitbucketProject = event.getBitbucketProject();
+            bitbucketProjectEntity = BitbucketProjectEntity
+                    .builder()
+                    .key(bitbucketProject.getKey())
+                    .name(bitbucketProject.getName())
+                    .description(bitbucketProject.getDescription())
+                    .createdBy(createdBy)
+                    .build();
 
-        ProjectEntity projectEntity = projectRepository
-                .findByProjectId(event.getProjectId().getProjectId());
-        projectEntity.setBitbucketProject(bitbucketProjectEntity);
+            ProjectEntity projectEntity = projectRepository
+                    .findByProjectId(event.getProjectId().getProjectId());
+            projectEntity.setBitbucketProject(bitbucketProjectEntity);
 
-        bitbucketProjectRepository.save(bitbucketProjectEntity);
+            bitbucketProjectRepository.save(bitbucketProjectEntity);
+        }
     }
 
     @EventHandler
