@@ -1,8 +1,8 @@
 package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TeamRepository extends JpaRepository<TeamEntity, Long> {
 
@@ -10,7 +10,11 @@ public interface TeamRepository extends JpaRepository<TeamEntity, Long> {
 
     TeamEntity findByName(String name);
 
+    List<TeamEntity> findBySlackDetailsTeamChannel(String teamChannel);
+
+    @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
     List<TeamEntity> findByMembers_SlackDetailsScreenName(String screenName);
 
+    @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
     List<TeamEntity> findByOwners_SlackDetailsScreenName(String screenName);
 }
