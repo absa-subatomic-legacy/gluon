@@ -6,13 +6,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
-import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.domain.team.AddSlackIdentity;
 import za.co.absa.subatomic.domain.team.AddTeamMembers;
 import za.co.absa.subatomic.domain.team.MembershipRequest;
@@ -29,6 +25,9 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestReposi
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @Slf4j
 public class TeamService {
@@ -37,17 +36,13 @@ public class TeamService {
 
     private TeamRepository teamRepository;
 
-    private TeamMemberService teamMemberService;
-
     private MembershipRequestRepository membershipRequestRepository;
 
     public TeamService(CommandGateway commandGateway,
             TeamRepository teamRepository,
-            TeamMemberService teamMemberService,
             MembershipRequestRepository membershipRequestRepository) {
         this.commandGateway = commandGateway;
         this.teamRepository = teamRepository;
-        this.teamMemberService = teamMemberService;
         this.membershipRequestRepository = membershipRequestRepository;
     }
 
@@ -160,8 +155,15 @@ public class TeamService {
     @Transactional(readOnly = true)
     public Set<TeamEntity> findByMemberOrOwner(String slackScreenName) {
         Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
-        teamsWithMemberOrOwner.addAll(teamRepository.findByMembers_SlackDetailsScreenName(slackScreenName));
-        teamsWithMemberOrOwner.addAll(teamRepository.findByOwners_SlackDetailsScreenName(slackScreenName));
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByMembers_SlackDetailsScreenName(slackScreenName));
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByOwners_SlackDetailsScreenName(slackScreenName));
         return teamsWithMemberOrOwner;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamEntity> findBySlackTeamChannel(String slackTeamChannel) {
+        return teamRepository.findBySlackDetailsTeamChannel(slackTeamChannel);
     }
 }
