@@ -1,6 +1,8 @@
 package za.co.absa.subatomic.application.team;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -11,7 +13,17 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.application.member.TeamMemberService;
-import za.co.absa.subatomic.domain.team.*;
+import za.co.absa.subatomic.domain.team.AddSlackIdentity;
+import za.co.absa.subatomic.domain.team.AddTeamMembers;
+import za.co.absa.subatomic.domain.team.MembershipRequest;
+import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
+import za.co.absa.subatomic.domain.team.NewDevOpsEnvironment;
+import za.co.absa.subatomic.domain.team.NewMembershipRequest;
+import za.co.absa.subatomic.domain.team.NewTeam;
+import za.co.absa.subatomic.domain.team.NewTeamFromSlack;
+import za.co.absa.subatomic.domain.team.SlackIdentity;
+import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.domain.team.UpdateMembershipRequest;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -145,4 +157,11 @@ public class TeamService {
         return membershipRequestRepository.findByMembershipRequestId(id);
     }
 
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findByMemberOrOwner(String slackScreenName) {
+        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
+        teamsWithMemberOrOwner.addAll(teamRepository.findByMembers_SlackDetailsScreenName(slackScreenName));
+        teamsWithMemberOrOwner.addAll(teamRepository.findByOwners_SlackDetailsScreenName(slackScreenName));
+        return teamsWithMemberOrOwner;
+    }
 }
