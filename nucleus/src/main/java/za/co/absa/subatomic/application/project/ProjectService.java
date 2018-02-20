@@ -94,4 +94,8 @@ public class ProjectService {
         return projectRepository.findByName(name);
     }
 
+    @Transactional(readOnly = true)
+    public List<ProjectEntity> findByTeamName(String teamName) {
+        return projectRepository.findByTeams_Name(teamName);
+    }
 }

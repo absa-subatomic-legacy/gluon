@@ -2,6 +2,9 @@ package za.co.absa.subatomic.infrastructure.application.view.jpa;
 
 import java.util.Date;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -48,4 +51,8 @@ public class ApplicationEntity {
 
     @ManyToOne
     private TeamMemberEntity createdBy;
+
+    @Embedded
+    @AttributeOverride(name = "name", column = @Column(name = "bitbucket_repo_name"))
+    private BitbucketRepositoryEmbedded bitbucketRepository;
 }

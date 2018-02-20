@@ -94,13 +94,19 @@ public class ProjectController {
 
     @GetMapping
     Resources<ProjectResource> list(
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String teamName) {
         List<ProjectResource> projects = new ArrayList<>();
 
-        // TODO see if we can't use that functional library for Java that has pattern matching?
+        // TODO see if we can't use http://www.vavr.io/ for pattern matching?
         if (StringUtils.isNotBlank(name)) {
             projects.add(
                     assembler.toResource(projectService.findByName(name)));
+        }
+
+        if (StringUtils.isNotBlank(teamName)) {
+            projects.addAll(
+                    assembler.toResources(projectService.findByTeamName(name)));
         }
 
         if (StringUtils.isAllBlank(name)) {
@@ -110,7 +116,7 @@ public class ProjectController {
 
         return new Resources<>(projects,
                 linkTo(TeamController.class).withRel("self"),
-                linkTo(methodOn(ProjectController.class).list(name))
+                linkTo(methodOn(ProjectController.class).list(name, teamName))
                         .withRel("self"));
     }
 

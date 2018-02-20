@@ -9,6 +9,8 @@ public class BitbucketRepository {
 
     private String bitbucketId;
 
+    private String slug;
+
     private String name;
 
     private String repoUrl;

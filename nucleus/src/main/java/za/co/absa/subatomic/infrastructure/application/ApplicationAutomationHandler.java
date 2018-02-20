@@ -87,9 +87,13 @@ public class ApplicationAutomationHandler {
                         .description(projectEntity.getDescription())
                         .build(),
                 BitbucketGitRepository.builder()
+                        .bitbucketId(event.getBitbucketGitRepository()
+                                .getBitbucketId())
+                        .slug(event.getBitbucketGitRepository().getSlug())
                         .name(event.getBitbucketGitRepository().getName())
-                        .repoUrl(event.getBitbucketGitRepository()
-                                .getRepoUrl())
+                        .repoUrl(event.getBitbucketGitRepository().getRepoUrl())
+                        .remoteUrl(event.getBitbucketGitRepository()
+                                .getRemoteUrl())
                         .build(),
                 new BitbucketProject(
                         projectEntity.getBitbucketProject().getId().toString(),
