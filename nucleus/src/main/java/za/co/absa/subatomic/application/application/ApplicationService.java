@@ -82,4 +82,8 @@ public class ApplicationService {
         return applicationRepository.findByName(name);
     }
 
+    @Transactional(readOnly = true)
+    public List<ApplicationEntity> findByProjectName(String projectName) {
+        return applicationRepository.findByProjectName(projectName);
+    }
 }

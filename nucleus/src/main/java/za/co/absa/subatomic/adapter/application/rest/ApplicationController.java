@@ -84,24 +84,31 @@ public class ApplicationController {
 
     @GetMapping
     Resources<ApplicationResource> list(
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String projectName) {
         List<ApplicationResource> applications = new ArrayList<>();
 
-        // TODO see if we can't use that functional library for Java that has pattern matching?
         if (StringUtils.isNotBlank(name)) {
             applications.add(
                     assembler.toResource(applicationService.findByName(name)));
         }
 
-        if (StringUtils.isAllBlank(name)) {
+        if (StringUtils.isNotBlank(projectName)) {
+            applications.addAll(
+                    assembler.toResources(
+                            applicationService.findByProjectName(projectName)));
+        }
+
+        if (StringUtils.isAllBlank(name, projectName)) {
             applications.addAll(applicationService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
         return new Resources<>(applications,
                 linkTo(ApplicationController.class).withRel("self"),
-                linkTo(methodOn(ApplicationController.class).list(name))
-                        .withRel("self"));
+                linkTo(methodOn(ApplicationController.class).list(name,
+                        projectName))
+                                .withRel("self"));
     }
 
     private class ApplicationResourceAssembler
