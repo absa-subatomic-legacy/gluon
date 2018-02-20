@@ -43,15 +43,23 @@ public class ApplicationService {
     }
 
     public String requestApplicationEnvironment(String applicationId,
-            String name, String requestedBy, String bitbucketRepoUrl,
-            String projectId) {
+            String bitbucketRepoId,
+            String bitbucketRepoSlug,
+            String bitbucketRepoName,
+            String bitbucketRepoUrl,
+            String bitbucketRepoRemoteUrl,
+            String projectId,
+            String requestedBy) {
         return commandGateway.sendAndWait(
                 new RequestApplicationEnvironment(
                         applicationId,
-                        name,
+                        bitbucketRepoName,
                         BitbucketGitRepository.builder()
-                                .name(name)
+                                .bitbucketId(bitbucketRepoId)
+                                .slug(bitbucketRepoSlug)
+                                .name(bitbucketRepoName)
                                 .repoUrl(bitbucketRepoUrl)
+                                .remoteUrl(bitbucketRepoRemoteUrl)
                                 .build(),
                         new ProjectId(projectId),
                         new TeamMemberId(requestedBy)),

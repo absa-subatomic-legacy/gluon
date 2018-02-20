@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import za.co.absa.subatomic.application.application.ApplicationService;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
+import za.co.absa.subatomic.infrastructure.application.view.jpa.BitbucketRepositoryEmbedded;
 
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
@@ -62,10 +63,13 @@ public class ApplicationController {
             @RequestBody ApplicationResource request) {
         if (request.getBitbucketRepository() != null) {
             applicationService.requestApplicationEnvironment(id,
+                    request.getBitbucketRepository().getBitbucketId(),
+                    request.getBitbucketRepository().getSlug(),
                     request.getBitbucketRepository().getName(),
-                    request.getCreatedBy(),
                     request.getBitbucketRepository().getRepoUrl(),
-                    request.getProjectId());
+                    request.getBitbucketRepository().getRemoteUrl(),
+                    request.getProjectId(),
+                    request.getCreatedBy());
         }
 
         return ResponseEntity.accepted()
@@ -120,6 +124,17 @@ public class ApplicationController {
                 resource.setProjectId(entity.getProject().getProjectId());
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
+
+                if (entity.getBitbucketRepository() != null) {
+                    BitbucketRepositoryEmbedded bitbucketRepository = entity
+                            .getBitbucketRepository();
+                    resource.setBitbucketRepository(new BitbucketRepository(
+                            bitbucketRepository.getBitbucketId(),
+                            bitbucketRepository.getSlug(),
+                            bitbucketRepository.getName(),
+                            bitbucketRepository.getRepoUrl(),
+                            bitbucketRepository.getRemoteUrl()));
+                }
 
                 return resource;
             }

@@ -5,7 +5,6 @@ import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
-import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
@@ -21,8 +20,6 @@ public class Application {
     private String description;
 
     private ProjectId projectId;
-
-    private BitbucketProject bitbucketProject;
 
     private BitbucketGitRepository bitbucketRepository;
 
@@ -53,13 +50,17 @@ public class Application {
 
     @CommandHandler
     void when(RequestApplicationEnvironment command) {
+        BitbucketGitRepository bitbucketRepository = command
+                .getBitbucketRepository();
         apply(new ApplicationEnvironmentRequested(
                 new ApplicationId(command.getApplicationId()),
                 command.getName(),
                 BitbucketGitRepository.builder()
-                        .name(command.getName())
-                        .repoUrl(
-                                command.getBitbucketRepository().getRepoUrl())
+                        .bitbucketId(bitbucketRepository.getBitbucketId())
+                        .slug(bitbucketRepository.getSlug())
+                        .name(bitbucketRepository.getName())
+                        .repoUrl(bitbucketRepository.getRepoUrl())
+                        .remoteUrl(bitbucketRepository.getRemoteUrl())
                         .build(),
                 command.getProjectId(),
                 command.getRequestedBy()));

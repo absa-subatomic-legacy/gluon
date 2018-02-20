@@ -2,6 +2,8 @@ package za.co.absa.subatomic.infrastructure.application.view.jpa;
 
 import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
+import za.co.absa.subatomic.domain.application.ApplicationEnvironmentRequested;
+import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -43,6 +45,25 @@ public class ApplicationHandler {
                 .project(projectEntity)
                 .createdBy(createdBy)
                 .build();
+
+        applicationRepository.save(applicationEntity);
+    }
+
+    @EventHandler
+    @Transactional
+    void on(ApplicationEnvironmentRequested event) {
+        ApplicationEntity applicationEntity = applicationRepository
+                .findByApplicationId(
+                        event.getApplicationId().getApplicationId());
+        BitbucketGitRepository bitbucketRepository = event
+                .getBitbucketGitRepository();
+        applicationEntity
+                .setBitbucketRepository(new BitbucketRepositoryEmbedded(
+                        bitbucketRepository.getBitbucketId(),
+                        bitbucketRepository.getSlug(),
+                        bitbucketRepository.getName(),
+                        bitbucketRepository.getRepoUrl(),
+                        bitbucketRepository.getRemoteUrl()));
 
         applicationRepository.save(applicationEntity);
     }
