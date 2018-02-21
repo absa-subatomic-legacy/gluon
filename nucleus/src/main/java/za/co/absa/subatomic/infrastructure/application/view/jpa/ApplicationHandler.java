@@ -46,7 +46,9 @@ public class ApplicationHandler {
                 .createdBy(createdBy)
                 .build();
 
-        applicationRepository.save(applicationEntity);
+        applicationEntity = applicationRepository.save(applicationEntity);
+
+        projectEntity.getApplications().add(applicationEntity);
     }
 
     @EventHandler

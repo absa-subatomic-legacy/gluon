@@ -9,6 +9,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -20,6 +21,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
@@ -51,6 +53,9 @@ public class ProjectEntity {
 
     @ManyToMany
     private Set<TeamEntity> teams = new HashSet<>();
+
+    @OneToMany
+    private Set<ApplicationEntity> applications = new HashSet<>();
 
     @OneToOne
     private BitbucketProjectEntity bitbucketProject;
