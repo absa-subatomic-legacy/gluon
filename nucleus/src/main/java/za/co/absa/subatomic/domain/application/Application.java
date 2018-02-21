@@ -19,6 +19,8 @@ public class Application {
 
     private String description;
 
+    private ApplicationType applicationType;
+
     private ProjectId projectId;
 
     private BitbucketGitRepository bitbucketRepository;
@@ -35,6 +37,7 @@ public class Application {
                 command.getApplicationId(),
                 command.getName(),
                 command.getDescription(),
+                command.getApplicationType(),
                 command.getProjectId(),
                 command.getRequestedBy()));
     }

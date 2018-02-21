@@ -15,6 +15,8 @@ public class ApplicationCreated {
 
     private String description;
 
+    private ApplicationType applicationType;
+
     private ProjectId projectId;
 
     private TeamMemberId createdBy;

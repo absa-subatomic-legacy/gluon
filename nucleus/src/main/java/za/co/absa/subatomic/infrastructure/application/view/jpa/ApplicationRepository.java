@@ -2,6 +2,8 @@ package za.co.absa.subatomic.infrastructure.application.view.jpa;
 
 import java.util.List;
 
+import za.co.absa.subatomic.domain.application.ApplicationType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ApplicationRepository
@@ -12,4 +14,7 @@ public interface ApplicationRepository
     ApplicationEntity findByName(String name);
 
     List<ApplicationEntity> findByProjectName(String projectName);
+
+    List<ApplicationEntity> findByApplicationType(
+            ApplicationType applicationType);
 }
