@@ -123,7 +123,7 @@ public class ApplicationController {
             extends
             ResourceAssemblerSupport<ApplicationEntity, ApplicationResource> {
 
-        public ApplicationResourceAssembler() {v
+        public ApplicationResourceAssembler() {
             super(ApplicationController.class, ApplicationResource.class);
         }
 
