@@ -15,6 +15,8 @@ public class ApplicationResource extends ResourceSupport {
 
     private String description;
 
+    private String applicationType;
+
     private String projectId;
 
     private Date createdAt;

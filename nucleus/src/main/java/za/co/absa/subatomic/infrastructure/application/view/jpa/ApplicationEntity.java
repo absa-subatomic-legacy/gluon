@@ -6,6 +6,8 @@ import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -20,6 +22,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 
@@ -42,6 +45,9 @@ public class ApplicationEntity {
     private String name;
 
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    private ApplicationType applicationType;
 
     @Temporal(TemporalType.TIMESTAMP)
     private final Date createdAt = new Date();

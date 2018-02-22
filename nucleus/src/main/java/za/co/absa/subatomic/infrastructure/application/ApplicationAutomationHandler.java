@@ -80,6 +80,7 @@ public class ApplicationAutomationHandler {
                         .applicationId(applicationEntity.getApplicationId())
                         .name(applicationEntity.getName())
                         .description(applicationEntity.getDescription())
+                        .applicationType(applicationEntity.getApplicationType())
                         .build(),
                 ProjectCreated.builder()
                         .projectId(projectEntity.getProjectId())

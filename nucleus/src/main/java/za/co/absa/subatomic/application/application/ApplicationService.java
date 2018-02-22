@@ -5,6 +5,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.application.NewApplication;
 import za.co.absa.subatomic.domain.application.RequestApplicationEnvironment;
@@ -30,12 +31,14 @@ public class ApplicationService {
     }
 
     public String newApplication(String name, String description,
+            String applicationType,
             String projectId, String requestedBy) {
         return commandGateway.sendAndWait(
                 new NewApplication(
                         UUID.randomUUID().toString(),
                         name,
                         description,
+                        ApplicationType.valueOf(applicationType),
                         new ProjectId(projectId),
                         new TeamMemberId(requestedBy)),
                 1000,
@@ -85,5 +88,12 @@ public class ApplicationService {
     @Transactional(readOnly = true)
     public List<ApplicationEntity> findByProjectName(String projectName) {
         return applicationRepository.findByProjectName(projectName);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ApplicationEntity> findByApplicationType(
+            String applicationType) {
+        return applicationRepository.findByApplicationType(
+                ApplicationType.valueOf(applicationType.toUpperCase()));
     }
 }

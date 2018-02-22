@@ -47,6 +47,7 @@ public class ApplicationController {
         String aggregateId = applicationService.newApplication(
                 request.getName(),
                 request.getDescription(),
+                request.getApplicationType(),
                 request.getProjectId(),
                 request.getCreatedBy());
 
@@ -85,6 +86,7 @@ public class ApplicationController {
     @GetMapping
     Resources<ApplicationResource> list(
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) String applicationType,
             @RequestParam(required = false) String projectName) {
         List<ApplicationResource> applications = new ArrayList<>();
 
@@ -93,13 +95,19 @@ public class ApplicationController {
                     assembler.toResource(applicationService.findByName(name)));
         }
 
+        if (StringUtils.isNotBlank(applicationType)) {
+            applications.addAll(
+                    assembler.toResources(applicationService
+                            .findByApplicationType(applicationType)));
+        }
+
         if (StringUtils.isNotBlank(projectName)) {
             applications.addAll(
                     assembler.toResources(
                             applicationService.findByProjectName(projectName)));
         }
 
-        if (StringUtils.isAllBlank(name, projectName)) {
+        if (StringUtils.isAllBlank(name, applicationType, projectName)) {
             applications.addAll(applicationService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
@@ -107,7 +115,7 @@ public class ApplicationController {
         return new Resources<>(applications,
                 linkTo(ApplicationController.class).withRel("self"),
                 linkTo(methodOn(ApplicationController.class).list(name,
-                        projectName))
+                        applicationType, projectName))
                                 .withRel("self"));
     }
 
@@ -128,6 +136,7 @@ public class ApplicationController {
                 resource.setApplicationId(entity.getApplicationId());
                 resource.setName(entity.getName());
                 resource.setDescription(entity.getDescription());
+                resource.setApplicationType(entity.getApplicationType().name());
                 resource.setProjectId(entity.getProject().getProjectId());
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());

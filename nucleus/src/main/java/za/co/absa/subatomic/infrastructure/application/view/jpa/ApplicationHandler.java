@@ -42,6 +42,7 @@ public class ApplicationHandler {
                 .applicationId(event.getApplicationId())
                 .name(event.getName())
                 .description(event.getDescription())
+                .applicationType(event.getApplicationType())
                 .project(projectEntity)
                 .createdBy(createdBy)
                 .build();
