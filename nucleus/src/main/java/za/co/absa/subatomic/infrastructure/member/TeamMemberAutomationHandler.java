@@ -29,7 +29,7 @@ public class TeamMemberAutomationHandler {
                 event);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfigurationProperties.getTeamCreatedEventUrl(),
+                atomistConfigurationProperties.getTeamMemberCreatedEventUrl(),
                 event,
                 String.class);
 
