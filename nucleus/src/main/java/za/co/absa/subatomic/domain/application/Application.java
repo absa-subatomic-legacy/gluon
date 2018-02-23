@@ -1,13 +1,19 @@
 package za.co.absa.subatomic.domain.application;
 
+import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+
+import java.util.Collection;
+import java.util.Set;
+
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
+
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
-
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Aggregate
 public class Application {
@@ -33,6 +39,10 @@ public class Application {
 
     @CommandHandler
     public Application(NewApplication command) {
+        if(!requesterIsMemberOfAssociatedTeam(command.getRequestedBy(), command.getProjectAssociatedTeams())){
+            throw new SecurityException("requestedBy member is not a valid member of any team associated to the owning project.");
+        }
+
         apply(new ApplicationCreated(
                 command.getApplicationId(),
                 command.getName(),
@@ -53,6 +63,9 @@ public class Application {
 
     @CommandHandler
     void when(RequestApplicationEnvironment command) {
+        if(!requesterIsMemberOfAssociatedTeam(command.getRequestedBy(), command.getProjectAssociatedTeams())){
+            throw new SecurityException("requestedBy member is not a valid member of any team associated to the owning project.");
+        }
         BitbucketGitRepository bitbucketRepository = command
                 .getBitbucketRepository();
         apply(new ApplicationEnvironmentRequested(
@@ -72,5 +85,30 @@ public class Application {
     @EventSourcingHandler
     void on(ApplicationEnvironmentRequested event) {
         this.bitbucketRepository = event.getBitbucketGitRepository();
+    }
+
+    private boolean requesterIsMemberOfAssociatedTeam(TeamMemberId requester,
+            Set<TeamEntity> projectAssociatedTeams) {
+        for (TeamEntity team : projectAssociatedTeams) {
+            if (memberBelongsToTeam(requester, team)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean memberBelongsToTeam(TeamMemberId member, TeamEntity team) {
+        return memberInMemberList(member, team.getMembers())
+                || memberInMemberList(member, team.getOwners());
+    }
+
+    private boolean memberInMemberList(TeamMemberId member,
+            Collection<TeamMemberEntity> memberList) {
+        for (TeamMemberEntity memberEntity : memberList) {
+            if (memberEntity.getMemberId().equals(member.getTeamMemberId())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

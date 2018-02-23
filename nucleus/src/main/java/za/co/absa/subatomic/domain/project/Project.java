@@ -1,5 +1,8 @@
 package za.co.absa.subatomic.domain.project;
 
+import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -8,9 +11,11 @@ import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
-import za.co.absa.subatomic.domain.pkg.ProjectId;
 
-import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
+import za.co.absa.subatomic.domain.pkg.ProjectId;
+import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Aggregate
 public class Project {
@@ -32,12 +37,18 @@ public class Project {
 
     @CommandHandler
     public Project(NewProject command) {
+
+        if (!memberBelongsToTeam(command.getCreatedBy(), command.getTeam())) {
+            throw new SecurityException(
+                    "createdBy member is not a valid member the owning project team.");
+        }
+
         apply(new ProjectCreated(
                 command.getProjectId(),
                 command.getName(),
                 command.getDescription(),
                 command.getCreatedBy(),
-                command.getTeam()));
+                new TeamId(command.getTeam().getTeamId())));
     }
 
     @EventSourcingHandler
@@ -50,9 +61,14 @@ public class Project {
 
     @CommandHandler
     void when(RequestBitbucketProject command) {
+        if (!requesterIsMemberOfAssociatedTeam(command.getRequestedBy(),
+                command.getProjectAssociatedTeams())) {
+            throw new SecurityException(
+                    "requestedBy member is not a valid member of any team associated to the owning project.");
+        }
         // TODO check for duplicate keys
         BitbucketProject bitbucketProject = command.getBitbucketProject();
-        String key = generateProjecyKey(bitbucketProject.getName());
+        String key = generateProjectKey(bitbucketProject.getName());
 
         apply(new BitbucketProjectRequested(
                 new ProjectId(command.getProjectId()),
@@ -64,7 +80,7 @@ public class Project {
                 command.getRequestedBy()));
     }
 
-    private String generateProjecyKey(String projectName) {
+    private String generateProjectKey(String projectName) {
         return getFirstLetters(projectName)
                 .trim()
                 .toUpperCase();
@@ -117,6 +133,11 @@ public class Project {
 
     @CommandHandler
     void when(NewProjectEnvironment command) {
+        if (!requesterIsMemberOfAssociatedTeam(command.getRequestedBy(),
+                command.getProjectAssociatedTeams())) {
+            throw new SecurityException(
+                    "requestedBy member is not a valid member of any team associated to the owning project.");
+        }
         apply(new ProjectEnvironmentRequested(
                 command.getProjectId(),
                 command.getRequestedBy()));
@@ -127,5 +148,30 @@ public class Project {
         // TODO link environments to project
         // will only have meaning when environments are a concept
         // I.e. when people can choose which environments they want
+    }
+
+    private boolean requesterIsMemberOfAssociatedTeam(TeamMemberId requester,
+            Set<TeamEntity> projectAssociatedTeams) {
+        for (TeamEntity team : projectAssociatedTeams) {
+            if (memberBelongsToTeam(requester, team)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean memberBelongsToTeam(TeamMemberId member, TeamEntity team) {
+        return memberInMemberList(member, team.getMembers())
+                || memberInMemberList(member, team.getOwners());
+    }
+
+    private boolean memberInMemberList(TeamMemberId member,
+            Collection<TeamMemberEntity> memberList) {
+        for (TeamMemberEntity memberEntity : memberList) {
+            if (memberEntity.getMemberId().equals(member.getTeamMemberId())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

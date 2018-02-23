@@ -1,6 +1,7 @@
 package za.co.absa.subatomic.application.pkg;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +14,8 @@ import za.co.absa.subatomic.infrastructure.pkg.view.jpa.PackageRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Service
 public class PackageService {
@@ -21,14 +24,22 @@ public class PackageService {
 
     private PackageRepository packageRepository;
 
+    private ProjectRepository projectRepository;
+
     public PackageService(CommandGateway commandGateway,
-            PackageRepository packageRepository) {
+            PackageRepository packageRepository,
+            ProjectRepository projectRepository) {
         this.commandGateway = commandGateway;
         this.packageRepository = packageRepository;
+        this.projectRepository = projectRepository;
     }
 
     public String newApplication(String packageType, String name,
-            String description, String createdBy, String project) {
+            String description, String createdBy, String projectId) {
+
+        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
+                projectId);
+
         return commandGateway.sendAndWait(
                 new NewPackage(
                         UUID.randomUUID().toString(),
@@ -36,7 +47,8 @@ public class PackageService {
                         name,
                         description,
                         new TeamMemberId(createdBy),
-                        new ProjectId(project)),
+                        new ProjectId(projectId),
+                        projectAssociatedTeams),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -54,5 +66,10 @@ public class PackageService {
     @Transactional(readOnly = true)
     public PackageEntity findByName(String name) {
         return packageRepository.findByName(name);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findTeamsByProjectId(String projectId) {
+        return projectRepository.findByProjectId(projectId).getTeams();
     }
 }

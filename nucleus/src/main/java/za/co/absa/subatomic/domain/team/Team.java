@@ -78,6 +78,7 @@ public class Team {
                 .map(TeamMemberId::new)
                 .collect(Collectors.toSet());
 
+
         apply(new TeamMembersAdded(this.teamId, owners, members));
     }
 
@@ -101,6 +102,10 @@ public class Team {
 
     @CommandHandler
     void when(NewDevOpsEnvironment command) {
+        if (!this.teamMembers.contains(command.getRequestedBy()) && !this.owners.contains(command.getRequestedBy())){
+            throw new SecurityException(
+                    "requestedBy member is not a valid member the owning team.");
+        }
         apply(new DevOpsEnvironmentRequested(
                 command.getTeamId(),
                 new DevOpsEnvironment(

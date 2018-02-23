@@ -1,6 +1,7 @@
 package za.co.absa.subatomic.application.application;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +17,8 @@ import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepos
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Service
 public class ApplicationService {
@@ -24,15 +27,21 @@ public class ApplicationService {
 
     private ApplicationRepository applicationRepository;
 
+    private ProjectRepository projectRepository;
+
     public ApplicationService(CommandGateway commandGateway,
-            ApplicationRepository applicationRepository) {
+            ApplicationRepository applicationRepository,
+            ProjectRepository projectRepository) {
         this.commandGateway = commandGateway;
         this.applicationRepository = applicationRepository;
+        this.projectRepository = projectRepository;
     }
 
     public String newApplication(String name, String description,
             String applicationType,
             String projectId, String requestedBy) {
+        Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
+                projectId);
         return commandGateway.sendAndWait(
                 new NewApplication(
                         UUID.randomUUID().toString(),
@@ -40,7 +49,8 @@ public class ApplicationService {
                         description,
                         ApplicationType.valueOf(applicationType),
                         new ProjectId(projectId),
-                        new TeamMemberId(requestedBy)),
+                        new TeamMemberId(requestedBy),
+                        teamsAssociatedWithProject),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -53,6 +63,8 @@ public class ApplicationService {
             String bitbucketRepoRemoteUrl,
             String projectId,
             String requestedBy) {
+        Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
+                projectId);
         return commandGateway.sendAndWait(
                 new RequestApplicationEnvironment(
                         applicationId,
@@ -65,7 +77,8 @@ public class ApplicationService {
                                 .remoteUrl(bitbucketRepoRemoteUrl)
                                 .build(),
                         new ProjectId(projectId),
-                        new TeamMemberId(requestedBy)),
+                        new TeamMemberId(requestedBy),
+                        teamsAssociatedWithProject),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -95,5 +108,10 @@ public class ApplicationService {
             String applicationType) {
         return applicationRepository.findByApplicationType(
                 ApplicationType.valueOf(applicationType.toUpperCase()));
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findTeamsByProjectId(String projectId) {
+        return projectRepository.findByProjectId(projectId).getTeams();
     }
 }
