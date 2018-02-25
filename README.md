@@ -12,7 +12,10 @@ To run Gluon locally using an in memory H2 database:
 $ ./mvnw spring-boot:run -pl nucleus --spring.profiles.active=local
 ```
 
+### `local` Spring profile
+
 The local Spring profile can be setup by following the instructions [here](nucleus/src/etc/atomist-config/README.md).
+To successfully invoke the Atomist webhooks, you **must complete the steps above** before starting Gluon.
 
 By default Gluon will be available at: http://localhost:8080
 
