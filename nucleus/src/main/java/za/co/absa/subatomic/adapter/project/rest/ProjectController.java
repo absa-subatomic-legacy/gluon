@@ -66,7 +66,6 @@ public class ProjectController {
             if (StringUtils.isNotBlank(
                     request.getBitbucketProject().getBitbucketProjectId())) {
                 projectService.confirmBitbucketProjectCreated(id,
-                        request.getCreatedBy(),
                         request.getBitbucketProject().getBitbucketProjectId(),
                         request.getBitbucketProject().getUrl());
             }

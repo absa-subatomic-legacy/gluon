@@ -44,7 +44,8 @@ public class ProjectService {
     public String newProject(String name, String description,
             String createdBy, String teamId) {
         TeamEntity team = findTeamById(teamId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(Collections.singletonList(team));
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                Collections.singletonList(team));
         return commandGateway.sendAndWait(
                 new NewProject(
                         UUID.randomUUID().toString(),
@@ -61,7 +62,8 @@ public class ProjectService {
             String description, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new RequestBitbucketProject(
                         projectId,
@@ -76,20 +78,14 @@ public class ProjectService {
     }
 
     public String confirmBitbucketProjectCreated(String projectId,
-            String actionedBy,
             String bitbucketProjectId, String url) {
-        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
-                projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new AddBitbucketRepository(
                         projectId,
-                        new TeamMemberId(actionedBy),
                         BitbucketProject.builder()
                                 .id(bitbucketProjectId)
                                 .url(url)
-                                .build(),
-                        allMemberAndOwnerIds),
+                                .build()),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -97,7 +93,8 @@ public class ProjectService {
     public String newProjectEnvironment(String projectId, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new NewProjectEnvironment(projectId,
                         new TeamMemberId(requestedBy),
@@ -136,13 +133,13 @@ public class ProjectService {
         return projectRepository.findByProjectId(projectId).getTeams();
     }
 
-    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams){
+    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams) {
         Set<String> teamMemberIds = new HashSet<>();
-        for (TeamEntity team: teams){
-            for (TeamMemberEntity member: team.getMembers()){
+        for (TeamEntity team : teams) {
+            for (TeamMemberEntity member : team.getMembers()) {
                 teamMemberIds.add(member.getMemberId());
             }
-            for (TeamMemberEntity owner: team.getOwners()){
+            for (TeamMemberEntity owner : team.getOwners()) {
                 teamMemberIds.add(owner.getMemberId());
             }
         }

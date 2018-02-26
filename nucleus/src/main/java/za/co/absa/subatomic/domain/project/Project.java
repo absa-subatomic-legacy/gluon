@@ -105,11 +105,6 @@ public class Project {
 
     @CommandHandler
     void when(AddBitbucketRepository command) {
-        if (!command.getAllAssociateProjectOwnerAndMemberIds()
-                .contains(command.getActionedBy().getTeamMemberId())) {
-            throw new SecurityException(
-                    "requestedBy member is not a valid member of any team associated to the owning project.");
-        }
         apply(new BitbucketProjectAdded(
                 new ProjectId(command.getProjectId()),
                 BitbucketProject.builder()
