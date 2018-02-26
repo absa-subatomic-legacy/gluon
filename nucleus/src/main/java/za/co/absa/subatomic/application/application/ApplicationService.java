@@ -1,5 +1,7 @@
 package za.co.absa.subatomic.application.application;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -17,6 +19,7 @@ import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepos
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
@@ -42,6 +45,8 @@ public class ApplicationService {
             String projectId, String requestedBy) {
         Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
                 projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                teamsAssociatedWithProject);
         return commandGateway.sendAndWait(
                 new NewApplication(
                         UUID.randomUUID().toString(),
@@ -50,7 +55,7 @@ public class ApplicationService {
                         ApplicationType.valueOf(applicationType),
                         new ProjectId(projectId),
                         new TeamMemberId(requestedBy),
-                        teamsAssociatedWithProject),
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -65,6 +70,8 @@ public class ApplicationService {
             String requestedBy) {
         Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
                 projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                teamsAssociatedWithProject);
         return commandGateway.sendAndWait(
                 new RequestApplicationEnvironment(
                         applicationId,
@@ -78,7 +85,7 @@ public class ApplicationService {
                                 .build(),
                         new ProjectId(projectId),
                         new TeamMemberId(requestedBy),
-                        teamsAssociatedWithProject),
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -113,5 +120,18 @@ public class ApplicationService {
     @Transactional(readOnly = true)
     public Set<TeamEntity> findTeamsByProjectId(String projectId) {
         return projectRepository.findByProjectId(projectId).getTeams();
+    }
+
+    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams) {
+        Set<String> teamMemberIds = new HashSet<>();
+        for (TeamEntity team : teams) {
+            for (TeamMemberEntity member : team.getMembers()) {
+                teamMemberIds.add(member.getMemberId());
+            }
+            for (TeamMemberEntity owner : team.getOwners()) {
+                teamMemberIds.add(owner.getMemberId());
+            }
+        }
+        return teamMemberIds;
     }
 }

@@ -2,7 +2,6 @@ package za.co.absa.subatomic.domain.project;
 
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,9 +12,6 @@ import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
 
 import za.co.absa.subatomic.domain.pkg.ProjectId;
-import za.co.absa.subatomic.domain.team.TeamMemberId;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Aggregate
 public class Project {
@@ -38,7 +34,8 @@ public class Project {
     @CommandHandler
     public Project(NewProject command) {
 
-        if (!memberBelongsToTeam(command.getCreatedBy(), command.getTeam())) {
+        if (!command.getAllAssociateProjectOwnerAndMemberIds()
+                .contains(command.getCreatedBy().getTeamMemberId())) {
             throw new SecurityException(
                     "createdBy member is not a valid member the owning project team.");
         }
@@ -48,7 +45,7 @@ public class Project {
                 command.getName(),
                 command.getDescription(),
                 command.getCreatedBy(),
-                new TeamId(command.getTeam().getTeamId())));
+                new TeamId(command.getTeam())));
     }
 
     @EventSourcingHandler
@@ -61,8 +58,8 @@ public class Project {
 
     @CommandHandler
     void when(RequestBitbucketProject command) {
-        if (!requesterIsMemberOfAssociatedTeam(command.getRequestedBy(),
-                command.getProjectAssociatedTeams())) {
+        if (!command.getAllAssociateProjectOwnerAndMemberIds()
+                .contains(command.getRequestedBy().getTeamMemberId())) {
             throw new SecurityException(
                     "requestedBy member is not a valid member of any team associated to the owning project.");
         }
@@ -108,6 +105,11 @@ public class Project {
 
     @CommandHandler
     void when(AddBitbucketRepository command) {
+        if (!command.getAllAssociateProjectOwnerAndMemberIds()
+                .contains(command.getActionedBy().getTeamMemberId())) {
+            throw new SecurityException(
+                    "requestedBy member is not a valid member of any team associated to the owning project.");
+        }
         apply(new BitbucketProjectAdded(
                 new ProjectId(command.getProjectId()),
                 BitbucketProject.builder()
@@ -133,8 +135,8 @@ public class Project {
 
     @CommandHandler
     void when(NewProjectEnvironment command) {
-        if (!requesterIsMemberOfAssociatedTeam(command.getRequestedBy(),
-                command.getProjectAssociatedTeams())) {
+        if (!command.getAllAssociateProjectOwnerAndMemberIds()
+                .contains(command.getRequestedBy().getTeamMemberId())) {
             throw new SecurityException(
                     "requestedBy member is not a valid member of any team associated to the owning project.");
         }
@@ -150,28 +152,4 @@ public class Project {
         // I.e. when people can choose which environments they want
     }
 
-    private boolean requesterIsMemberOfAssociatedTeam(TeamMemberId requester,
-            Set<TeamEntity> projectAssociatedTeams) {
-        for (TeamEntity team : projectAssociatedTeams) {
-            if (memberBelongsToTeam(requester, team)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean memberBelongsToTeam(TeamMemberId member, TeamEntity team) {
-        return memberInMemberList(member, team.getMembers())
-                || memberInMemberList(member, team.getOwners());
-    }
-
-    private boolean memberInMemberList(TeamMemberId member,
-            Collection<TeamMemberEntity> memberList) {
-        for (TeamMemberEntity memberEntity : memberList) {
-            if (memberEntity.getMemberId().equals(member.getTeamMemberId())) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

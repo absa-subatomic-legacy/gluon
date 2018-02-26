@@ -1,12 +1,12 @@
 package za.co.absa.subatomic.domain.application;
 
-import lombok.Value;
+import java.util.Set;
+
 import org.axonframework.commandhandling.TargetAggregateIdentifier;
+
+import lombok.Value;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-
-import java.util.Set;
 
 @Value
 public class RequestApplicationEnvironment {
@@ -22,5 +22,5 @@ public class RequestApplicationEnvironment {
 
     private TeamMemberId requestedBy;
 
-    private Set<TeamEntity> projectAssociatedTeams;
+    private Set<String> allAssociateProjectOwnerAndMemberIds;
 }

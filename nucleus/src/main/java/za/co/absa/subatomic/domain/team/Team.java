@@ -19,7 +19,6 @@ public class Team {
 
     @AggregateIdentifier
     private String teamId;
-
     private String name;
 
     private String description;
@@ -70,6 +69,13 @@ public class Team {
 
     @CommandHandler
     void when(AddTeamMembers command) {
+
+        if (!this.teamMembers.contains(command.getActionedBy())
+                && !this.owners.contains(command.getActionedBy())) {
+            throw new SecurityException(
+                    "createdBy member is not a valid member the owning team.");
+        }
+
         Set<TeamMemberId> owners = command.getOwnerMemberIds().stream()
                 .map(TeamMemberId::new)
                 .collect(Collectors.toSet());
@@ -77,7 +83,6 @@ public class Team {
         Set<TeamMemberId> members = command.getTeamMemberIds().stream()
                 .map(TeamMemberId::new)
                 .collect(Collectors.toSet());
-
 
         apply(new TeamMembersAdded(this.teamId, owners, members));
     }
@@ -102,7 +107,8 @@ public class Team {
 
     @CommandHandler
     void when(NewDevOpsEnvironment command) {
-        if (!this.teamMembers.contains(command.getRequestedBy()) && !this.owners.contains(command.getRequestedBy())){
+        if (!this.teamMembers.contains(command.getRequestedBy())
+                && !this.owners.contains(command.getRequestedBy())) {
             throw new SecurityException(
                     "requestedBy member is not a valid member the owning team.");
         }

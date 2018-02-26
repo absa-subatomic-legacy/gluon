@@ -1,5 +1,7 @@
 package za.co.absa.subatomic.application.pkg;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -9,6 +11,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import za.co.absa.subatomic.domain.pkg.NewPackage;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.pkg.view.jpa.PackageEntity;
 import za.co.absa.subatomic.infrastructure.pkg.view.jpa.PackageRepository;
 
@@ -40,6 +43,8 @@ public class PackageService {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
 
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
+
         return commandGateway.sendAndWait(
                 new NewPackage(
                         UUID.randomUUID().toString(),
@@ -48,7 +53,7 @@ public class PackageService {
                         description,
                         new TeamMemberId(createdBy),
                         new ProjectId(projectId),
-                        projectAssociatedTeams),
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -71,5 +76,18 @@ public class PackageService {
     @Transactional(readOnly = true)
     public Set<TeamEntity> findTeamsByProjectId(String projectId) {
         return projectRepository.findByProjectId(projectId).getTeams();
+    }
+
+    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams){
+        Set<String> teamMemberIds = new HashSet<>();
+        for (TeamEntity team: teams){
+            for (TeamMemberEntity member: team.getMembers()){
+                teamMemberIds.add(member.getMemberId());
+            }
+            for (TeamMemberEntity owner: team.getOwners()){
+                teamMemberIds.add(owner.getMemberId());
+            }
+        }
+        return teamMemberIds;
     }
 }

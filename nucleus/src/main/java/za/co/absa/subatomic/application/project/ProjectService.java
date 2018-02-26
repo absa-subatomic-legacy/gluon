@@ -1,5 +1,8 @@
 package za.co.absa.subatomic.application.project;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -15,6 +18,7 @@ import za.co.absa.subatomic.domain.project.NewProject;
 import za.co.absa.subatomic.domain.project.NewProjectEnvironment;
 import za.co.absa.subatomic.domain.project.RequestBitbucketProject;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -40,13 +44,15 @@ public class ProjectService {
     public String newProject(String name, String description,
             String createdBy, String teamId) {
         TeamEntity team = findTeamById(teamId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(Collections.singletonList(team));
         return commandGateway.sendAndWait(
                 new NewProject(
                         UUID.randomUUID().toString(),
                         name,
                         description,
                         new TeamMemberId(createdBy),
-                        team),
+                        teamId,
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -55,6 +61,7 @@ public class ProjectService {
             String description, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new RequestBitbucketProject(
                         projectId,
@@ -63,20 +70,26 @@ public class ProjectService {
                                 .description(description)
                                 .build(),
                         new TeamMemberId(requestedBy),
-                        projectAssociatedTeams),
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
 
     public String confirmBitbucketProjectCreated(String projectId,
+            String actionedBy,
             String bitbucketProjectId, String url) {
+        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
+                projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new AddBitbucketRepository(
                         projectId,
+                        new TeamMemberId(actionedBy),
                         BitbucketProject.builder()
                                 .id(bitbucketProjectId)
                                 .url(url)
-                                .build()),
+                                .build(),
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -84,10 +97,11 @@ public class ProjectService {
     public String newProjectEnvironment(String projectId, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new NewProjectEnvironment(projectId,
                         new TeamMemberId(requestedBy),
-                        projectAssociatedTeams),
+                        allMemberAndOwnerIds),
                 1,
                 TimeUnit.SECONDS);
     }
@@ -121,4 +135,18 @@ public class ProjectService {
     public Set<TeamEntity> findTeamsByProjectId(String projectId) {
         return projectRepository.findByProjectId(projectId).getTeams();
     }
+
+    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams){
+        Set<String> teamMemberIds = new HashSet<>();
+        for (TeamEntity team: teams){
+            for (TeamMemberEntity member: team.getMembers()){
+                teamMemberIds.add(member.getMemberId());
+            }
+            for (TeamMemberEntity owner: team.getOwners()){
+                teamMemberIds.add(owner.getMemberId());
+            }
+        }
+        return teamMemberIds;
+    }
+
 }

@@ -1,9 +1,11 @@
 package za.co.absa.subatomic.domain.project;
 
-import lombok.Value;
+import java.util.Set;
+
 import org.axonframework.commandhandling.TargetAggregateIdentifier;
+
+import lombok.Value;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Value
 public class NewProject {
@@ -17,5 +19,7 @@ public class NewProject {
 
     private TeamMemberId createdBy;
 
-    private TeamEntity team;
+    private String team;
+
+    private Set<String> allAssociateProjectOwnerAndMemberIds;
 }
