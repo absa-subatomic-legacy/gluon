@@ -1,7 +1,7 @@
 {
 	"info": {
 		"name": "Gluon",
-		"_postman_id": "6c0b66c1-4a1b-6d69-9bc5-39d58a2da889",
+		"_postman_id": "94895205-e792-5057-8505-f3fb5a27b369",
 		"description": "Gluon API resources",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -251,7 +251,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"members\": [\n\t\t{\n\t\t\t\"memberId\": \"04800c34-9941-4ff4-87a7-69904b53c410\"\n\t\t}\n\t]\n}"
+					"raw": "{\n\t\"members\": [\n\t\t{\n\t\t\t\"memberId\": \"04800c34-9941-4ff4-87a7-69904b53c410\"\n\t\t}\n\t],\n\t\"createdBy\": \"eae4fc04-d4a9-4626-9988-614d82f3d651\"\n}"
 				},
 				"url": {
 					"raw": "http://localhost:8080/teams/60250f90-383b-4f88-82e9-723386972a98",
