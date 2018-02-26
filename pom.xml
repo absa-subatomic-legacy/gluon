@@ -12,6 +12,13 @@
     <name>Gluon</name>
     <description>Gluon is a Kubernetes/OpenShift platform management and automation system</description>
 
+    <scm>
+        <connection>scm:git:git@github.com:absa-subatomic/gluon.git</connection>
+        <developerConnection>scm:git:git@github.com:absa-subatomic/gluon.git</developerConnection>
+        <url>https://github.com/absa-subatomic/gluon</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <modules>
         <module>nucleus</module>
     </modules>
