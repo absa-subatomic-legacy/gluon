@@ -1,7 +1,10 @@
 package za.co.absa.subatomic.domain.application;
 
-import lombok.Value;
+import java.util.Set;
+
 import org.axonframework.commandhandling.TargetAggregateIdentifier;
+
+import lombok.Value;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 
@@ -20,4 +23,6 @@ public class NewApplication {
     private ProjectId projectId;
 
     private TeamMemberId requestedBy;
+
+    private Set<String> allAssociateProjectOwnerAndMemberIds;
 }

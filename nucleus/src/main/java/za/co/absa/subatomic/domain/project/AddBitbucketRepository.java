@@ -1,7 +1,8 @@
 package za.co.absa.subatomic.domain.project;
 
-import lombok.Value;
 import org.axonframework.commandhandling.TargetAggregateIdentifier;
+
+import lombok.Value;
 
 @Value
 public class AddBitbucketRepository {

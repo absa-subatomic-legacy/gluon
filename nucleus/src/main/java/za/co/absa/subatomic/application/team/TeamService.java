@@ -6,8 +6,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.domain.team.AddSlackIdentity;
 import za.co.absa.subatomic.domain.team.AddTeamMembers;
@@ -24,9 +27,6 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -78,10 +78,12 @@ public class TeamService {
 
     }
 
-    public String addTeamMembers(String teamId, List<String> teamOwnerIds,
+    public String addTeamMembers(String teamId, String actionedBy,
+            List<String> teamOwnerIds,
             List<String> teamMemberIds) {
         return commandGateway.sendAndWait(new AddTeamMembers(
                 teamId,
+                new TeamMemberId(actionedBy),
                 teamOwnerIds,
                 teamMemberIds),
                 1,

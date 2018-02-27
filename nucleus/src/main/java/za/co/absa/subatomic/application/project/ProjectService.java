@@ -1,10 +1,17 @@
 package za.co.absa.subatomic.application.project;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import za.co.absa.subatomic.domain.project.AddBitbucketRepository;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.NewProject;
@@ -12,11 +19,11 @@ import za.co.absa.subatomic.domain.project.NewProjectEnvironment;
 import za.co.absa.subatomic.domain.project.RequestBitbucketProject;
 import za.co.absa.subatomic.domain.project.TeamId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 
 @Service
 public class ProjectService {
@@ -25,27 +32,39 @@ public class ProjectService {
 
     private ProjectRepository projectRepository;
 
+    private TeamRepository teamRepository;
+
     public ProjectService(CommandGateway commandGateway,
-            ProjectRepository projectRepository) {
+            ProjectRepository projectRepository,
+            TeamRepository teamRepository) {
         this.commandGateway = commandGateway;
         this.projectRepository = projectRepository;
+        this.teamRepository = teamRepository;
     }
 
     public String newProject(String name, String description,
-            String createdBy, String team) {
+            String createdBy, String teamId) {
+        TeamEntity team = findTeamById(teamId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                Collections.singletonList(team));
         return commandGateway.sendAndWait(
                 new NewProject(
                         UUID.randomUUID().toString(),
                         name,
                         description,
                         new TeamMemberId(createdBy),
-                        new TeamId(team)),
+                        new TeamId(teamId),
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
 
     public String requestBitbucketProject(String projectId, String name,
             String description, String requestedBy) {
+        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
+                projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new RequestBitbucketProject(
                         projectId,
@@ -53,7 +72,8 @@ public class ProjectService {
                                 .name(name)
                                 .description(description)
                                 .build(),
-                        new TeamMemberId(requestedBy)),
+                        new TeamMemberId(requestedBy),
+                        allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
     }
@@ -72,9 +92,14 @@ public class ProjectService {
     }
 
     public String newProjectEnvironment(String projectId, String requestedBy) {
+        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
+                projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new NewProjectEnvironment(projectId,
-                        new TeamMemberId(requestedBy)),
+                        new TeamMemberId(requestedBy),
+                        allMemberAndOwnerIds),
                 1,
                 TimeUnit.SECONDS);
     }
@@ -98,4 +123,28 @@ public class ProjectService {
     public List<ProjectEntity> findByTeamName(String teamName) {
         return projectRepository.findByTeams_Name(teamName);
     }
+
+    @Transactional(readOnly = true)
+    public TeamEntity findTeamById(String teamId) {
+        return teamRepository.findByTeamId(teamId);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findTeamsByProjectId(String projectId) {
+        return projectRepository.findByProjectId(projectId).getTeams();
+    }
+
+    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams) {
+        Set<String> teamMemberIds = new HashSet<>();
+        for (TeamEntity team : teams) {
+            for (TeamMemberEntity member : team.getMembers()) {
+                teamMemberIds.add(member.getMemberId());
+            }
+            for (TeamMemberEntity owner : team.getOwners()) {
+                teamMemberIds.add(owner.getMemberId());
+            }
+        }
+        return teamMemberIds;
+    }
+
 }

@@ -1,5 +1,7 @@
 package za.co.absa.subatomic.domain.pkg;
 
+import java.util.Set;
+
 import lombok.Value;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 
@@ -17,4 +19,7 @@ public class NewPackage {
     private TeamMemberId createdBy;
 
     private ProjectId project;
+
+    private Set<String> allAssociateProjectOwnerAndMemberIds;
+
 }

@@ -14,6 +14,9 @@ import org.axonframework.spring.stereotype.Aggregate;
 
 import com.github.slugify.Slugify;
 
+import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
+
 @Aggregate
 public class Team {
 
@@ -70,15 +73,22 @@ public class Team {
 
     @CommandHandler
     void when(AddTeamMembers command) {
-        Set<TeamMemberId> owners = command.getOwnerMemberIds().stream()
+        if (!this.teamMembers.contains(command.getActionedBy())
+                && !this.owners.contains(command.getActionedBy())) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "CreatedBy member {0} is not a valid member the owning team {1}.",
+                    command.getActionedBy(), command.getTeamId()));
+        }
+
+        Set<TeamMemberId> newOwners = command.getOwnerMemberIds().stream()
                 .map(TeamMemberId::new)
                 .collect(Collectors.toSet());
 
-        Set<TeamMemberId> members = command.getTeamMemberIds().stream()
+        Set<TeamMemberId> newMembers = command.getTeamMemberIds().stream()
                 .map(TeamMemberId::new)
                 .collect(Collectors.toSet());
 
-        apply(new TeamMembersAdded(this.teamId, owners, members));
+        apply(new TeamMembersAdded(this.teamId, newOwners, newMembers));
     }
 
     @EventSourcingHandler
@@ -101,6 +111,12 @@ public class Team {
 
     @CommandHandler
     void when(NewDevOpsEnvironment command) {
+        if (!this.teamMembers.contains(command.getRequestedBy())
+                && !this.owners.contains(command.getRequestedBy())) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member the owning team {1}.",
+                    command.getRequestedBy(), command.getTeamId()));
+        }
         apply(new DevOpsEnvironmentRequested(
                 command.getTeamId(),
                 new DevOpsEnvironment(
@@ -119,15 +135,20 @@ public class Team {
                 .contains(command.getMembershipRequest().getRequestedBy()) ||
                 this.owners.contains(
                         command.getMembershipRequest().getRequestedBy())) {
-            throw new IllegalArgumentException(
-                    "Requesting user is already a member of the team.");
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Requesting user {0} is already a member of the team {1}.",
+                    command.getMembershipRequest().getRequestedBy()
+                            .getTeamMemberId(),
+                    command.getTeamId()));
         }
         for (MembershipRequest request : this.membershipRequests) {
             if (request.getRequestStatus() == MembershipRequestStatus.OPEN &&
                     request.getRequestedBy().equals(
                             command.getMembershipRequest().getRequestedBy())) {
-                throw new IllegalStateException(
-                        "An open membership request already exists for requesting user");
+                throw new InvalidRequestException(MessageFormat.format(
+                        "An open membership request to team {0} already exists for requesting user {1}",
+                        command.getTeamId(), command.getMembershipRequest()
+                                .getRequestedBy().getTeamMemberId()));
             }
         }
         apply(new MembershipRequestCreated(
@@ -148,7 +169,7 @@ public class Team {
                         .getMembershipRequestId());
 
         if (existingMembershipRequest == null) {
-            throw new NullPointerException(MessageFormat.format(
+            throw new InvalidRequestException(MessageFormat.format(
                     "Membership Request with id {0} does not exist for team {1}.",
                     command.getMembershipRequest().getMembershipRequestId(),
                     this.name));
@@ -156,14 +177,14 @@ public class Team {
 
         if (existingMembershipRequest
                 .getRequestStatus() != MembershipRequestStatus.OPEN) {
-            throw new IllegalStateException(MessageFormat.format(
+            throw new InvalidRequestException(MessageFormat.format(
                     "Cannot update MembershipRequest with id {0} which is not in OPEN state.",
                     command.getMembershipRequest().getMembershipRequestId()));
         }
 
         if (!this.owners
                 .contains(command.getMembershipRequest().getApprovedBy())) {
-            throw new IllegalArgumentException(MessageFormat.format(
+            throw new InvalidRequestException(MessageFormat.format(
                     "Member {0} is not an owner of team {1} so cannot close request {2}",
                     command.getMembershipRequest().getApprovedBy()
                             .getTeamMemberId(),

@@ -11,7 +11,10 @@ public class AddTeamMembers {
     @TargetAggregateIdentifier
     private String teamId;
 
+    private TeamMemberId actionedBy;
+
     private List<String> ownerMemberIds;
 
     private List<String> teamMemberIds;
+
 }
