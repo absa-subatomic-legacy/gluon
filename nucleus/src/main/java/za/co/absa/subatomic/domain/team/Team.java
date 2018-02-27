@@ -15,6 +15,7 @@ import org.axonframework.spring.stereotype.Aggregate;
 import com.github.slugify.Slugify;
 
 import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 
 @Aggregate
 public class Team {
@@ -72,7 +73,6 @@ public class Team {
 
     @CommandHandler
     void when(AddTeamMembers command) {
-
         if (!this.teamMembers.contains(command.getActionedBy())
                 && !this.owners.contains(command.getActionedBy())) {
             throw new ApplicationAuthorisationException(MessageFormat.format(
@@ -135,15 +135,20 @@ public class Team {
                 .contains(command.getMembershipRequest().getRequestedBy()) ||
                 this.owners.contains(
                         command.getMembershipRequest().getRequestedBy())) {
-            throw new IllegalArgumentException(
-                    "Requesting user is already a member of the team.");
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Requesting user {0} is already a member of the team {1}.",
+                    command.getMembershipRequest().getRequestedBy()
+                            .getTeamMemberId(),
+                    command.getTeamId()));
         }
         for (MembershipRequest request : this.membershipRequests) {
             if (request.getRequestStatus() == MembershipRequestStatus.OPEN &&
                     request.getRequestedBy().equals(
                             command.getMembershipRequest().getRequestedBy())) {
-                throw new IllegalStateException(
-                        "An open membership request already exists for requesting user");
+                throw new InvalidRequestException(MessageFormat.format(
+                        "An open membership request to team {0} already exists for requesting user {1}",
+                        command.getTeamId(), command.getMembershipRequest()
+                                .getRequestedBy().getTeamMemberId()));
             }
         }
         apply(new MembershipRequestCreated(
@@ -164,7 +169,7 @@ public class Team {
                         .getMembershipRequestId());
 
         if (existingMembershipRequest == null) {
-            throw new NullPointerException(MessageFormat.format(
+            throw new InvalidRequestException(MessageFormat.format(
                     "Membership Request with id {0} does not exist for team {1}.",
                     command.getMembershipRequest().getMembershipRequestId(),
                     this.name));
@@ -172,14 +177,14 @@ public class Team {
 
         if (existingMembershipRequest
                 .getRequestStatus() != MembershipRequestStatus.OPEN) {
-            throw new IllegalStateException(MessageFormat.format(
+            throw new InvalidRequestException(MessageFormat.format(
                     "Cannot update MembershipRequest with id {0} which is not in OPEN state.",
                     command.getMembershipRequest().getMembershipRequestId()));
         }
 
         if (!this.owners
                 .contains(command.getMembershipRequest().getApprovedBy())) {
-            throw new IllegalArgumentException(MessageFormat.format(
+            throw new InvalidRequestException(MessageFormat.format(
                     "Member {0} is not an owner of team {1} so cannot close request {2}",
                     command.getMembershipRequest().getApprovedBy()
                             .getTeamMemberId(),

@@ -9,16 +9,25 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler
         extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = { ApplicationAuthorisationException.class })
-    protected ResponseEntity<Object> handleConflict(RuntimeException ex,
+    protected ResponseEntity<Object> handleAuthException(RuntimeException ex,
             WebRequest request) {
         String bodyOfResponse = ex.getMessage();
         return handleExceptionInternal(ex, bodyOfResponse,
                 new HttpHeaders(), HttpStatus.FORBIDDEN, request);
+    }
+
+    @ExceptionHandler(value = { InvalidRequestException.class })
+    protected ResponseEntity<Object> handleBadRequest(RuntimeException ex,
+            WebRequest request) {
+        String bodyOfResponse = ex.getMessage();
+        return handleExceptionInternal(ex, bodyOfResponse,
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
     }
 }
