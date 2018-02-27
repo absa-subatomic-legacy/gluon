@@ -2,11 +2,14 @@ package za.co.absa.subatomic.domain.application;
 
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
 
+import java.text.MessageFormat;
+
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
 
+import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 
@@ -36,8 +39,9 @@ public class Application {
     public Application(NewApplication command) {
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
                 .contains(command.getRequestedBy().getTeamMemberId())) {
-            throw new SecurityException(
-                    "requestedBy member is not a valid member of any team associated to the owning project.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getRequestedBy()));
         }
 
         apply(new ApplicationCreated(
@@ -62,8 +66,9 @@ public class Application {
     void when(RequestApplicationEnvironment command) {
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
                 .contains(command.getRequestedBy().getTeamMemberId())) {
-            throw new SecurityException(
-                    "requestedBy member is not a valid member of any team associated to the owning project.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getRequestedBy()));
         }
         BitbucketGitRepository bitbucketRepository = command
                 .getBitbucketRepository();

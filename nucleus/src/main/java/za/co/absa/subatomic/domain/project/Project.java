@@ -2,6 +2,7 @@ package za.co.absa.subatomic.domain.project;
 
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
 
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,6 +12,7 @@ import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
 
+import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 
 @Aggregate
@@ -36,8 +38,9 @@ public class Project {
 
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
                 .contains(command.getCreatedBy().getTeamMemberId())) {
-            throw new SecurityException(
-                    "createdBy member is not a valid member the owning project team.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "CreatedBy member {0} is not a valid member the owning team {1}.",
+                    command.getCreatedBy(), command.getTeam().getTeamId()));
         }
 
         apply(new ProjectCreated(
@@ -45,7 +48,7 @@ public class Project {
                 command.getName(),
                 command.getDescription(),
                 command.getCreatedBy(),
-                new TeamId(command.getTeam())));
+                command.getTeam()));
     }
 
     @EventSourcingHandler
@@ -60,8 +63,9 @@ public class Project {
     void when(RequestBitbucketProject command) {
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
                 .contains(command.getRequestedBy().getTeamMemberId())) {
-            throw new SecurityException(
-                    "requestedBy member is not a valid member of any team associated to the owning project.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getRequestedBy()));
         }
         // TODO check for duplicate keys
         BitbucketProject bitbucketProject = command.getBitbucketProject();
@@ -132,8 +136,9 @@ public class Project {
     void when(NewProjectEnvironment command) {
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
                 .contains(command.getRequestedBy().getTeamMemberId())) {
-            throw new SecurityException(
-                    "requestedBy member is not a valid member of any team associated to the owning project.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getRequestedBy()));
         }
         apply(new ProjectEnvironmentRequested(
                 command.getProjectId(),

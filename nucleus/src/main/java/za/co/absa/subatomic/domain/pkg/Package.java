@@ -2,10 +2,14 @@ package za.co.absa.subatomic.domain.pkg;
 
 import static org.axonframework.commandhandling.model.AggregateLifecycle.apply;
 
+import java.text.MessageFormat;
+
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.model.AggregateIdentifier;
 import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
+
+import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 
 @Aggregate
 public class Package {
@@ -30,8 +34,9 @@ public class Package {
 
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
                 .contains(command.getCreatedBy().getTeamMemberId())) {
-            throw new SecurityException(
-                    "createdBy member is not a valid member of any team associated to the owning project.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "CreatedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getCreatedBy()));
         }
 
         PackageType packageType = validatePackageType(command.getPackageType());

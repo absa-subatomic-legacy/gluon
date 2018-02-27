@@ -17,6 +17,7 @@ import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.NewProject;
 import za.co.absa.subatomic.domain.project.NewProjectEnvironment;
 import za.co.absa.subatomic.domain.project.RequestBitbucketProject;
+import za.co.absa.subatomic.domain.project.TeamId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -52,7 +53,7 @@ public class ProjectService {
                         name,
                         description,
                         new TeamMemberId(createdBy),
-                        teamId,
+                        new TeamId(teamId),
                         allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);

@@ -14,11 +14,14 @@ import org.axonframework.spring.stereotype.Aggregate;
 
 import com.github.slugify.Slugify;
 
+import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
+
 @Aggregate
 public class Team {
 
     @AggregateIdentifier
     private String teamId;
+
     private String name;
 
     private String description;
@@ -72,19 +75,20 @@ public class Team {
 
         if (!this.teamMembers.contains(command.getActionedBy())
                 && !this.owners.contains(command.getActionedBy())) {
-            throw new SecurityException(
-                    "createdBy member is not a valid member the owning team.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "CreatedBy member {0} is not a valid member the owning team {1}.",
+                    command.getActionedBy(), command.getTeamId()));
         }
 
-        Set<TeamMemberId> owners = command.getOwnerMemberIds().stream()
+        Set<TeamMemberId> newOwners = command.getOwnerMemberIds().stream()
                 .map(TeamMemberId::new)
                 .collect(Collectors.toSet());
 
-        Set<TeamMemberId> members = command.getTeamMemberIds().stream()
+        Set<TeamMemberId> newMembers = command.getTeamMemberIds().stream()
                 .map(TeamMemberId::new)
                 .collect(Collectors.toSet());
 
-        apply(new TeamMembersAdded(this.teamId, owners, members));
+        apply(new TeamMembersAdded(this.teamId, newOwners, newMembers));
     }
 
     @EventSourcingHandler
@@ -109,8 +113,9 @@ public class Team {
     void when(NewDevOpsEnvironment command) {
         if (!this.teamMembers.contains(command.getRequestedBy())
                 && !this.owners.contains(command.getRequestedBy())) {
-            throw new SecurityException(
-                    "requestedBy member is not a valid member the owning team.");
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member the owning team {1}.",
+                    command.getRequestedBy(), command.getTeamId()));
         }
         apply(new DevOpsEnvironmentRequested(
                 command.getTeamId(),

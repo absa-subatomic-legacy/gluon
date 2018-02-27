@@ -19,7 +19,7 @@ public class NewProject {
 
     private TeamMemberId createdBy;
 
-    private String team;
+    private TeamId team;
 
     private Set<String> allAssociateProjectOwnerAndMemberIds;
 }
