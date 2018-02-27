@@ -3,16 +3,17 @@ package za.co.absa.subatomic.infrastructure.project.view.jpa;
 import java.util.Collections;
 
 import org.axonframework.eventhandling.EventHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
 import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
-
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class ProjectHandler {
@@ -41,13 +42,16 @@ public class ProjectHandler {
         TeamMemberEntity createdBy = teamMemberRepository
                 .findByMemberId(event.getCreatedBy().getTeamMemberId());
 
+        TeamEntity creatingTeam = teamRepository
+                .findByTeamId(event.getTeam().getTeamId());
+
         ProjectEntity projectEntity = ProjectEntity.builder()
                 .projectId(event.getProjectId())
                 .name(event.getName())
                 .description(event.getDescription())
                 .createdBy(createdBy)
-                .teams(Collections.singleton(teamRepository
-                        .findByTeamId(event.getTeam().getTeamId())))
+                .owningTeam(creatingTeam)
+                .teams(Collections.singleton(creatingTeam))
                 .build();
 
         projectRepository.save(projectEntity);

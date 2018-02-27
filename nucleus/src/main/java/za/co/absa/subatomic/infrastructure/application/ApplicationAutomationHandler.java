@@ -3,9 +3,13 @@ package za.co.absa.subatomic.infrastructure.application;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.axonframework.eventhandling.EventHandler;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.application.ApplicationEnvironmentRequested;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
@@ -19,10 +23,7 @@ import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Component
 @Slf4j
@@ -75,6 +76,8 @@ public class ApplicationAutomationHandler {
                             .getUserId());
         }
 
+        TeamEntity owningTeam = projectEntity.getOwningTeam();
+
         ApplicationEnvironmentRequestedWithDetails environmentRequested = new ApplicationEnvironmentRequestedWithDetails(
                 ApplicationCreated.builder()
                         .applicationId(applicationEntity.getApplicationId())
@@ -102,6 +105,9 @@ public class ApplicationAutomationHandler {
                         projectEntity.getBitbucketProject().getName(),
                         projectEntity.getBitbucketProject().getDescription(),
                         projectEntity.getBitbucketProject().getUrl()),
+                new Team(owningTeam.getTeamId(), owningTeam.getName(),
+                        new za.co.absa.subatomic.domain.team.SlackIdentity(
+                                owningTeam.getSlackDetails().getTeamChannel())),
                 projectEntity.getTeams().stream()
                         .map(teamEntity -> new Team(
                                 teamEntity.getTeamId(),
@@ -138,6 +144,8 @@ public class ApplicationAutomationHandler {
         private BitbucketGitRepository bitbucketRepository;
 
         private BitbucketProject bitbucketProject;
+
+        private Team owningTeam;
 
         private List<Team> teams;
 
