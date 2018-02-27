@@ -51,6 +51,9 @@ public class ProjectEntity {
     @ManyToOne
     private TeamMemberEntity createdBy;
 
+    @OneToOne
+    private TeamEntity owningTeam;
+
     @ManyToMany
     private Set<TeamEntity> teams = new HashSet<>();
 

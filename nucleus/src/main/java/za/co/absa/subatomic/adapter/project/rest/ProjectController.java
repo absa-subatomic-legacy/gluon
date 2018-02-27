@@ -138,7 +138,8 @@ public class ProjectController {
                 resource.setDescription(entity.getDescription());
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
-
+                resource.setOwningTeam(new TeamResourceAssembler()
+                        .toResource(entity.getOwningTeam()));
                 resource.setTeams(
                         new TeamResourceAssembler()
                                 .toResources(entity.getTeams()));

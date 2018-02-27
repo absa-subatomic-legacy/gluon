@@ -23,6 +23,8 @@ public class ProjectResource extends ResourceSupport {
 
     private BitbucketProjectResource bitbucketProject;
 
+    private TeamResource owningTeam;
+
     private List<TeamResource> teams = new ArrayList<>();
 
     private ProjectEnvironment projectEnvironment;

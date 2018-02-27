@@ -24,6 +24,8 @@ public class Project {
 
     private BitbucketProject bitbucketProject;
 
+    private TeamId owningTeam;
+
     private Set<TeamId> teams = new HashSet<>();
 
     Project() {
@@ -45,6 +47,7 @@ public class Project {
         this.projectId = event.getProjectId();
         this.name = event.getName();
         this.description = event.getDescription();
+        this.owningTeam = event.getTeam();
         this.teams.add(event.getTeam());
     }
 
