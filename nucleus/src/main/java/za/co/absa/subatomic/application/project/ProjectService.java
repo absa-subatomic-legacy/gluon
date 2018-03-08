@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.application.project;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.project.AddBitbucketRepository;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.NewProject;
@@ -44,6 +46,14 @@ public class ProjectService {
 
     public String newProject(String name, String description,
             String createdBy, String teamId) {
+
+        ProjectEntity existingProject = this.findByName(name);
+        if (existingProject != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested project name {0} is not available.",
+                    name));
+        }
+
         TeamEntity team = findTeamById(teamId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
                 Collections.singletonList(team));

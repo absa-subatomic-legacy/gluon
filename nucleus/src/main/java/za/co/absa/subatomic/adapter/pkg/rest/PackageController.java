@@ -61,7 +61,7 @@ public class PackageController {
 
     @GetMapping("/{id}")
     PackageResource get(@PathVariable String id) {
-        return assembler.toResource(packageService.findByProjectId(id));
+        return assembler.toResource(packageService.findByApplicationId(id));
     }
 
     @GetMapping

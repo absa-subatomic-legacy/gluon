@@ -8,4 +8,8 @@ public interface PackageRepository
     PackageEntity findByApplicationId(String applicationId);
 
     PackageEntity findByName(String name);
+
+    PackageEntity findByNameAndProjectName(String name, String projectName);
+
+    PackageEntity findByNameAndProjectId(String name, Long projectId);
 }

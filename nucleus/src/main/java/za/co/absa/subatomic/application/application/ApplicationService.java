@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.application.application;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -8,17 +9,18 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.application.NewApplication;
 import za.co.absa.subatomic.domain.application.RequestApplicationEnvironment;
+import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepository;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -43,6 +45,15 @@ public class ApplicationService {
     public String newApplication(String name, String description,
             String applicationType,
             String projectId, String requestedBy) {
+
+        ApplicationEntity existingApplication = this
+                .findByNameAndProjectName(name, projectId);
+        if (existingApplication != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Application with name {0} already exists in project with id {1}.",
+                    name, projectId));
+        }
+
         Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -68,6 +79,7 @@ public class ApplicationService {
             String bitbucketRepoRemoteUrl,
             String projectId,
             String requestedBy) {
+
         Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -108,6 +120,20 @@ public class ApplicationService {
     @Transactional(readOnly = true)
     public List<ApplicationEntity> findByProjectName(String projectName) {
         return applicationRepository.findByProjectName(projectName);
+    }
+
+    @Transactional(readOnly = true)
+    public ApplicationEntity findByNameAndProjectName(String name,
+            String projectName) {
+        return applicationRepository.findByNameAndProjectName(name,
+                projectName);
+    }
+
+    @Transactional(readOnly = true)
+    public ApplicationEntity findByNameAndProjectId(String name,
+            String projectId) {
+        return applicationRepository.findByNameAndProjectId(name,
+                Long.valueOf(projectId));
     }
 
     @Transactional(readOnly = true)
