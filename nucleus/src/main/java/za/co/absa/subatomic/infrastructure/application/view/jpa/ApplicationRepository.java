@@ -11,10 +11,14 @@ public interface ApplicationRepository
 
     ApplicationEntity findByApplicationId(String applicationId);
 
-    ApplicationEntity findByName(String name);
+    List<ApplicationEntity> findByName(String name);
 
     List<ApplicationEntity> findByProjectName(String projectName);
 
     List<ApplicationEntity> findByApplicationType(
             ApplicationType applicationType);
+
+    ApplicationEntity findByNameAndProjectName(String name, String projectName);
+
+    ApplicationEntity findByNameAndProjectId(String name, Long projectId);
 }

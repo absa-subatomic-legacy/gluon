@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.application.team;
 
+import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
+import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.team.AddSlackIdentity;
 import za.co.absa.subatomic.domain.team.AddTeamMembers;
 import za.co.absa.subatomic.domain.team.MembershipRequest;
@@ -47,8 +49,12 @@ public class TeamService {
     }
 
     public String newTeam(String name, String description, String createdBy) {
-
-        // TODO where does the check go for duplicate Teams?
+        TeamEntity existingTeam = this.findByName(name);
+        if (existingTeam != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested team name {0} is not available.",
+                    name));
+        }
 
         return commandGateway.sendAndWait(
                 new NewTeam(
@@ -63,7 +69,12 @@ public class TeamService {
     public String newTeamFromSlack(String name, String description,
             String createdBy,
             String teamChannel) {
-
+        TeamEntity existingTeam = this.findByName(name);
+        if (existingTeam != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested team name {0} is not available.",
+                    name));
+        }
         // TODO use the TeamMemberService to add a member for the owner
 
         return commandGateway.sendAndWait(

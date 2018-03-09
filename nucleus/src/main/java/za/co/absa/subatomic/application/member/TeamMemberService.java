@@ -1,10 +1,12 @@
 package za.co.absa.subatomic.application.member;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.member.AddSlackDetails;
 import za.co.absa.subatomic.domain.member.NewTeamMember;
 import za.co.absa.subatomic.domain.member.NewTeamMemberFromSlack;
@@ -30,6 +32,19 @@ public class TeamMemberService {
 
     public String newTeamMember(String firstName, String lastName,
             String email, String domainUsername) {
+        TeamMemberEntity existingMember = this.findByEmail(email);
+        if (existingMember != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested email address {0} is already in use.",
+                    email));
+        }
+
+        existingMember = this.findByEmail(email);
+        if (existingMember != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested domain username {0} is already in use.",
+                    domainUsername));
+        }
         return commandGateway.sendAndWait(
                 new NewTeamMember(
                         UUID.randomUUID().toString(),
@@ -76,6 +91,11 @@ public class TeamMemberService {
     @Transactional(readOnly = true)
     public TeamMemberEntity findByEmail(String email) {
         return teamMemberRepository.findByEmail(email);
+    }
+
+    @Transactional(readOnly = true)
+    public TeamMemberEntity findByDomainUsername(String domainUsername) {
+        return teamMemberRepository.findByDomainUsername(domainUsername);
     }
 
     @Transactional(readOnly = true)

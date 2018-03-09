@@ -90,21 +90,21 @@ public class ApplicationController {
             @RequestParam(required = false) String projectName) {
         List<ApplicationResource> applications = new ArrayList<>();
 
-        if (StringUtils.isNotBlank(name)) {
+        if (!StringUtils.isAnyBlank(name, projectName)) {
             applications.add(
-                    assembler.toResource(applicationService.findByName(name)));
+                    assembler.toResource(applicationService
+                            .findByNameAndProjectName(name, projectName)));
+        }
+        else if (StringUtils.isNotBlank(projectName)) {
+            applications.addAll(
+                    assembler.toResources(
+                            applicationService.findByProjectName(projectName)));
         }
 
         if (StringUtils.isNotBlank(applicationType)) {
             applications.addAll(
                     assembler.toResources(applicationService
                             .findByApplicationType(applicationType)));
-        }
-
-        if (StringUtils.isNotBlank(projectName)) {
-            applications.addAll(
-                    assembler.toResources(
-                            applicationService.findByProjectName(projectName)));
         }
 
         if (StringUtils.isAllBlank(name, applicationType, projectName)) {

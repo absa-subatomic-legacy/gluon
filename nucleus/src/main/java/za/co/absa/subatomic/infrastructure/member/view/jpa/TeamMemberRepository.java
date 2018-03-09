@@ -10,4 +10,6 @@ public interface TeamMemberRepository
     TeamMemberEntity findByEmail(String email);
 
     TeamMemberEntity findBySlackDetailsScreenName(String slackScreenName);
+
+    TeamMemberEntity findByDomainUsername(String domainUsername);
 }
