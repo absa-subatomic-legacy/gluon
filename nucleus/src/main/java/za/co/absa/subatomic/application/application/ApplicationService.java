@@ -45,7 +45,6 @@ public class ApplicationService {
     public String newApplication(String name, String description,
             String applicationType,
             String projectId, String requestedBy) {
-
         ApplicationEntity existingApplication = this
                 .findByNameAndProjectName(name, projectId);
         if (existingApplication != null) {
@@ -79,7 +78,6 @@ public class ApplicationService {
             String bitbucketRepoRemoteUrl,
             String projectId,
             String requestedBy) {
-
         Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(

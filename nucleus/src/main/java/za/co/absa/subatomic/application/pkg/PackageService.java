@@ -41,8 +41,8 @@ public class PackageService {
 
     public String newApplication(String packageType, String name,
             String description, String createdBy, String projectId) {
-
-        PackageEntity existingPackage = this.findByNameAndProjectName(name, projectId);
+        PackageEntity existingPackage = this.findByNameAndProjectName(name,
+                projectId);
         if (existingPackage != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Package with name {0} already exists in project with id {1}.",
@@ -52,7 +52,8 @@ public class PackageService {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
 
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(projectAssociatedTeams);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                projectAssociatedTeams);
 
         return commandGateway.sendAndWait(
                 new NewPackage(
@@ -83,13 +84,15 @@ public class PackageService {
     }
 
     @Transactional(readOnly = true)
-    public PackageEntity findByNameAndProjectName(String name, String projectName) {
+    public PackageEntity findByNameAndProjectName(String name,
+            String projectName) {
         return packageRepository.findByNameAndProjectName(name, projectName);
     }
 
     @Transactional(readOnly = true)
     public PackageEntity findByNameAndProjectId(String name, String projectId) {
-        return packageRepository.findByNameAndProjectId(name, Long.valueOf(projectId));
+        return packageRepository.findByNameAndProjectId(name,
+                Long.valueOf(projectId));
     }
 
     @Transactional(readOnly = true)
@@ -97,13 +100,13 @@ public class PackageService {
         return projectRepository.findByProjectId(projectId).getTeams();
     }
 
-    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams){
+    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams) {
         Set<String> teamMemberIds = new HashSet<>();
-        for (TeamEntity team: teams){
-            for (TeamMemberEntity member: team.getMembers()){
+        for (TeamEntity team : teams) {
+            for (TeamMemberEntity member : team.getMembers()) {
                 teamMemberIds.add(member.getMemberId());
             }
-            for (TeamMemberEntity owner: team.getOwners()){
+            for (TeamMemberEntity owner : team.getOwners()) {
                 teamMemberIds.add(owner.getMemberId());
             }
         }
