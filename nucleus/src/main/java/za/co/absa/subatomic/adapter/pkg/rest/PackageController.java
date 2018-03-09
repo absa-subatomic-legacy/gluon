@@ -66,13 +66,14 @@ public class PackageController {
 
     @GetMapping
     Resources<PackageResource> list(
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String projectName) {
         List<PackageResource> packages = new ArrayList<>();
 
         // TODO see if we can't use that functional library for Java that has pattern matching?
-        if (StringUtils.isNotBlank(name)) {
+        if (!StringUtils.isAnyBlank(name, projectName)) {
             packages.add(
-                    assembler.toResource(packageService.findByName(name)));
+                    assembler.toResource(packageService.findByNameAndProjectId(name, projectName)));
         }
 
         if (StringUtils.isAllBlank(name)) {
@@ -82,7 +83,7 @@ public class PackageController {
 
         return new Resources<>(packages,
                 linkTo(TeamController.class).withRel("self"),
-                linkTo(methodOn(PackageController.class).list(name))
+                linkTo(methodOn(PackageController.class).list(name, projectName))
                         .withRel("self"));
     }
 

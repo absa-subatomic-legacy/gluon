@@ -113,7 +113,7 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public ApplicationEntity findByName(String name) {
+    public List<ApplicationEntity> findByName(String name) {
         return applicationRepository.findByName(name);
     }
 

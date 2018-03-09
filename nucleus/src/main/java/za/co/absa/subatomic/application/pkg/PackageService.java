@@ -78,7 +78,7 @@ public class PackageService {
     }
 
     @Transactional(readOnly = true)
-    public PackageEntity findByName(String name) {
+    public List<PackageEntity> findByName(String name) {
         return packageRepository.findByName(name);
     }
 
