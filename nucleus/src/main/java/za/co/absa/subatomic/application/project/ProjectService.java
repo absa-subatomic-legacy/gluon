@@ -46,7 +46,6 @@ public class ProjectService {
 
     public String newProject(String name, String description,
             String createdBy, String teamId) {
-
         ProjectEntity existingProject = this.findByName(name);
         if (existingProject != null) {
             throw new DuplicateRequestException(MessageFormat.format(
