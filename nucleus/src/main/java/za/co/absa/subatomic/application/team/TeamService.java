@@ -49,7 +49,6 @@ public class TeamService {
     }
 
     public String newTeam(String name, String description, String createdBy) {
-
         TeamEntity existingTeam = this.findByName(name);
         if (existingTeam != null) {
             throw new DuplicateRequestException(MessageFormat.format(
@@ -70,7 +69,6 @@ public class TeamService {
     public String newTeamFromSlack(String name, String description,
             String createdBy,
             String teamChannel) {
-
         TeamEntity existingTeam = this.findByName(name);
         if (existingTeam != null) {
             throw new DuplicateRequestException(MessageFormat.format(
