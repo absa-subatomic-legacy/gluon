@@ -39,7 +39,7 @@ public class TeamMemberService {
                     email));
         }
 
-        existingMember = this.findByEmail(email);
+        existingMember = this.findByDomainUsername(domainUsername);
         if (existingMember != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested domain username {0} is already in use.",
@@ -57,9 +57,28 @@ public class TeamMemberService {
     }
 
     public String newTeamMemberFromSlack(String firstName, String lastName,
-            String email, String domainUsername, String screeName,
+            String email, String domainUsername, String screenName,
             String userId) {
+        TeamMemberEntity existingMember = this.findByEmail(email);
+        if (existingMember != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested email address {0} is already in use.",
+                    email));
+        }
 
+        existingMember = this.findByDomainUsername(domainUsername);
+        if (existingMember != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested domain username {0} is already in use.",
+                    domainUsername));
+        }
+
+        existingMember = this.findBySlackScreenName(screenName);
+        if (existingMember != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested slack username {0} is already in use.",
+                    screenName));
+        }
         return commandGateway.sendAndWait(
                 new NewTeamMemberFromSlack(
                         new NewTeamMember(
@@ -68,13 +87,19 @@ public class TeamMemberService {
                                 lastName,
                                 email,
                                 domainUsername),
-                        new SlackIdentity(screeName, userId)),
+                        new SlackIdentity(screenName, userId)),
                 1,
                 TimeUnit.SECONDS);
     }
 
     public String addSlackDetails(String memberId, String screenName,
             String userId) {
+        TeamMemberEntity existingMember = this.findBySlackScreenName(screenName);
+        if (existingMember != null) {
+            throw new DuplicateRequestException(MessageFormat.format(
+                    "Requested slack username {0} is already in use.",
+                    screenName));
+        }
         return commandGateway.sendAndWait(new AddSlackDetails(
                 memberId,
                 screenName,
