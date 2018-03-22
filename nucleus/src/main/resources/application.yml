@@ -11,3 +11,4 @@ spring:
       enabled: true
       path: /h2-console
   data.rest.detection-strategy: visibility
+  
