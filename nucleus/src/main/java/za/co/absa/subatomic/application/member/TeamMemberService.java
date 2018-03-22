@@ -39,7 +39,7 @@ public class TeamMemberService {
                     email));
         }
 
-        existingMember = this.findByEmail(email);
+        existingMember = this.findByDomainUsername(domainUsername);
         if (existingMember != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested domain username {0} is already in use.",
@@ -66,7 +66,7 @@ public class TeamMemberService {
                     email));
         }
 
-        existingMember = this.findByEmail(email);
+        existingMember = this.findByDomainUsername(domainUsername);
         if (existingMember != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested domain username {0} is already in use.",
