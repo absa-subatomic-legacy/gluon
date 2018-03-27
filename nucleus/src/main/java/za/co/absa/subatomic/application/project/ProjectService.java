@@ -69,7 +69,7 @@ public class ProjectService {
     }
 
     public String requestBitbucketProject(String projectId, String name,
-            String description, String requestedBy) {
+            String projectKey, String description, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -80,6 +80,7 @@ public class ProjectService {
                         BitbucketProject.builder()
                                 .name(name)
                                 .description(description)
+                                .key(projectKey)
                                 .build(),
                         new TeamMemberId(requestedBy),
                         allMemberAndOwnerIds),

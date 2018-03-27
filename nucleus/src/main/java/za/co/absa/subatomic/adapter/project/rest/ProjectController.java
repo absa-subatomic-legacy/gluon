@@ -73,6 +73,7 @@ public class ProjectController {
                     .isNotBlank(request.getBitbucketProject().getName())) {
                 projectService.requestBitbucketProject(id,
                         request.getBitbucketProject().getName(),
+                        request.getBitbucketProject().getKey(),
                         request.getBitbucketProject().getDescription(),
                         request.getCreatedBy());
             }

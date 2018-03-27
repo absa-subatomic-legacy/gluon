@@ -73,6 +73,9 @@ public class Project {
         // TODO check for duplicate keys
         BitbucketProject bitbucketProject = command.getBitbucketProject();
         String key = generateProjectKey(bitbucketProject.getName());
+        if (StringUtils.isNotBlank(bitbucketProject.getKey())) {
+            key = bitbucketProject.getKey();
+        }
 
         apply(new BitbucketProjectRequested(
                 new ProjectId(command.getProjectId()),
