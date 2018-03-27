@@ -1,12 +1,14 @@
 package za.co.absa.subatomic.infrastructure.team;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import lombok.Value;
@@ -15,6 +17,8 @@ import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.team.DevOpsEnvironmentRequested;
 import za.co.absa.subatomic.domain.team.MembershipRequestCreated;
 import za.co.absa.subatomic.domain.team.TeamCreated;
+import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.domain.team.TeamMembersAdded;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
@@ -184,6 +188,77 @@ public class TeamAutomationHandler {
             log.info("Atomist has ingested event successfully: {} -> {}",
                     response.getHeaders(), response.getBody());
         }
+    }
+
+    @EventHandler
+    @Transactional
+    void on(TeamMembersAdded event) {
+        TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
+        za.co.absa.subatomic.domain.team.SlackIdentity teamEntitySlackIdentity = null;
+        if (teamEntity.getSlackDetails() != null) {
+            teamEntitySlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                    teamEntity.getSlackDetails()
+                            .getTeamChannel());
+        }
+
+        Team team = new Team(teamEntity.getTeamId(), teamEntity.getName(),
+                teamEntitySlackIdentity);
+
+        List<TeamMember> owners = teamMemberIdCollectionToTeamMemberList(
+                event.getOwners());
+        List<TeamMember> members = teamMemberIdCollectionToTeamMemberList(
+                event.getTeamMembers());
+
+        MembersAddedToTeamWithDetails membersAddedEvent = new MembersAddedToTeamWithDetails(
+                team, owners, members);
+
+        log.info(
+                "New members have been added to a team, sending event to Atomist...{}",
+                membersAddedEvent);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getMembersAddedToTeamEventUrl(),
+                membersAddedEvent,
+                String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("Atomist has ingested event successfully: {} -> {}",
+                    response.getHeaders(), response.getBody());
+        }
+    }
+
+    private List<TeamMember> teamMemberIdCollectionToTeamMemberList(
+            Collection<TeamMemberId> teamMemberIdList) {
+        List<TeamMember> members = new ArrayList<>();
+        for (TeamMemberId member : teamMemberIdList) {
+            TeamMemberEntity memberEntity = teamMemberRepository.findByMemberId(
+                    member.getTeamMemberId());
+            za.co.absa.subatomic.domain.member.SlackIdentity memberSlackIdentity = null;
+            if (memberEntity.getSlackDetails() != null) {
+                memberSlackIdentity = new za.co.absa.subatomic.domain.member.SlackIdentity(
+                        memberEntity.getSlackDetails()
+                                .getScreenName(),
+                        memberEntity.getSlackDetails()
+                                .getUserId());
+            }
+            members.add(new TeamMember(memberEntity.getMemberId(),
+                    memberEntity.getDomainUsername(),
+                    memberEntity.getFirstName(),
+                    memberEntity.getLastName(),
+                    memberEntity.getEmail(),
+                    memberSlackIdentity));
+        }
+        return members;
+    }
+
+    @Value
+    class MembersAddedToTeamWithDetails {
+        private Team team;
+
+        private List<TeamMember> owners;
+
+        private List<TeamMember> members;
     }
 
     @Value
