@@ -77,7 +77,6 @@ public class Project {
             key = bitbucketProject.getKey();
         }
 
-
         apply(new BitbucketProjectRequested(
                 new ProjectId(command.getProjectId()),
                 BitbucketProject.builder()
