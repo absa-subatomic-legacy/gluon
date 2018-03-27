@@ -253,7 +253,7 @@ public class TeamAutomationHandler {
     }
 
     @Value
-    class MembersAddedToTeamWithDetails {
+    private class MembersAddedToTeamWithDetails {
         private Team team;
 
         private List<TeamMember> owners;
