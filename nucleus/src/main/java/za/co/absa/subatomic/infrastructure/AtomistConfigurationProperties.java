@@ -10,7 +10,7 @@ public class AtomistConfigurationProperties {
 
     private String slackIdentityUrl;
 
-    private String teamUrl;
+    private String gluonTeamUrl;
 
     private String teamCreatedEventUrl;
 
@@ -29,4 +29,6 @@ public class AtomistConfigurationProperties {
     private String applicationCreatedEventUrl;
 
     private String membershipRequestCreatedEventUrl;
+
+    private String membersAddedToTeamEventUrl;
 }
