@@ -168,7 +168,8 @@ public class Project {
         }
         apply(new BitbucketProjectLinked(
                 new ProjectId(command.getProjectId()),
-                command.getBitbucketProject()));
+                command.getBitbucketProject(),
+                command.getRequestedBy()));
     }
 
     @EventSourcingHandler
