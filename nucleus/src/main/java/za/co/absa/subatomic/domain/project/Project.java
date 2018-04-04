@@ -158,6 +158,19 @@ public class Project {
                 command.getRequestedBy()));
     }
 
+    @CommandHandler
+    void when(LinkBitbucketProject command) {
+        if (!command.getAllAssociateProjectOwnerAndMemberIds()
+                .contains(command.getRequestedBy().getTeamMemberId())) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getRequestedBy()));
+        }
+        apply(new BitbucketProjectLinked(
+                new ProjectId(command.getProjectId()),
+                command.getBitbucketProject()));
+    }
+
     @EventSourcingHandler
     void on(BitbucketProjectLinked event) {
         this.bitbucketProject = event.getBitbucketProject();
