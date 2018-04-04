@@ -138,6 +138,13 @@ public class Project {
                 .build();
     }
 
+    @EventSourcingHandler
+    void on(ProjectEnvironmentRequested event) {
+        // TODO link environments to project
+        // will only have meaning when environments are a concept
+        // I.e. when people can choose which environments they want
+    }
+
     @CommandHandler
     void when(NewProjectEnvironment command) {
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
@@ -152,10 +159,7 @@ public class Project {
     }
 
     @EventSourcingHandler
-    void on(ProjectEnvironmentRequested event) {
-        // TODO link environments to project
-        // will only have meaning when environments are a concept
-        // I.e. when people can choose which environments they want
+    void on(BitbucketProjectLinked event) {
+        this.bitbucketProject = event.getBitbucketProject();
     }
-
 }

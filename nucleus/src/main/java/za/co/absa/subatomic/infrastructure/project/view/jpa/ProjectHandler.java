@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
+import za.co.absa.subatomic.domain.project.BitbucketProjectLinked;
 import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -86,7 +87,17 @@ public class ProjectHandler {
     @EventHandler
     @Transactional
     void on(BitbucketProjectAdded event) {
-        BitbucketProject bitbucketProject = event.getBitbucketProject();
+        persistBitbucketProject(event.getBitbucketProject());
+    }
+
+    @EventHandler
+    @Transactional
+    void on(BitbucketProjectLinked event) {
+        persistBitbucketProject(event.getBitbucketProject());
+    }
+
+    @Transactional
+    void persistBitbucketProject(BitbucketProject bitbucketProject) {
         BitbucketProjectEntity bitbucketProjectEntity = bitbucketProjectRepository
                 .findByKey(bitbucketProject.getKey());
         bitbucketProjectEntity.setBitbucketProjectId(bitbucketProject.getId());
