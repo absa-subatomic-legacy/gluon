@@ -84,6 +84,11 @@ public class PackageService {
     }
 
     @Transactional(readOnly = true)
+    public List<PackageEntity> findByProjectId(String projectId) {
+        return packageRepository.findByProjectId(Long.valueOf(projectId));
+    }
+
+    @Transactional(readOnly = true)
     public PackageEntity findByNameAndProjectName(String name,
             String projectName) {
         return packageRepository.findByNameAndProjectName(name, projectName);

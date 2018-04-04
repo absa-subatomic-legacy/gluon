@@ -14,4 +14,6 @@ public interface PackageRepository
     PackageEntity findByNameAndProjectName(String name, String projectName);
 
     PackageEntity findByNameAndProjectId(String name, Long projectId);
+
+    List<PackageEntity> findByProjectId(Long projectId);
 }

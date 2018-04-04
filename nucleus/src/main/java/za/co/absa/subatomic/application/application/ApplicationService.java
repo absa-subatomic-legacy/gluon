@@ -135,6 +135,12 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
+    public List<ApplicationEntity> findByProjectId(String projectId) {
+        return applicationRepository.findByProjectId(
+                Long.valueOf(projectId));
+    }
+
+    @Transactional(readOnly = true)
     public List<ApplicationEntity> findByApplicationType(
             String applicationType) {
         return applicationRepository.findByApplicationType(
