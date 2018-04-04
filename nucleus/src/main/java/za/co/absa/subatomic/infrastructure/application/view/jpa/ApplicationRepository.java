@@ -18,7 +18,7 @@ public interface ApplicationRepository
     List<ApplicationEntity> findByApplicationType(
             ApplicationType applicationType);
 
-    List<ApplicationEntity> findByProjectId(Long projectId);
+    List<ApplicationEntity> findByProjectProjectId(String projectId);
 
     ApplicationEntity findByNameAndProjectName(String name, String projectName);
 
