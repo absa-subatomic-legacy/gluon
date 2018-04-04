@@ -63,7 +63,20 @@ public class ProjectController {
     ResponseEntity<ProjectResource> update(@PathVariable String id,
             @RequestBody ProjectResource request) {
         if (request.getBitbucketProject() != null) {
-            if (StringUtils.isNotBlank(
+            if (StringUtils.isNoneBlank(
+                    request.getBitbucketProject().getBitbucketProjectId(),
+                    request.getBitbucketProject().getName(),
+                    request.getBitbucketProject().getKey(),
+                    request.getBitbucketProject().getUrl())) {
+                projectService.linkExistingBitbucketProject(id,
+                        request.getBitbucketProject().getBitbucketProjectId(),
+                        request.getBitbucketProject().getName(),
+                        request.getBitbucketProject().getKey(),
+                        request.getBitbucketProject().getDescription(),
+                        request.getBitbucketProject().getUrl(),
+                        request.getCreatedBy());
+            }
+            else if (StringUtils.isNotBlank(
                     request.getBitbucketProject().getBitbucketProjectId())) {
                 projectService.confirmBitbucketProjectCreated(id,
                         request.getBitbucketProject().getBitbucketProjectId(),

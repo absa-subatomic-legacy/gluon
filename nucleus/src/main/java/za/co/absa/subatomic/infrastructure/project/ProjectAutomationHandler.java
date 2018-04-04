@@ -8,7 +8,9 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
+import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
+import za.co.absa.subatomic.domain.project.BitbucketProjectLinked;
 import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.domain.project.ProjectEnvironmentRequested;
@@ -197,14 +199,32 @@ public class ProjectAutomationHandler {
                 "A Bitbucket project was added to project [{}], sending event to Atomist: {}",
                 event.getProjectId(), event);
 
-        ProjectEntity projectEntity = projectRepository
-                .findByProjectId(event.getProjectId().getProjectId());
-
         BitbucketProjectEntity bitbucketProjectEntity = bitbucketProjectRepository
                 .findByKey(event.getBitbucketProject().getKey());
 
+        sendBitbucketProjectAddedEventToAtomist(event.getProjectId(),
+                event.getBitbucketProject(),
+                bitbucketProjectEntity.getCreatedBy().getMemberId());
+    }
+
+    @EventHandler
+    void on(BitbucketProjectLinked event) {
+        log.info(
+                "A Bitbucket project was linked to project [{}], sending event to Atomist: {}",
+                event.getProjectId(), event);
+
+        sendBitbucketProjectAddedEventToAtomist(event.getProjectId(),
+                event.getBitbucketProject(), event.getRequestedBy().getTeamMemberId());
+    }
+
+    void sendBitbucketProjectAddedEventToAtomist(ProjectId projectId,
+                                                 za.co.absa.subatomic.domain.project.BitbucketProject bitbucketProject,
+                                                 String createdByMemberId) {
+        ProjectEntity projectEntity = projectRepository
+                .findByProjectId(projectId.getProjectId());
+
         SlackIdentity slackIdentity = null;
-        TeamMemberEntity createdBy = bitbucketProjectEntity.getCreatedBy();
+        TeamMemberEntity createdBy = teamMemberRepository.findByMemberId(createdByMemberId);
         if (createdBy.getSlackDetails() != null) {
             slackIdentity = new SlackIdentity(
                     createdBy.getSlackDetails()
@@ -220,11 +240,11 @@ public class ProjectAutomationHandler {
                         .description(projectEntity.getDescription())
                         .build(),
                 new BitbucketProject(
-                        event.getBitbucketProject().getId(),
-                        event.getBitbucketProject().getKey(),
-                        event.getBitbucketProject().getName(),
-                        event.getBitbucketProject().getDescription(),
-                        event.getBitbucketProject().getUrl()),
+                        bitbucketProject.getId(),
+                        bitbucketProject.getKey(),
+                        bitbucketProject.getName(),
+                        bitbucketProject.getDescription(),
+                        bitbucketProject.getUrl()),
                 projectEntity.getTeams().stream()
                         .map(teamEntity -> new Team(
                                 teamEntity.getTeamId(),

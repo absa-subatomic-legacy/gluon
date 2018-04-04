@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.project.AddBitbucketRepository;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
+import za.co.absa.subatomic.domain.project.LinkBitbucketProject;
 import za.co.absa.subatomic.domain.project.NewProject;
 import za.co.absa.subatomic.domain.project.NewProjectEnvironment;
 import za.co.absa.subatomic.domain.project.RequestBitbucketProject;
@@ -99,6 +100,32 @@ public class ProjectService {
                                 .build()),
                 1000,
                 TimeUnit.SECONDS);
+    }
+
+    public String linkExistingBitbucketProject(String projectId,
+            String bitbucketProjectId,
+            String bitbucketProjectName,
+            String projectKey,
+            String description,
+            String url,
+            String requestedBy) {
+        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
+                projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                projectAssociatedTeams);
+
+        BitbucketProject bitbucketProject = new BitbucketProject(
+                bitbucketProjectId,
+                projectKey,
+                bitbucketProjectName,
+                description,
+                url);
+
+        return commandGateway.sendAndWait(new LinkBitbucketProject(
+                projectId,
+                bitbucketProject,
+                new TeamMemberId(requestedBy),
+                allMemberAndOwnerIds));
     }
 
     public String newProjectEnvironment(String projectId, String requestedBy) {

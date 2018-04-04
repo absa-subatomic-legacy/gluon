@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
+import za.co.absa.subatomic.domain.project.BitbucketProjectLinked;
 import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -94,4 +95,30 @@ public class ProjectHandler {
 
         bitbucketProjectRepository.save(bitbucketProjectEntity);
     }
+
+    @EventHandler
+    @Transactional
+    void on(BitbucketProjectLinked event) {
+        BitbucketProject bitbucketProject = event.getBitbucketProject();
+
+        TeamMemberEntity createdBy = teamMemberRepository
+                .findByMemberId(event.getRequestedBy().getTeamMemberId());
+
+        BitbucketProjectEntity bitbucketProjectEntity = BitbucketProjectEntity
+                .builder()
+                .bitbucketProjectId(bitbucketProject.getId())
+                .url(bitbucketProject.getUrl())
+                .key(bitbucketProject.getKey())
+                .name(bitbucketProject.getName())
+                .description(bitbucketProject.getDescription())
+                .createdBy(createdBy)
+                .build();
+
+        ProjectEntity projectEntity = projectRepository
+                .findByProjectId(event.getProjectId().getProjectId());
+        projectEntity.setBitbucketProject(bitbucketProjectEntity);
+
+        bitbucketProjectRepository.save(bitbucketProjectEntity);
+    }
+
 }

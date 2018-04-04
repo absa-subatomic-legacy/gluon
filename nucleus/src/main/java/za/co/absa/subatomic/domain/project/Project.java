@@ -138,6 +138,13 @@ public class Project {
                 .build();
     }
 
+    @EventSourcingHandler
+    void on(ProjectEnvironmentRequested event) {
+        // TODO link environments to project
+        // will only have meaning when environments are a concept
+        // I.e. when people can choose which environments they want
+    }
+
     @CommandHandler
     void when(NewProjectEnvironment command) {
         if (!command.getAllAssociateProjectOwnerAndMemberIds()
@@ -151,11 +158,22 @@ public class Project {
                 command.getRequestedBy()));
     }
 
-    @EventSourcingHandler
-    void on(ProjectEnvironmentRequested event) {
-        // TODO link environments to project
-        // will only have meaning when environments are a concept
-        // I.e. when people can choose which environments they want
+    @CommandHandler
+    void when(LinkBitbucketProject command) {
+        if (!command.getAllAssociateProjectOwnerAndMemberIds()
+                .contains(command.getRequestedBy().getTeamMemberId())) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getRequestedBy()));
+        }
+        apply(new BitbucketProjectLinked(
+                new ProjectId(command.getProjectId()),
+                command.getBitbucketProject(),
+                command.getRequestedBy()));
     }
 
+    @EventSourcingHandler
+    void on(BitbucketProjectLinked event) {
+        this.bitbucketProject = event.getBitbucketProject();
+    }
 }
