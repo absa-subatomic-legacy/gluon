@@ -67,24 +67,32 @@ public class PackageController {
     @GetMapping
     Resources<PackageResource> list(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String projectName) {
+            @RequestParam(required = false) String projectName,
+            @RequestParam(required = false) String projectId) {
         List<PackageResource> packages = new ArrayList<>();
 
         // TODO see if we can't use that functional library for Java that has pattern matching?
-        if (!StringUtils.isAnyBlank(name, projectName)) {
+        if (StringUtils.isNotBlank(projectId)) {
+            packages.addAll(
+                    assembler.toResources(
+                            packageService.findByProjectId(projectId)));
+        }
+        else if (StringUtils.isNoneBlank(name, projectName)) {
             packages.add(
-                    assembler.toResource(packageService.findByNameAndProjectId(name, projectName)));
+                    assembler.toResource(packageService
+                            .findByNameAndProjectId(name, projectName)));
         }
 
-        if (StringUtils.isAllBlank(name)) {
+        if (StringUtils.isAllBlank(name, projectName, projectId)) {
             packages.addAll(packageService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
         return new Resources<>(packages,
                 linkTo(TeamController.class).withRel("self"),
-                linkTo(methodOn(PackageController.class).list(name, projectName))
-                        .withRel("self"));
+                linkTo(methodOn(PackageController.class).list(name, projectName,
+                        projectId))
+                                .withRel("self"));
     }
 
     private class PackageResourceAssembler

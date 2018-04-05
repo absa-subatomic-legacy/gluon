@@ -87,10 +87,21 @@ public class ApplicationController {
     Resources<ApplicationResource> list(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String applicationType,
-            @RequestParam(required = false) String projectName) {
+            @RequestParam(required = false) String projectName,
+            @RequestParam(required = false) String projectId) {
         List<ApplicationResource> applications = new ArrayList<>();
 
-        if (!StringUtils.isAnyBlank(name, projectName)) {
+        if (StringUtils.isNoneBlank(name, projectId)) {
+            applications.add(
+                    assembler.toResource(applicationService
+                            .findByNameAndProjectId(name, projectId)));
+        }
+        else if (StringUtils.isNotBlank(projectId)){
+            applications.addAll(
+                    assembler.toResources(
+                            applicationService.findByProjectId(projectId)));
+        }
+        else if (StringUtils.isNoneBlank(name, projectName)) {
             applications.add(
                     assembler.toResource(applicationService
                             .findByNameAndProjectName(name, projectName)));
@@ -107,7 +118,7 @@ public class ApplicationController {
                             .findByApplicationType(applicationType)));
         }
 
-        if (StringUtils.isAllBlank(name, applicationType, projectName)) {
+        if (StringUtils.isAllBlank(name, applicationType, projectName, projectId)) {
             applications.addAll(applicationService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
@@ -115,7 +126,7 @@ public class ApplicationController {
         return new Resources<>(applications,
                 linkTo(ApplicationController.class).withRel("self"),
                 linkTo(methodOn(ApplicationController.class).list(name,
-                        applicationType, projectName))
+                        applicationType, projectName, projectId))
                                 .withRel("self"));
     }
 
