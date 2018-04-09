@@ -9,7 +9,7 @@ A supporting domain applying logic and emitting events to indicate indicate desi
 To run Gluon locally using an in memory H2 database:
 
 ```console
-$ ./mvnw spring-boot:run -pl nucleus --spring.profiles.active=local
+$ ./mvnw spring-boot:run -pl nucleus -Dspring.profiles.active=local
 ```
 
 ### `local` Spring profile
