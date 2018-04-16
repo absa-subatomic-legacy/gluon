@@ -78,13 +78,18 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
+        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+        if (teamEntity.getSlackDetails() != null) {
+            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                    teamEntity.getSlackDetails().getTeamChannel());
+        }
+
         ProjectCreatedWithDetails newProject = new ProjectCreatedWithDetails(
                 event,
                 new Team(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
-                        new za.co.absa.subatomic.domain.team.SlackIdentity(
-                                teamEntity.getSlackDetails().getTeamChannel())),
+                        teamSlackIdentity),
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getFirstName(),
@@ -214,17 +219,19 @@ public class ProjectAutomationHandler {
                 event.getProjectId(), event);
 
         sendBitbucketProjectAddedEventToAtomist(event.getProjectId(),
-                event.getBitbucketProject(), event.getRequestedBy().getTeamMemberId());
+                event.getBitbucketProject(),
+                event.getRequestedBy().getTeamMemberId());
     }
 
     void sendBitbucketProjectAddedEventToAtomist(ProjectId projectId,
-                                                 za.co.absa.subatomic.domain.project.BitbucketProject bitbucketProject,
-                                                 String createdByMemberId) {
+            za.co.absa.subatomic.domain.project.BitbucketProject bitbucketProject,
+            String createdByMemberId) {
         ProjectEntity projectEntity = projectRepository
                 .findByProjectId(projectId.getProjectId());
 
         SlackIdentity slackIdentity = null;
-        TeamMemberEntity createdBy = teamMemberRepository.findByMemberId(createdByMemberId);
+        TeamMemberEntity createdBy = teamMemberRepository
+                .findByMemberId(createdByMemberId);
         if (createdBy.getSlackDetails() != null) {
             slackIdentity = new SlackIdentity(
                     createdBy.getSlackDetails()
