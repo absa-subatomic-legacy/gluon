@@ -91,12 +91,17 @@ public class TeamAutomationHandler {
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getRequestedBy().getTeamMemberId());
 
+        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+        if (teamEntity.getSlackDetails() != null) {
+            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                    teamEntity.getSlackDetails().getTeamChannel());
+        }
+
         DevOpsEnvironmentRequestedWithDetails newDevOpsEnvironmentRequested = new DevOpsEnvironmentRequestedWithDetails(
                 new Team(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
-                        new za.co.absa.subatomic.domain.team.SlackIdentity(
-                                teamEntity.getSlackDetails().getTeamChannel())),
+                        teamSlackIdentity),
                 new DevOpsTeamMember(
                         null,
                         teamMemberEntity.getFirstName(),

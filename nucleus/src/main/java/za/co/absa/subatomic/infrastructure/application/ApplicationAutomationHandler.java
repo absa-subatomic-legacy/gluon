@@ -1,7 +1,7 @@
 package za.co.absa.subatomic.infrastructure.application;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.http.ResponseEntity;
@@ -76,7 +76,27 @@ public class ApplicationAutomationHandler {
                             .getUserId());
         }
 
+        List<Team> teamList = new ArrayList<>();
+        for (TeamEntity teamEntity : projectEntity.getTeams()) {
+            za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+            if (teamEntity.getSlackDetails() != null) {
+                teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                        teamEntity.getSlackDetails().getTeamChannel());
+            }
+            teamList.add(new Team(
+                    teamEntity.getTeamId(),
+                    teamEntity.getName(),
+                    teamSlackIdentity));
+        }
+
         TeamEntity owningTeam = projectEntity.getOwningTeam();
+
+        za.co.absa.subatomic.domain.team.SlackIdentity owningTeamSlackIdentity = null;
+
+        if (teamMemberEntity.getSlackDetails() != null) {
+            owningTeamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                    owningTeam.getSlackDetails().getTeamChannel());
+        }
 
         ApplicationEnvironmentRequestedWithDetails environmentRequested = new ApplicationEnvironmentRequestedWithDetails(
                 ApplicationCreated.builder()
@@ -106,16 +126,8 @@ public class ApplicationAutomationHandler {
                         projectEntity.getBitbucketProject().getDescription(),
                         projectEntity.getBitbucketProject().getUrl()),
                 new Team(owningTeam.getTeamId(), owningTeam.getName(),
-                        new za.co.absa.subatomic.domain.team.SlackIdentity(
-                                owningTeam.getSlackDetails().getTeamChannel())),
-                projectEntity.getTeams().stream()
-                        .map(teamEntity -> new Team(
-                                teamEntity.getTeamId(),
-                                teamEntity.getName(),
-                                new za.co.absa.subatomic.domain.team.SlackIdentity(
-                                        teamEntity.getSlackDetails()
-                                                .getTeamChannel())))
-                        .collect(Collectors.toList()),
+                        owningTeamSlackIdentity),
+                teamList,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getFirstName(),
