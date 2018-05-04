@@ -21,5 +21,7 @@ public class NewProject {
 
     private TeamId team;
 
+    private TenantId tenant;
+
     private Set<String> allAssociateProjectOwnerAndMemberIds;
 }

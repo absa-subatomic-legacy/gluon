@@ -24,6 +24,7 @@ import lombok.Setter;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
 
 @Entity
 @Table(name = "project")
@@ -53,6 +54,9 @@ public class ProjectEntity {
 
     @OneToOne
     private TeamEntity owningTeam;
+
+    @OneToOne
+    private TenantEntity owningTenant;
 
     @ManyToMany
     private Set<TeamEntity> teams = new HashSet<>();

@@ -29,6 +29,8 @@ public class Project {
 
     private TeamId owningTeam;
 
+    private TenantId owningTenant;
+
     private Set<TeamId> teams = new HashSet<>();
 
     Project() {
@@ -50,7 +52,8 @@ public class Project {
                 command.getName(),
                 command.getDescription(),
                 command.getCreatedBy(),
-                command.getTeam()));
+                command.getTeam(),
+                command.getTenant()));
     }
 
     @EventSourcingHandler

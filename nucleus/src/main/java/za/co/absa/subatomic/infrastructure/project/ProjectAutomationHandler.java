@@ -27,6 +27,8 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantRepository;
 
 @Component
 @Slf4j
@@ -42,6 +44,8 @@ public class ProjectAutomationHandler {
 
     private BitbucketProjectRepository bitbucketProjectRepository;
 
+    private TenantRepository tenantRepository;
+
     private AtomistConfigurationProperties atomistConfigurationProperties;
 
     public ProjectAutomationHandler(RestTemplate restTemplate,
@@ -49,12 +53,14 @@ public class ProjectAutomationHandler {
             TeamMemberRepository teamMemberRepository,
             ProjectRepository projectRepository,
             BitbucketProjectRepository bitbucketProjectRepository,
+            TenantRepository tenantRepository,
             AtomistConfigurationProperties atomistConfigurationProperties) {
         this.restTemplate = restTemplate;
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.projectRepository = projectRepository;
         this.bitbucketProjectRepository = bitbucketProjectRepository;
+        this.tenantRepository = tenantRepository;
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
@@ -78,6 +84,14 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
+        Tenant tenant = null;
+        TenantEntity tenantEntity = tenantRepository
+                .findByTenantId(event.getTenant().getTenantId());
+        if (tenantEntity != null) {
+            tenant = new Tenant(tenantEntity.getTenantId(),
+                    tenantEntity.getName(), tenantEntity.getDescription());
+        }
+
         ProjectCreatedWithDetails newProject = new ProjectCreatedWithDetails(
                 event,
                 new Team(
@@ -85,6 +99,7 @@ public class ProjectAutomationHandler {
                         teamEntity.getName(),
                         new za.co.absa.subatomic.domain.team.SlackIdentity(
                                 teamEntity.getSlackDetails().getTeamChannel())),
+                tenant,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getFirstName(),
@@ -214,17 +229,19 @@ public class ProjectAutomationHandler {
                 event.getProjectId(), event);
 
         sendBitbucketProjectAddedEventToAtomist(event.getProjectId(),
-                event.getBitbucketProject(), event.getRequestedBy().getTeamMemberId());
+                event.getBitbucketProject(),
+                event.getRequestedBy().getTeamMemberId());
     }
 
     void sendBitbucketProjectAddedEventToAtomist(ProjectId projectId,
-                                                 za.co.absa.subatomic.domain.project.BitbucketProject bitbucketProject,
-                                                 String createdByMemberId) {
+            za.co.absa.subatomic.domain.project.BitbucketProject bitbucketProject,
+            String createdByMemberId) {
         ProjectEntity projectEntity = projectRepository
                 .findByProjectId(projectId.getProjectId());
 
         SlackIdentity slackIdentity = null;
-        TeamMemberEntity createdBy = teamMemberRepository.findByMemberId(createdByMemberId);
+        TeamMemberEntity createdBy = teamMemberRepository
+                .findByMemberId(createdByMemberId);
         if (createdBy.getSlackDetails() != null) {
             slackIdentity = new SlackIdentity(
                     createdBy.getSlackDetails()
@@ -365,6 +382,8 @@ public class ProjectAutomationHandler {
 
         private Team team;
 
+        private Tenant tenant;
+
         private CreatedBy createdBy;
     }
 
@@ -428,6 +447,16 @@ public class ProjectAutomationHandler {
         private final List<TeamMember> owners = new ArrayList<>();
 
         private final List<TeamMember> members = new ArrayList<>();
+    }
+
+    @Value
+    private class Tenant {
+
+        private String tenantId;
+
+        private String name;
+
+        private String description;
     }
 
     @Value

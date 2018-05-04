@@ -21,6 +21,7 @@ import za.co.absa.subatomic.domain.project.NewProject;
 import za.co.absa.subatomic.domain.project.NewProjectEnvironment;
 import za.co.absa.subatomic.domain.project.RequestBitbucketProject;
 import za.co.absa.subatomic.domain.project.TeamId;
+import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -46,7 +47,7 @@ public class ProjectService {
     }
 
     public String newProject(String name, String description,
-            String createdBy, String teamId) {
+            String createdBy, String teamId, String tenantId) {
         ProjectEntity existingProject = this.findByName(name);
         if (existingProject != null) {
             throw new DuplicateRequestException(MessageFormat.format(
@@ -64,6 +65,7 @@ public class ProjectService {
                         description,
                         new TeamMemberId(createdBy),
                         new TeamId(teamId),
+                        new TenantId(tenantId),
                         allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
