@@ -84,6 +84,12 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
+        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+        if (teamEntity.getSlackDetails() != null) {
+            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                    teamEntity.getSlackDetails().getTeamChannel());
+        }
+
         Tenant tenant = null;
         TenantEntity tenantEntity = tenantRepository
                 .findByTenantId(event.getTenant().getTenantId());
@@ -97,8 +103,7 @@ public class ProjectAutomationHandler {
                 new Team(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
-                        new za.co.absa.subatomic.domain.team.SlackIdentity(
-                                teamEntity.getSlackDetails().getTeamChannel())),
+                        teamSlackIdentity),
                 tenant,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
