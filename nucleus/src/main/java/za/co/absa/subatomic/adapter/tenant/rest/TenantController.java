@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
@@ -59,15 +60,20 @@ public class TenantController {
     }
 
     @GetMapping
-    Resources<TenantResource> list() {
+    Resources<TenantResource> list(String name) {
         List<TenantResource> projects = new ArrayList<>();
 
-        projects.addAll(tenantService.findAll().stream()
-                .map(assembler::toResource).collect(Collectors.toList()));
+        if (StringUtils.isNotBlank(name)) {
+            projects.add(assembler.toResource(tenantService.findByName(name)));
+        }
+        else {
+            projects.addAll(tenantService.findAll().stream()
+                    .map(assembler::toResource).collect(Collectors.toList()));
+        }
 
         return new Resources<>(projects,
                 linkTo(TeamController.class).withRel("self"),
-                linkTo(methodOn(TenantController.class).list())
+                linkTo(methodOn(TenantController.class).list(name))
                         .withRel("self"));
     }
 
