@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.application.tenant.TenantService;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.project.AddBitbucketRepository;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.LinkBitbucketProject;
@@ -65,11 +66,17 @@ public class ProjectService {
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
                 Collections.singletonList(team));
 
-        if (tenantId == null){
+        if (tenantId == null) {
             TenantEntity tenantEntity = tenantService.findByName("Default");
             tenantId = tenantEntity.getTenantId();
         }
-
+        else {
+            TenantEntity tenantEntity = tenantService.findByTenantId(tenantId);
+            if (tenantEntity == null) {
+                throw new InvalidRequestException(MessageFormat.format(
+                        "Supplied tenantId {0} does not exist.", tenantId));
+            }
+        }
 
         return commandGateway.sendAndWait(
                 new NewProject(
