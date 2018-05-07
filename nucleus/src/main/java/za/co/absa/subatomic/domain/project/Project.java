@@ -62,6 +62,7 @@ public class Project {
         this.name = event.getName();
         this.description = event.getDescription();
         this.owningTeam = event.getTeam();
+        this.owningTenant = event.getTenant();
         this.teams.add(event.getTeam());
     }
 

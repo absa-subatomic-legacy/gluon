@@ -13,6 +13,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import za.co.absa.subatomic.application.tenant.TenantService;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.project.AddBitbucketRepository;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
@@ -28,6 +29,7 @@ import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
 
 @Service
 public class ProjectService {
@@ -38,12 +40,16 @@ public class ProjectService {
 
     private TeamRepository teamRepository;
 
+    private TenantService tenantService;
+
     public ProjectService(CommandGateway commandGateway,
             ProjectRepository projectRepository,
-            TeamRepository teamRepository) {
+            TeamRepository teamRepository,
+            TenantService tenantService) {
         this.commandGateway = commandGateway;
         this.projectRepository = projectRepository;
         this.teamRepository = teamRepository;
+        this.tenantService = tenantService;
     }
 
     public String newProject(String name, String description,
@@ -58,6 +64,13 @@ public class ProjectService {
         TeamEntity team = findTeamById(teamId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
                 Collections.singletonList(team));
+
+        if (tenantId == null){
+            TenantEntity tenantEntity = tenantService.findByName("Default");
+            tenantId = tenantEntity.getTenantId();
+        }
+
+
         return commandGateway.sendAndWait(
                 new NewProject(
                         UUID.randomUUID().toString(),
