@@ -144,6 +144,13 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
+        Tenant tenant = null;
+        TenantEntity tenantEntity = projectEntity.getOwningTenant();
+        if (tenantEntity != null) {
+            tenant = new Tenant(tenantEntity.getTenantId(),
+                    tenantEntity.getName(), tenantEntity.getDescription());
+        }
+
         BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
                 ProjectCreated.builder()
                         .projectId(projectEntity.getProjectId())
@@ -194,6 +201,7 @@ public class ProjectAutomationHandler {
                             return team;
                         })
                         .collect(Collectors.toList()),
+                tenant,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getFirstName(),
@@ -314,6 +322,13 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
+        Tenant tenant = null;
+        TenantEntity tenantEntity = projectEntity.getOwningTenant();
+        if (tenantEntity != null) {
+            tenant = new Tenant(tenantEntity.getTenantId(),
+                    tenantEntity.getName(), tenantEntity.getDescription());
+        }
+
         BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
                 ProjectCreated.builder()
                         .projectId(projectEntity.getProjectId())
@@ -361,6 +376,7 @@ public class ProjectAutomationHandler {
                             return team;
                         })
                         .collect(Collectors.toList()),
+                tenant,
                 new CreatedBy(
                         createdBy.getMemberId(),
                         createdBy.getFirstName(),
@@ -400,6 +416,8 @@ public class ProjectAutomationHandler {
         private BitbucketProjectRequest bitbucketProjectRequest;
 
         private List<Team> teams;
+
+        private Tenant owningTenant;
 
         private CreatedBy requestedBy;
     }
