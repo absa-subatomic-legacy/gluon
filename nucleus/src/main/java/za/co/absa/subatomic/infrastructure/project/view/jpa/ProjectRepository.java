@@ -10,5 +10,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
 
     ProjectEntity findByName(String name);
 
+    ProjectEntity findByOwningTenant_Id(String tenantId);
+
     List<ProjectEntity> findByTeams_Name(String teamName);
 }

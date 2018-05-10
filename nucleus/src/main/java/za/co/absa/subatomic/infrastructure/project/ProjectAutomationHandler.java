@@ -27,6 +27,8 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantRepository;
 
 @Component
 @Slf4j
@@ -42,6 +44,8 @@ public class ProjectAutomationHandler {
 
     private BitbucketProjectRepository bitbucketProjectRepository;
 
+    private TenantRepository tenantRepository;
+
     private AtomistConfigurationProperties atomistConfigurationProperties;
 
     public ProjectAutomationHandler(RestTemplate restTemplate,
@@ -49,12 +53,14 @@ public class ProjectAutomationHandler {
             TeamMemberRepository teamMemberRepository,
             ProjectRepository projectRepository,
             BitbucketProjectRepository bitbucketProjectRepository,
+            TenantRepository tenantRepository,
             AtomistConfigurationProperties atomistConfigurationProperties) {
         this.restTemplate = restTemplate;
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.projectRepository = projectRepository;
         this.bitbucketProjectRepository = bitbucketProjectRepository;
+        this.tenantRepository = tenantRepository;
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
@@ -84,12 +90,21 @@ public class ProjectAutomationHandler {
                     teamEntity.getSlackDetails().getTeamChannel());
         }
 
+        Tenant tenant = null;
+        TenantEntity tenantEntity = tenantRepository
+                .findByTenantId(event.getTenant().getTenantId());
+        if (tenantEntity != null) {
+            tenant = new Tenant(tenantEntity.getTenantId(),
+                    tenantEntity.getName(), tenantEntity.getDescription());
+        }
+
         ProjectCreatedWithDetails newProject = new ProjectCreatedWithDetails(
                 event,
                 new Team(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
                         teamSlackIdentity),
+                tenant,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getFirstName(),
@@ -127,6 +142,13 @@ public class ProjectAutomationHandler {
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
                             .getUserId());
+        }
+
+        Tenant tenant = null;
+        TenantEntity tenantEntity = projectEntity.getOwningTenant();
+        if (tenantEntity != null) {
+            tenant = new Tenant(tenantEntity.getTenantId(),
+                    tenantEntity.getName(), tenantEntity.getDescription());
         }
 
         BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
@@ -179,6 +201,7 @@ public class ProjectAutomationHandler {
                             return team;
                         })
                         .collect(Collectors.toList()),
+                tenant,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getFirstName(),
@@ -299,6 +322,13 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
+        Tenant tenant = null;
+        TenantEntity tenantEntity = projectEntity.getOwningTenant();
+        if (tenantEntity != null) {
+            tenant = new Tenant(tenantEntity.getTenantId(),
+                    tenantEntity.getName(), tenantEntity.getDescription());
+        }
+
         BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
                 ProjectCreated.builder()
                         .projectId(projectEntity.getProjectId())
@@ -346,6 +376,7 @@ public class ProjectAutomationHandler {
                             return team;
                         })
                         .collect(Collectors.toList()),
+                tenant,
                 new CreatedBy(
                         createdBy.getMemberId(),
                         createdBy.getFirstName(),
@@ -372,6 +403,8 @@ public class ProjectAutomationHandler {
 
         private Team team;
 
+        private Tenant tenant;
+
         private CreatedBy createdBy;
     }
 
@@ -383,6 +416,8 @@ public class ProjectAutomationHandler {
         private BitbucketProjectRequest bitbucketProjectRequest;
 
         private List<Team> teams;
+
+        private Tenant owningTenant;
 
         private CreatedBy requestedBy;
     }
@@ -435,6 +470,16 @@ public class ProjectAutomationHandler {
         private final List<TeamMember> owners = new ArrayList<>();
 
         private final List<TeamMember> members = new ArrayList<>();
+    }
+
+    @Value
+    private class Tenant {
+
+        private String tenantId;
+
+        private String name;
+
+        private String description;
     }
 
     @Value

@@ -15,6 +15,8 @@ import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantRepository;
 
 @Component
 public class ProjectHandler {
@@ -27,14 +29,18 @@ public class ProjectHandler {
 
     private TeamMemberRepository teamMemberRepository;
 
+    private TenantRepository tenantRepository;
+
     public ProjectHandler(ProjectRepository projectRepository,
             BitbucketProjectRepository bitbucketProjectRepository,
             TeamRepository teamRepository,
-            TeamMemberRepository teamMemberRepository) {
+            TeamMemberRepository teamMemberRepository,
+            TenantRepository tenantRepository) {
         this.projectRepository = projectRepository;
         this.bitbucketProjectRepository = bitbucketProjectRepository;
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
+        this.tenantRepository = tenantRepository;
     }
 
     @EventHandler
@@ -46,12 +52,16 @@ public class ProjectHandler {
         TeamEntity creatingTeam = teamRepository
                 .findByTeamId(event.getTeam().getTeamId());
 
+        TenantEntity owningTenant = tenantRepository
+                .findByTenantId(event.getTenant().getTenantId());
+
         ProjectEntity projectEntity = ProjectEntity.builder()
                 .projectId(event.getProjectId())
                 .name(event.getName())
                 .description(event.getDescription())
                 .createdBy(createdBy)
                 .owningTeam(creatingTeam)
+                .owningTenant(owningTenant)
                 .teams(Collections.singleton(creatingTeam))
                 .build();
 

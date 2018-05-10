@@ -17,4 +17,6 @@ public class ProjectCreated {
     private TeamMemberId createdBy;
 
     private TeamId team;
+
+    private TenantId tenant;
 }

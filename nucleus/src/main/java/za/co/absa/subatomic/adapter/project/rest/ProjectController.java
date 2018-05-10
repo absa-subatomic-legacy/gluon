@@ -1,17 +1,14 @@
 package za.co.absa.subatomic.adapter.project.rest;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import za.co.absa.subatomic.adapter.team.rest.TeamController;
-import za.co.absa.subatomic.application.project.ProjectService;
-import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
-import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
@@ -26,8 +23,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import za.co.absa.subatomic.adapter.team.rest.TeamController;
+import za.co.absa.subatomic.application.project.ProjectService;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @RestController
 @RequestMapping("/projects")
@@ -49,7 +49,8 @@ public class ProjectController {
         // TODO do better error checking on the initial team
         String aggregateId = projectService.newProject(request.getName(),
                 request.getDescription(), request.getCreatedBy(),
-                request.getTeams().get(0).getTeamId());
+                request.getTeams().get(0).getTeamId(),
+                request.getOwningTenant());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -154,6 +155,8 @@ public class ProjectController {
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
                 resource.setOwningTeam(new TeamResourceAssembler()
                         .toResource(entity.getOwningTeam()));
+                resource.setOwningTenant(
+                        entity.getOwningTenant().getTenantId());
                 resource.setTeams(
                         new TeamResourceAssembler()
                                 .toResources(entity.getTeams()));
