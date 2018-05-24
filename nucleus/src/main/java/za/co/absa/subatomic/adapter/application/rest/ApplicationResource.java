@@ -24,4 +24,6 @@ public class ApplicationResource extends ResourceSupport {
     private String createdBy;
 
     private BitbucketRepository bitbucketRepository;
+
+    private Boolean requestConfiguration;
 }

@@ -24,5 +24,9 @@ public class NewApplication {
 
     private TeamMemberId requestedBy;
 
+    private Boolean requestConfiguration;
+
+    private BitbucketGitRepository bitbucketRepository;
+
     private Set<String> allAssociateProjectOwnerAndMemberIds;
 }

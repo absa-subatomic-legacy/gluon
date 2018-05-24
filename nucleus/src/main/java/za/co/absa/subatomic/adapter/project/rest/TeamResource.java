@@ -11,4 +11,6 @@ public class TeamResource extends ResourceSupport {
 
     private String name;
 
+    private Slack slack;
+
 }

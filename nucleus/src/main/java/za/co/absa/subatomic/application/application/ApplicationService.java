@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.application.NewApplication;
-import za.co.absa.subatomic.domain.application.RequestApplicationEnvironment;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
@@ -44,7 +43,13 @@ public class ApplicationService {
 
     public String newApplication(String name, String description,
             String applicationType,
-            String projectId, String requestedBy) {
+            String projectId, String requestedBy,
+            boolean requestConfiguration,
+            String bitbucketRepoId,
+            String bitbucketRepoSlug,
+            String bitbucketRepoName,
+            String bitbucketRepoUrl,
+            String bitbucketRepoRemoteUrl) {
         ApplicationEntity existingApplication = this
                 .findByNameAndProjectName(name, projectId);
         if (existingApplication != null) {
@@ -65,27 +70,7 @@ public class ApplicationService {
                         ApplicationType.valueOf(applicationType),
                         new ProjectId(projectId),
                         new TeamMemberId(requestedBy),
-                        allMemberAndOwnerIds),
-                1000,
-                TimeUnit.SECONDS);
-    }
-
-    public String requestApplicationEnvironment(String applicationId,
-            String bitbucketRepoId,
-            String bitbucketRepoSlug,
-            String bitbucketRepoName,
-            String bitbucketRepoUrl,
-            String bitbucketRepoRemoteUrl,
-            String projectId,
-            String requestedBy) {
-        Set<TeamEntity> teamsAssociatedWithProject = findTeamsByProjectId(
-                projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
-                teamsAssociatedWithProject);
-        return commandGateway.sendAndWait(
-                new RequestApplicationEnvironment(
-                        applicationId,
-                        bitbucketRepoName,
+                        requestConfiguration,
                         BitbucketGitRepository.builder()
                                 .bitbucketId(bitbucketRepoId)
                                 .slug(bitbucketRepoSlug)
@@ -93,8 +78,6 @@ public class ApplicationService {
                                 .repoUrl(bitbucketRepoUrl)
                                 .remoteUrl(bitbucketRepoRemoteUrl)
                                 .build(),
-                        new ProjectId(projectId),
-                        new TeamMemberId(requestedBy),
                         allMemberAndOwnerIds),
                 1000,
                 TimeUnit.SECONDS);
