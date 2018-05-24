@@ -20,4 +20,8 @@ public class ApplicationCreated {
     private ProjectId projectId;
 
     private TeamMemberId createdBy;
+
+    private Boolean requestConfiguration;
+
+    private BitbucketGitRepository bitbucketRepository;
 }

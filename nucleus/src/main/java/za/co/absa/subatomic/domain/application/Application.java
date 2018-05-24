@@ -50,7 +50,9 @@ public class Application {
                 command.getDescription(),
                 command.getApplicationType(),
                 command.getProjectId(),
-                command.getRequestedBy()));
+                command.getRequestedBy(),
+                command.getRequestConfiguration(),
+                command.getBitbucketRepository()));
     }
 
     @EventSourcingHandler
@@ -60,34 +62,6 @@ public class Application {
         this.description = event.getDescription();
         this.projectId = event.getProjectId();
         this.createdBy = event.getCreatedBy();
-    }
-
-    @CommandHandler
-    void when(RequestApplicationEnvironment command) {
-        if (!command.getAllAssociateProjectOwnerAndMemberIds()
-                .contains(command.getRequestedBy().getTeamMemberId())) {
-            throw new ApplicationAuthorisationException(MessageFormat.format(
-                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
-                    command.getRequestedBy()));
-        }
-        BitbucketGitRepository bitbucketRepository = command
-                .getBitbucketRepository();
-        apply(new ApplicationEnvironmentRequested(
-                new ApplicationId(command.getApplicationId()),
-                command.getName(),
-                BitbucketGitRepository.builder()
-                        .bitbucketId(bitbucketRepository.getBitbucketId())
-                        .slug(bitbucketRepository.getSlug())
-                        .name(bitbucketRepository.getName())
-                        .repoUrl(bitbucketRepository.getRepoUrl())
-                        .remoteUrl(bitbucketRepository.getRemoteUrl())
-                        .build(),
-                command.getProjectId(),
-                command.getRequestedBy()));
-    }
-
-    @EventSourcingHandler
-    void on(ApplicationEnvironmentRequested event) {
-        this.bitbucketRepository = event.getBitbucketGitRepository();
+        this.bitbucketRepository = event.getBitbucketRepository();
     }
 }

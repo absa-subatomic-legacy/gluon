@@ -11,7 +11,6 @@ import org.springframework.web.client.RestTemplate;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
-import za.co.absa.subatomic.domain.application.ApplicationEnvironmentRequested;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
@@ -52,20 +51,20 @@ public class ApplicationAutomationHandler {
     }
 
     @EventHandler
-    void on(ApplicationEnvironmentRequested event) {
+    void on(ApplicationCreated event) {
         log.info(
-                "An application environment was requested for project [{}], sending event to Atomist: {}",
+                "An application was created for project [{}], sending event to Atomist: {}",
                 event.getProjectId().getProjectId(), event);
 
         ApplicationEntity applicationEntity = applicationRepository
                 .findByApplicationId(
-                        event.getApplicationId().getApplicationId());
+                        event.getApplicationId());
 
         ProjectEntity projectEntity = projectRepository
                 .findByProjectId(event.getProjectId().getProjectId());
 
         TeamMemberEntity teamMemberEntity = teamMemberRepository
-                .findByMemberId(event.getRequestedBy().getTeamMemberId());
+                .findByMemberId(event.getCreatedBy().getTeamMemberId());
 
         SlackIdentity slackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
@@ -98,7 +97,7 @@ public class ApplicationAutomationHandler {
                     owningTeam.getSlackDetails().getTeamChannel());
         }
 
-        ApplicationEnvironmentRequestedWithDetails environmentRequested = new ApplicationEnvironmentRequestedWithDetails(
+        ApplicationCreatedWithDetails applicationCreated = new ApplicationCreatedWithDetails(
                 ApplicationCreated.builder()
                         .applicationId(applicationEntity.getApplicationId())
                         .name(applicationEntity.getName())
@@ -111,12 +110,12 @@ public class ApplicationAutomationHandler {
                         .description(projectEntity.getDescription())
                         .build(),
                 BitbucketGitRepository.builder()
-                        .bitbucketId(event.getBitbucketGitRepository()
+                        .bitbucketId(event.getBitbucketRepository()
                                 .getBitbucketId())
-                        .slug(event.getBitbucketGitRepository().getSlug())
-                        .name(event.getBitbucketGitRepository().getName())
-                        .repoUrl(event.getBitbucketGitRepository().getRepoUrl())
-                        .remoteUrl(event.getBitbucketGitRepository()
+                        .slug(event.getBitbucketRepository().getSlug())
+                        .name(event.getBitbucketRepository().getName())
+                        .repoUrl(event.getBitbucketRepository().getRepoUrl())
+                        .remoteUrl(event.getBitbucketRepository()
                                 .getRemoteUrl())
                         .build(),
                 new BitbucketProject(
@@ -133,11 +132,12 @@ public class ApplicationAutomationHandler {
                         teamMemberEntity.getFirstName(),
                         teamMemberEntity.getLastName(),
                         teamMemberEntity.getEmail(),
-                        slackIdentity));
+                        slackIdentity),
+                event.getRequestConfiguration());
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties.getApplicationCreatedEventUrl(),
-                environmentRequested,
+                applicationCreated,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
@@ -147,7 +147,7 @@ public class ApplicationAutomationHandler {
     }
 
     @Value
-    private class ApplicationEnvironmentRequestedWithDetails {
+    private class ApplicationCreatedWithDetails {
 
         private ApplicationCreated application;
 
@@ -162,6 +162,8 @@ public class ApplicationAutomationHandler {
         private List<Team> teams;
 
         private CreatedBy requestedBy;
+
+        private Boolean requestConfiguration;
     }
 
     @Value

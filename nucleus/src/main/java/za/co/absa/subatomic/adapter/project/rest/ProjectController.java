@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.adapter.project.rest;
 
+import static java.util.Optional.ofNullable;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -197,30 +198,13 @@ public class ProjectController {
                     entity);
             resource.setTeamId(entity.getTeamId());
             resource.setName(entity.getName());
+
+            ofNullable(entity.getSlackDetails())
+                    .ifPresent(slackDetails -> resource
+                            .setSlack(
+                                    new Slack(slackDetails
+                                            .getTeamChannel())));
             return resource;
         }
     }
-    //
-    // private class BitbucketProjectAssembler extends
-    // ResourceAssemblerSupport<BitbucketProjectEntity, BitbucketProjectResource> {
-    //
-    // public BitbucketProjectAssembler() {
-    // super(ProjectController.class, BitbucketProjectResource.class);
-    // }
-    //
-    // @Override
-    // public BitbucketProjectResource toResource(
-    // BitbucketProjectEntity entity) {
-    // BitbucketProjectResource resource = createResourceWithId(
-    // entity.getBitbucketProjectId(),
-    // entity);
-    // resource.setKey(entity.getKey());
-    // resource.setBitbucketProjectId(entity.getBitbucketProjectId());
-    // resource.setName(entity.getName());
-    // resource.setDescription(entity.getDescription());
-    // resource.setUrl(entity.getUrl());
-    // return resource;
-    //
-    // }
-    // }
 }

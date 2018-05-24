@@ -1,16 +1,15 @@
 package za.co.absa.subatomic.infrastructure.application.view.jpa;
 
 import org.axonframework.eventhandling.EventHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
-import za.co.absa.subatomic.domain.application.ApplicationEnvironmentRequested;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
-
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class ApplicationHandler {
@@ -38,6 +37,9 @@ public class ApplicationHandler {
         TeamMemberEntity createdBy = teamMemberRepository
                 .findByMemberId(event.getCreatedBy().getTeamMemberId());
 
+        BitbucketGitRepository bitbucketRepository = event
+                .getBitbucketRepository();
+
         ApplicationEntity applicationEntity = ApplicationEntity.builder()
                 .applicationId(event.getApplicationId())
                 .name(event.getName())
@@ -45,6 +47,12 @@ public class ApplicationHandler {
                 .applicationType(event.getApplicationType())
                 .project(projectEntity)
                 .createdBy(createdBy)
+                .bitbucketRepository(new BitbucketRepositoryEmbedded(
+                        bitbucketRepository.getBitbucketId(),
+                        bitbucketRepository.getSlug(),
+                        bitbucketRepository.getName(),
+                        bitbucketRepository.getRepoUrl(),
+                        bitbucketRepository.getRemoteUrl()))
                 .build();
 
         applicationEntity = applicationRepository.save(applicationEntity);
@@ -52,22 +60,4 @@ public class ApplicationHandler {
         projectEntity.getApplications().add(applicationEntity);
     }
 
-    @EventHandler
-    @Transactional
-    void on(ApplicationEnvironmentRequested event) {
-        ApplicationEntity applicationEntity = applicationRepository
-                .findByApplicationId(
-                        event.getApplicationId().getApplicationId());
-        BitbucketGitRepository bitbucketRepository = event
-                .getBitbucketGitRepository();
-        applicationEntity
-                .setBitbucketRepository(new BitbucketRepositoryEmbedded(
-                        bitbucketRepository.getBitbucketId(),
-                        bitbucketRepository.getSlug(),
-                        bitbucketRepository.getName(),
-                        bitbucketRepository.getRepoUrl(),
-                        bitbucketRepository.getRemoteUrl()));
-
-        applicationRepository.save(applicationEntity);
-    }
 }

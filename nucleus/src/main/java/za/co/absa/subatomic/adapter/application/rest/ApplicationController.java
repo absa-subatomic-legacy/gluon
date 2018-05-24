@@ -1,15 +1,14 @@
 package za.co.absa.subatomic.adapter.application.rest;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import za.co.absa.subatomic.application.application.ApplicationService;
-import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
-import za.co.absa.subatomic.infrastructure.application.view.jpa.BitbucketRepositoryEmbedded;
-
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
@@ -17,15 +16,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import za.co.absa.subatomic.application.application.ApplicationService;
+import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
+import za.co.absa.subatomic.infrastructure.application.view.jpa.BitbucketRepositoryEmbedded;
 
 @RestController
 @RequestMapping("/applications")
@@ -44,12 +43,23 @@ public class ApplicationController {
     @PostMapping
     ResponseEntity<ApplicationResource> create(
             @RequestBody ApplicationResource request) {
+
+        if (request.getRequestConfiguration() == null) {
+            request.setRequestConfiguration(false);
+        }
+
         String aggregateId = applicationService.newApplication(
                 request.getName(),
                 request.getDescription(),
                 request.getApplicationType(),
                 request.getProjectId(),
-                request.getCreatedBy());
+                request.getCreatedBy(),
+                request.getRequestConfiguration(),
+                request.getBitbucketRepository().getBitbucketId(),
+                request.getBitbucketRepository().getSlug(),
+                request.getBitbucketRepository().getName(),
+                request.getBitbucketRepository().getRepoUrl(),
+                request.getBitbucketRepository().getRemoteUrl());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -57,25 +67,6 @@ public class ApplicationController {
                 .toUri();
 
         return ResponseEntity.created(location).build();
-    }
-
-    @PutMapping("/{id}")
-    ResponseEntity<ApplicationResource> update(@PathVariable String id,
-            @RequestBody ApplicationResource request) {
-        if (request.getBitbucketRepository() != null) {
-            applicationService.requestApplicationEnvironment(id,
-                    request.getBitbucketRepository().getBitbucketId(),
-                    request.getBitbucketRepository().getSlug(),
-                    request.getBitbucketRepository().getName(),
-                    request.getBitbucketRepository().getRepoUrl(),
-                    request.getBitbucketRepository().getRemoteUrl(),
-                    request.getProjectId(),
-                    request.getCreatedBy());
-        }
-
-        return ResponseEntity.accepted()
-                .body(assembler
-                        .toResource(applicationService.findByApplictionId(id)));
     }
 
     @GetMapping("/{id}")
@@ -96,7 +87,7 @@ public class ApplicationController {
                     assembler.toResource(applicationService
                             .findByNameAndProjectId(name, projectId)));
         }
-        else if (StringUtils.isNotBlank(projectId)){
+        else if (StringUtils.isNotBlank(projectId)) {
             applications.addAll(
                     assembler.toResources(
                             applicationService.findByProjectId(projectId)));
@@ -118,7 +109,8 @@ public class ApplicationController {
                             .findByApplicationType(applicationType)));
         }
 
-        if (StringUtils.isAllBlank(name, applicationType, projectName, projectId)) {
+        if (StringUtils.isAllBlank(name, applicationType, projectName,
+                projectId)) {
             applications.addAll(applicationService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
