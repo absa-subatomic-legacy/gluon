@@ -98,6 +98,10 @@ public class ProjectController {
                     request.getProjectEnvironment().getRequestedBy());
         }
 
+        if (request.getTeams() != null){
+            projectService.linkProjectToTeams(id, request.getCreatedBy(), request.getTeams());
+        }
+
         return ResponseEntity.accepted()
                 .body(assembler.toResource(projectService.findByProjectId(id)));
     }
