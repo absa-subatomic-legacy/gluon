@@ -406,12 +406,6 @@ public class ProjectAutomationHandler {
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getRequestedBy().getTeamMemberId());
 
-        /*Set<TeamEntity> teamsLinked = new HashSet<>();
-
-        for(TeamId team: event.getTeamsLinked()) {
-            teamsLinked.add(teamRepository.findByTeamId(team.getTeamId()));
-        }*/
-
         za.co.absa.subatomic.domain.member.SlackIdentity slackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
             slackIdentity = new SlackIdentity(
