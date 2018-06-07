@@ -415,15 +415,24 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
+        TeamEntity newTeam = teamRepository
+                .findByTeamId(event.getTeamsLinked().iterator().next().getTeamId());
+
+        List<Team> currentTeams = projectEntity.getTeams().stream()
+                .map(teamEntity -> new Team(
+                        teamEntity.getTeamId(),
+                        teamEntity.getName(),
+                        new za.co.absa.subatomic.domain.team.SlackIdentity(
+                                teamEntity.getSlackDetails()
+                                        .getTeamChannel())))
+                .collect(Collectors.toList());
+
+        currentTeams.add(0, new Team(newTeam.getTeamId(), newTeam.getName(), new za.co.absa.subatomic.domain.team.SlackIdentity(
+                newTeam.getSlackDetails()
+                        .getTeamChannel())));
+
         TeamAssociated teamAssociated = new TeamAssociated(
-                projectEntity.getTeams().stream()
-                        .map(teamEntity -> new Team(
-                                teamEntity.getTeamId(),
-                                teamEntity.getName(),
-                                new za.co.absa.subatomic.domain.team.SlackIdentity(
-                                        teamEntity.getSlackDetails()
-                                                .getTeamChannel())))
-                        .collect(Collectors.toList()),
+                currentTeams,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getFirstName(),
@@ -432,12 +441,12 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfigurationProperties.getProjectCreatedEventUrl(),
+                atomistConfigurationProperties.getTeamsLinkedToProjectEventUrl(),
                 teamAssociated,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested event successfully: {} -> {}",
+            log.info("Atomist has ingested team associated event successfully: {} -> {}",
                     response.getHeaders(), response.getBody());
         }
     }
