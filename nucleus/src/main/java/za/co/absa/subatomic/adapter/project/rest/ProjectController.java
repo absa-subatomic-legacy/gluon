@@ -126,10 +126,10 @@ public class ProjectController {
 
         if (StringUtils.isNotBlank(teamName)) {
             projects.addAll(
-                    assembler.toResources(projectService.findByTeamName(name)));
+                    assembler.toResources(projectService.findByTeamName(teamName)));
         }
 
-        if (StringUtils.isAllBlank(name)) {
+        if (StringUtils.isAllBlank(name, teamName)) {
             projects.addAll(projectService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
