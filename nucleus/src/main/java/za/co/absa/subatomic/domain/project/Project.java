@@ -13,6 +13,7 @@ import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.spring.stereotype.Aggregate;
 
 import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 
 @Aggregate
@@ -180,4 +181,40 @@ public class Project {
     void on(BitbucketProjectLinked event) {
         this.bitbucketProject = event.getBitbucketProject();
     }
+
+    @CommandHandler
+    void when(LinkTeamsToProject command) {
+        if (!command.getAllAssociateProjectOwnerAndMemberIds()
+                .contains(command.getRequestedBy().getTeamMemberId())) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "RequestedBy member {0} is not a valid member of any team associated to the owning project.",
+                    command.getRequestedBy()));
+        }
+
+        Set<TeamId> unlinkedTeams = new HashSet<>();
+
+        // Link only teams that are not yet linked
+        for (TeamId team :
+                command.getTeamsToLink()) {
+            if (!this.teams.contains(team)) {
+                unlinkedTeams.add(team);
+            }
+        }
+
+        if (unlinkedTeams.size() == 0){
+            throw new InvalidRequestException("There are no teams that are not already associated to this project");
+        }
+
+        apply(new TeamsLinkedToProject(
+                new ProjectId(command.getProjectId()),
+                command.getRequestedBy(),
+                unlinkedTeams
+        ));
+    }
+
+    @EventSourcingHandler
+    void on(TeamsLinkedToProject event) {
+        this.teams.addAll(event.getTeamsLinked());
+    }
+
 }

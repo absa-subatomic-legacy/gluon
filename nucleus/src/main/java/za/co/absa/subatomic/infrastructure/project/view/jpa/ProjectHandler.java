@@ -1,16 +1,14 @@
 package za.co.absa.subatomic.infrastructure.project.view.jpa;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import za.co.absa.subatomic.domain.project.BitbucketProject;
-import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
-import za.co.absa.subatomic.domain.project.BitbucketProjectLinked;
-import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
-import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.domain.project.*;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -131,4 +129,20 @@ public class ProjectHandler {
         bitbucketProjectRepository.save(bitbucketProjectEntity);
     }
 
+    @EventHandler
+    @Transactional
+    void on(TeamsLinkedToProject event) {
+
+        ProjectEntity project = projectRepository.findByProjectId(event.getProjectId().getProjectId());
+
+        Set<TeamEntity> teamEntities = new HashSet<>();
+
+        for(TeamId team: event.getTeamsLinked()){
+            teamEntities.add(teamRepository.findByTeamId(team.getTeamId()));
+        }
+
+        project.getTeams().addAll(teamEntities);
+
+        projectRepository.save(project);
+    }
 }

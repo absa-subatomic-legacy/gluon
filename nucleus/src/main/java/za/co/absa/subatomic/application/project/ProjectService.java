@@ -13,17 +13,11 @@ import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import za.co.absa.subatomic.adapter.project.rest.TeamResource;
 import za.co.absa.subatomic.application.tenant.TenantService;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
-import za.co.absa.subatomic.domain.project.AddBitbucketRepository;
-import za.co.absa.subatomic.domain.project.BitbucketProject;
-import za.co.absa.subatomic.domain.project.LinkBitbucketProject;
-import za.co.absa.subatomic.domain.project.NewProject;
-import za.co.absa.subatomic.domain.project.NewProjectEnvironment;
-import za.co.absa.subatomic.domain.project.RequestBitbucketProject;
-import za.co.absa.subatomic.domain.project.TeamId;
-import za.co.absa.subatomic.domain.project.TenantId;
+import za.co.absa.subatomic.domain.project.*;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -44,9 +38,9 @@ public class ProjectService {
     private TenantService tenantService;
 
     public ProjectService(CommandGateway commandGateway,
-            ProjectRepository projectRepository,
-            TeamRepository teamRepository,
-            TenantService tenantService) {
+                          ProjectRepository projectRepository,
+                          TeamRepository teamRepository,
+                          TenantService tenantService) {
         this.commandGateway = commandGateway;
         this.projectRepository = projectRepository;
         this.teamRepository = teamRepository;
@@ -54,7 +48,7 @@ public class ProjectService {
     }
 
     public String newProject(String name, String description,
-            String createdBy, String teamId, String tenantId) {
+                             String createdBy, String teamId, String tenantId) {
         ProjectEntity existingProject = this.findByName(name);
         if (existingProject != null) {
             throw new DuplicateRequestException(MessageFormat.format(
@@ -69,8 +63,7 @@ public class ProjectService {
         if (tenantId == null) {
             TenantEntity tenantEntity = tenantService.findByName("Default");
             tenantId = tenantEntity.getTenantId();
-        }
-        else {
+        } else {
             TenantEntity tenantEntity = tenantService.findByTenantId(tenantId);
             if (tenantEntity == null) {
                 throw new InvalidRequestException(MessageFormat.format(
@@ -92,7 +85,7 @@ public class ProjectService {
     }
 
     public String requestBitbucketProject(String projectId, String name,
-            String projectKey, String description, String requestedBy) {
+                                          String projectKey, String description, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -112,7 +105,7 @@ public class ProjectService {
     }
 
     public String confirmBitbucketProjectCreated(String projectId,
-            String bitbucketProjectId, String url) {
+                                                 String bitbucketProjectId, String url) {
         return commandGateway.sendAndWait(
                 new AddBitbucketRepository(
                         projectId,
@@ -125,12 +118,12 @@ public class ProjectService {
     }
 
     public String linkExistingBitbucketProject(String projectId,
-            String bitbucketProjectId,
-            String bitbucketProjectName,
-            String projectKey,
-            String description,
-            String url,
-            String requestedBy) {
+                                               String bitbucketProjectId,
+                                               String bitbucketProjectName,
+                                               String projectKey,
+                                               String description,
+                                               String url,
+                                               String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -158,6 +151,28 @@ public class ProjectService {
         return commandGateway.sendAndWait(
                 new NewProjectEnvironment(projectId,
                         new TeamMemberId(requestedBy),
+                        allMemberAndOwnerIds),
+                1,
+                TimeUnit.SECONDS);
+    }
+
+    public String linkProjectToTeams(String projectId, String requestedBy,
+                                     List<TeamResource> teamsToLink) {
+        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
+                projectId);
+        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
+                projectAssociatedTeams);
+
+        Set<TeamId> teamIdsToLink = new HashSet<>();
+
+        for (TeamResource team : teamsToLink) {
+            teamIdsToLink.add(new TeamId(team.getTeamId()));
+        }
+
+        return commandGateway.sendAndWait(
+                new LinkTeamsToProject(projectId,
+                        new TeamMemberId(requestedBy),
+                        teamIdsToLink,
                         allMemberAndOwnerIds),
                 1,
                 TimeUnit.SECONDS);
