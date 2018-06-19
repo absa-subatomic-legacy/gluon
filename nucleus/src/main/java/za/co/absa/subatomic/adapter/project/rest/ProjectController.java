@@ -93,14 +93,12 @@ public class ProjectController {
                         request.getCreatedBy());
             }
         }
-
-        if (request.getProjectEnvironment() != null) {
+        else if (request.getTeams() != null){
+            projectService.linkProjectToTeams(id, request.getCreatedBy(), request.getTeams());
+        }
+        else if (request.getProjectEnvironment() != null) {
             projectService.newProjectEnvironment(id,
                     request.getProjectEnvironment().getRequestedBy());
-        }
-
-        if (request.getTeams() != null){
-            projectService.linkProjectToTeams(id, request.getCreatedBy(), request.getTeams());
         }
 
         return ResponseEntity.accepted()
