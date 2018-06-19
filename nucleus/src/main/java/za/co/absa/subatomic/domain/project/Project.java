@@ -201,7 +201,7 @@ public class Project {
             }
         }
 
-        if (unlinkedTeams.size() == 0){
+        if (unlinkedTeams.isEmpty()){
             throw new InvalidRequestException("There are no teams that are not already associated to this project");
         }
 
