@@ -93,7 +93,7 @@ public class ProjectController {
                         request.getCreatedBy());
             }
         }
-        else if (request.getTeams() != null){
+        else if (!request.getTeams().isEmpty()){
             projectService.linkProjectToTeams(id, request.getCreatedBy(), request.getTeams());
         }
         else if (request.getProjectEnvironment() != null) {
