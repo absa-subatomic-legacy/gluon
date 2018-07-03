@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -61,9 +62,9 @@ public class ProjectEntity {
     @ManyToMany
     private Set<TeamEntity> teams = new HashSet<>();
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.REMOVE)
     private Set<ApplicationEntity> applications = new HashSet<>();
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.REMOVE)
     private BitbucketProjectEntity bitbucketProject;
 }

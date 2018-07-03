@@ -38,9 +38,9 @@ public class ProjectService {
     private TenantService tenantService;
 
     public ProjectService(CommandGateway commandGateway,
-                          ProjectRepository projectRepository,
-                          TeamRepository teamRepository,
-                          TenantService tenantService) {
+            ProjectRepository projectRepository,
+            TeamRepository teamRepository,
+            TenantService tenantService) {
         this.commandGateway = commandGateway;
         this.projectRepository = projectRepository;
         this.teamRepository = teamRepository;
@@ -48,7 +48,7 @@ public class ProjectService {
     }
 
     public String newProject(String name, String description,
-                             String createdBy, String teamId, String tenantId) {
+            String createdBy, String teamId, String tenantId) {
         ProjectEntity existingProject = this.findByName(name);
         if (existingProject != null) {
             throw new DuplicateRequestException(MessageFormat.format(
@@ -63,7 +63,8 @@ public class ProjectService {
         if (tenantId == null) {
             TenantEntity tenantEntity = tenantService.findByName("Default");
             tenantId = tenantEntity.getTenantId();
-        } else {
+        }
+        else {
             TenantEntity tenantEntity = tenantService.findByTenantId(tenantId);
             if (tenantEntity == null) {
                 throw new InvalidRequestException(MessageFormat.format(
@@ -85,7 +86,7 @@ public class ProjectService {
     }
 
     public String requestBitbucketProject(String projectId, String name,
-                                          String projectKey, String description, String requestedBy) {
+            String projectKey, String description, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -105,7 +106,7 @@ public class ProjectService {
     }
 
     public String confirmBitbucketProjectCreated(String projectId,
-                                                 String bitbucketProjectId, String url) {
+            String bitbucketProjectId, String url) {
         return commandGateway.sendAndWait(
                 new AddBitbucketRepository(
                         projectId,
@@ -118,12 +119,12 @@ public class ProjectService {
     }
 
     public String linkExistingBitbucketProject(String projectId,
-                                               String bitbucketProjectId,
-                                               String bitbucketProjectName,
-                                               String projectKey,
-                                               String description,
-                                               String url,
-                                               String requestedBy) {
+            String bitbucketProjectId,
+            String bitbucketProjectName,
+            String projectKey,
+            String description,
+            String url,
+            String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -157,7 +158,7 @@ public class ProjectService {
     }
 
     public String linkProjectToTeams(String projectId, String requestedBy,
-                                     List<TeamResource> teamsToLink) {
+            List<TeamResource> teamsToLink) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
@@ -206,6 +207,11 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public Set<TeamEntity> findTeamsByProjectId(String projectId) {
         return projectRepository.findByProjectId(projectId).getTeams();
+    }
+
+    @Transactional
+    public void deleteProjectById(String projectId) {
+        projectRepository.deleteByProjectId(projectId);
     }
 
     private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams) {
