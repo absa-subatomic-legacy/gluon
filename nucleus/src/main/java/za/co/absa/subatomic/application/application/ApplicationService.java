@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
+import za.co.absa.subatomic.domain.application.DeleteApplication;
 import za.co.absa.subatomic.domain.application.NewApplication;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
@@ -79,6 +80,14 @@ public class ApplicationService {
                                 .remoteUrl(bitbucketRepoRemoteUrl)
                                 .build(),
                         allMemberAndOwnerIds),
+                1000,
+                TimeUnit.SECONDS);
+    }
+
+    public String deleteApplication(String applicationId) {
+        return commandGateway.sendAndWait(
+                new DeleteApplication(
+                        applicationId),
                 1000,
                 TimeUnit.SECONDS);
     }

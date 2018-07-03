@@ -55,6 +55,11 @@ public class Application {
                 command.getBitbucketRepository()));
     }
 
+    @CommandHandler
+    public Application(DeleteApplication command) {
+        apply(new ApplicationDeleted(command.getApplicationId()));
+    }
+
     @EventSourcingHandler
     void on(ApplicationCreated event) {
         this.applicationId = event.getApplicationId();

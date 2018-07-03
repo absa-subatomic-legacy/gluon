@@ -13,6 +13,7 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -120,6 +121,12 @@ public class ApplicationController {
                 linkTo(methodOn(ApplicationController.class).list(name,
                         applicationType, projectName, projectId))
                                 .withRel("self"));
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity delete(@PathVariable String id) {
+        applicationService.deleteApplication(id);
+        return ResponseEntity.accepted().build();
     }
 
     private class ApplicationResourceAssembler
