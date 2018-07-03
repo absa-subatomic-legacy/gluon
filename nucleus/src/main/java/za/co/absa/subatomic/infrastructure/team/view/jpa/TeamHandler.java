@@ -90,6 +90,33 @@ public class TeamHandler {
 
     @EventHandler
     @Transactional
+    void on(TeamMembersRemoved event) {
+        TeamEntity team = teamRepository.findByTeamId(event.getTeamId());
+        team.getOwners().removeAll(event.getOwners().stream()
+                .map(teamMemberId -> teamMemberRepository
+                        .findByMemberId(teamMemberId.getTeamMemberId()))
+                .collect(Collectors.toList()));
+
+        team.getMembers().removeAll(event.getTeamMembers().stream()
+                .map(teamMemberId -> teamMemberRepository
+                        .findByMemberId(teamMemberId.getTeamMemberId()))
+                .collect(Collectors.toList()));
+
+        event.getOwners()
+                .forEach(teamMemberId -> teamMemberRepository
+                        .findByMemberId(teamMemberId.getTeamMemberId())
+                        .getTeams().remove(team));
+
+        event.getTeamMembers()
+                .forEach(teamMemberId -> teamMemberRepository
+                        .findByMemberId(teamMemberId.getTeamMemberId())
+                        .getTeams().remove(team));
+
+        teamRepository.save(team);
+    }
+
+    @EventHandler
+    @Transactional
     void on(MembershipRequestCreated event) {
         TeamMemberEntity requestedBy = teamMemberRepository
                 .findByMemberId(event.getMembershipRequest().getRequestedBy()
@@ -111,4 +138,11 @@ public class TeamHandler {
         team.getMembershipRequests().add(membershipRequestEntity);
         teamRepository.save(team);
     }
+
+    @EventHandler
+    @Transactional
+    void on(TeamDeleted event) {
+        teamRepository.deleteByTeamId(event.getTeamId());
+    }
+
 }

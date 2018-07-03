@@ -16,6 +16,7 @@ import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.team.AddSlackIdentity;
 import za.co.absa.subatomic.domain.team.AddTeamMembers;
+import za.co.absa.subatomic.domain.team.DeleteTeam;
 import za.co.absa.subatomic.domain.team.MembershipRequest;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
 import za.co.absa.subatomic.domain.team.NewDevOpsEnvironment;
@@ -101,6 +102,18 @@ public class TeamService {
                 TimeUnit.SECONDS);
     }
 
+    public String removeTeamMembers(String teamId, String actionedBy,
+                                 List<String> teamOwnerIds,
+                                 List<String> teamMemberIds) {
+        return commandGateway.sendAndWait(new AddTeamMembers(
+                        teamId,
+                        new TeamMemberId(actionedBy),
+                        teamOwnerIds,
+                        teamMemberIds),
+                1,
+                TimeUnit.SECONDS);
+    }
+
     public String addSlackIdentity(String teamId, String teamChannel) {
         return commandGateway.sendAndWait(new AddSlackIdentity(
                 teamId,
@@ -141,6 +154,13 @@ public class TeamService {
                                 new TeamMemberId(requestByMemberId),
                                 null,
                                 MembershipRequestStatus.OPEN)),
+                1,
+                TimeUnit.SECONDS);
+    }
+
+    public String deleteTeam(String teamId) {
+        return commandGateway.sendAndWait(
+                new DeleteTeam(teamId),
                 1,
                 TimeUnit.SECONDS);
     }
