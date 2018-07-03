@@ -133,16 +133,24 @@ public class ProjectHandler {
     @Transactional
     void on(TeamsLinkedToProject event) {
 
-        ProjectEntity project = projectRepository.findByProjectId(event.getProjectId().getProjectId());
+        ProjectEntity project = projectRepository
+                .findByProjectId(event.getProjectId().getProjectId());
 
         Set<TeamEntity> teamEntities = new HashSet<>();
 
-        for(TeamId team: event.getTeamsLinked()){
+        for (TeamId team : event.getTeamsLinked()) {
             teamEntities.add(teamRepository.findByTeamId(team.getTeamId()));
         }
 
         project.getTeams().addAll(teamEntities);
 
         projectRepository.save(project);
+    }
+
+    @EventHandler
+    @Transactional
+    void on(ProjectDeleted event) {
+        projectRepository
+                .deleteByProjectId(event.getProjectId().getProjectId());
     }
 }

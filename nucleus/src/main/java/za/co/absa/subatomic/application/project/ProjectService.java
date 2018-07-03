@@ -179,6 +179,10 @@ public class ProjectService {
                 TimeUnit.SECONDS);
     }
 
+    public String deleteProject(String projectId){
+        return commandGateway.sendAndWait(new DeleteProject(projectId));
+    }
+
     @Transactional(readOnly = true)
     public ProjectEntity findByProjectId(String projectId) {
         return projectRepository.findByProjectId(projectId);
@@ -207,11 +211,6 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public Set<TeamEntity> findTeamsByProjectId(String projectId) {
         return projectRepository.findByProjectId(projectId).getTeams();
-    }
-
-    @Transactional
-    public void deleteProjectById(String projectId) {
-        projectRepository.deleteByProjectId(projectId);
     }
 
     private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams) {

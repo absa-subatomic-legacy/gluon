@@ -143,7 +143,7 @@ public class ProjectController {
 
     @DeleteMapping("/{id}")
     ResponseEntity update(@PathVariable String id) {
-        projectService.deleteProjectById(id);
+        projectService.deleteProject(id);
         return ResponseEntity.accepted().build();
     }
 
