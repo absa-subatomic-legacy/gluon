@@ -23,4 +23,6 @@ public interface ApplicationRepository
     ApplicationEntity findByNameAndProjectName(String name, String projectName);
 
     ApplicationEntity findByNameAndProjectId(String name, Long projectId);
+
+    void deleteByApplicationId(String applicationId);
 }

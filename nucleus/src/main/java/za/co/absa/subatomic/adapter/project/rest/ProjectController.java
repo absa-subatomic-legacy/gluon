@@ -14,6 +14,7 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -93,8 +94,9 @@ public class ProjectController {
                         request.getCreatedBy());
             }
         }
-        else if (!request.getTeams().isEmpty()){
-            projectService.linkProjectToTeams(id, request.getCreatedBy(), request.getTeams());
+        else if (!request.getTeams().isEmpty()) {
+            projectService.linkProjectToTeams(id, request.getCreatedBy(),
+                    request.getTeams());
         }
         else if (request.getProjectEnvironment() != null) {
             projectService.newProjectEnvironment(id,
@@ -124,7 +126,8 @@ public class ProjectController {
 
         if (StringUtils.isNotBlank(teamName)) {
             projects.addAll(
-                    assembler.toResources(projectService.findByTeamName(teamName)));
+                    assembler.toResources(
+                            projectService.findByTeamName(teamName)));
         }
 
         if (StringUtils.isAllBlank(name, teamName)) {
@@ -136,6 +139,12 @@ public class ProjectController {
                 linkTo(TeamController.class).withRel("self"),
                 linkTo(methodOn(ProjectController.class).list(name, teamName))
                         .withRel("self"));
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity delete(@PathVariable String id) {
+        projectService.deleteProject(id);
+        return ResponseEntity.accepted().build();
     }
 
     private class ProjectResourceAssembler

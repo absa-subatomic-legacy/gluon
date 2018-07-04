@@ -194,27 +194,33 @@ public class Project {
         Set<TeamId> unlinkedTeams = new HashSet<>();
 
         // Link only teams that are not yet linked
-        for (TeamId team :
-                command.getTeamsToLink()) {
+        for (TeamId team : command.getTeamsToLink()) {
             if (!this.teams.contains(team)) {
                 unlinkedTeams.add(team);
             }
         }
 
-        if (unlinkedTeams.isEmpty()){
-            throw new InvalidRequestException("There are no teams that are not already associated to this project");
+        if (unlinkedTeams.isEmpty()) {
+            throw new InvalidRequestException(
+                    "There are no teams that are not already associated to this project");
         }
 
         apply(new TeamsLinkedToProject(
                 new ProjectId(command.getProjectId()),
                 command.getRequestedBy(),
-                unlinkedTeams
-        ));
+                unlinkedTeams));
     }
 
     @EventSourcingHandler
     void on(TeamsLinkedToProject event) {
         this.teams.addAll(event.getTeamsLinked());
     }
+
+    @CommandHandler
+    void when(DeleteProject command) {
+        apply(new ProjectDeleted(new ProjectId(command.getProjectId())));
+    }
+
+
 
 }

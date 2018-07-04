@@ -13,4 +13,6 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     ProjectEntity findByOwningTenant_Id(String tenantId);
 
     List<ProjectEntity> findByTeams_Name(String teamName);
+
+    void deleteByProjectId(String projectId);
 }

@@ -98,6 +98,27 @@ public class Team {
     }
 
     @CommandHandler
+    void when(RemoveTeamMembers command) {
+        if (!this.teamMembers.contains(command.getActionedBy())
+                && !this.owners.contains(command.getActionedBy())) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "CreatedBy member {0} is not a valid member the owning team {1}.",
+                    command.getActionedBy(), command.getTeamId()));
+        }
+
+        Set<TeamMemberId> newOwners = command.getOwnerMemberIds().stream()
+                .map(TeamMemberId::new)
+                .collect(Collectors.toSet());
+
+        Set<TeamMemberId> newMembers = command.getTeamMemberIds().stream()
+                .map(TeamMemberId::new)
+                .collect(Collectors.toSet());
+
+        apply(new TeamMembersRemoved(this.teamId, newOwners, newMembers));
+    }
+
+
+    @CommandHandler
     void when(AddSlackIdentity command) {
         apply(new SlackIdentityAdded(
                 command.getTeamId(),
@@ -221,6 +242,12 @@ public class Team {
                         originalRequest.getRequestedBy(),
                         updatedRequest.getApprovedBy(),
                         updatedRequest.getRequestStatus()));
+    }
+
+    @CommandHandler
+    void when(DeleteTeam command) {
+        apply(new TeamDeleted(
+                command.getTeamId()));
     }
 
     private String buidDevOpsEnvironmentName(String teamName) {

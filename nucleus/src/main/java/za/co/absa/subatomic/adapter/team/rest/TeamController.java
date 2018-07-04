@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
 import za.co.absa.subatomic.application.team.TeamService;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -158,6 +159,23 @@ public class TeamController {
                 linkTo(methodOn(TeamController.class).list(name,
                         slackScreenName, slackTeamChannel))
                                 .withRel("self"));
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity delete(@PathVariable String id,
+            @RequestBody TeamResource request) {
+        if (!request.getMembers().isEmpty() || !request.getOwners().isEmpty()) {
+            teamService.removeTeamMembers(id, request.getCreatedBy(), request.getOwners().stream()
+                    .map(TeamMemberIdResource::getMemberId)
+                    .collect(toList()), request.getMembers().stream()
+                    .map(TeamMemberIdResource::getMemberId)
+                    .collect(toList()));
+        }
+        else {
+            teamService.deleteTeam(id);
+        }
+
+        return ResponseEntity.accepted().build();
     }
 
     private class TeamResourceAssembler

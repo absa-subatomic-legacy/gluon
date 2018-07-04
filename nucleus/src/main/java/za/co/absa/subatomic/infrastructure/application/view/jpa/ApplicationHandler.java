@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
+import za.co.absa.subatomic.domain.application.ApplicationDeleted;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
@@ -58,6 +59,12 @@ public class ApplicationHandler {
         applicationEntity = applicationRepository.save(applicationEntity);
 
         projectEntity.getApplications().add(applicationEntity);
+    }
+
+    @EventHandler
+    @Transactional
+    void on(ApplicationDeleted event) {
+        applicationRepository.deleteByApplicationId(event.getApplicationId());
     }
 
 }
