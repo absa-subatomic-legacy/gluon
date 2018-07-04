@@ -165,7 +165,11 @@ public class TeamController {
     ResponseEntity delete(@PathVariable String id,
             @RequestBody TeamResource request) {
         if (!request.getMembers().isEmpty() || !request.getOwners().isEmpty()) {
-
+            teamService.removeTeamMembers(id, request.getCreatedBy(), request.getOwners().stream()
+                    .map(TeamMemberIdResource::getMemberId)
+                    .collect(toList()), request.getMembers().stream()
+                    .map(TeamMemberIdResource::getMemberId)
+                    .collect(toList()));
         }
         else {
             teamService.deleteTeam(id);

@@ -142,6 +142,15 @@ public class TeamHandler {
     @EventHandler
     @Transactional
     void on(TeamDeleted event) {
+        TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
+        teamEntity.getOwners().forEach(teamMemberEntity -> {
+            teamMemberEntity.getTeams().remove(teamEntity);
+            teamMemberRepository.save(teamMemberEntity);
+        });
+        teamEntity.getMembers().forEach(teamMemberEntity -> {
+            teamMemberEntity.getTeams().remove(teamEntity);
+            teamMemberRepository.save(teamMemberEntity);
+        });
         teamRepository.deleteByTeamId(event.getTeamId());
     }
 

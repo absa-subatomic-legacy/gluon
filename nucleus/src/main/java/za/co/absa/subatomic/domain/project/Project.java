@@ -221,4 +221,6 @@ public class Project {
         apply(new ProjectDeleted(new ProjectId(command.getProjectId())));
     }
 
+
+
 }
