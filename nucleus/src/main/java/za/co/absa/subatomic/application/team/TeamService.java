@@ -122,9 +122,9 @@ public class TeamService {
                 TimeUnit.SECONDS);
     }
 
-    public String newDevOpsEnvironment(String teamId, String requestedBy) {
+    public String newDevOpsEnvironment(String teamId, String messageId, String requestedBy) {
         return commandGateway.sendAndWait(
-                new NewDevOpsEnvironment(teamId, new TeamMemberId(requestedBy)),
+                new NewDevOpsEnvironment(teamId, messageId, new TeamMemberId(requestedBy)),
                 1,
                 TimeUnit.SECONDS);
     }

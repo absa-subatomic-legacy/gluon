@@ -13,6 +13,8 @@ public class TeamResource extends ResourceSupport {
 
     private String teamId;
 
+    private String messageId;
+
     private String name;
 
     private String description;

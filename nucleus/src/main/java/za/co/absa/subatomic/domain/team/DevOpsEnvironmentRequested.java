@@ -7,6 +7,8 @@ public class DevOpsEnvironmentRequested {
 
     private String teamId;
 
+    private String messageId;
+
     private DevOpsEnvironment devOpsEnvironment;
 
     private TeamMemberId requestedBy;

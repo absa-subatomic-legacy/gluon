@@ -71,7 +71,7 @@ public class TeamController {
     @PutMapping("/{id}")
     ResponseEntity<TeamResource> update(@PathVariable String id,
             @RequestBody TeamResource request) {
-        log.info("Trying to update Team with: {}", request);
+        log.info(" Trying to update Team with: {}", request);
         if (!request.getOwners().isEmpty() || !request.getMembers().isEmpty()) {
             teamService.addTeamMembers(id,
                     request.getCreatedBy(),
@@ -89,7 +89,7 @@ public class TeamController {
         }
 
         if (request.getDevOpsEnvironment() != null) {
-            teamService.newDevOpsEnvironment(id,
+            teamService.newDevOpsEnvironment(id, request.getMessageId(),
                     request.getDevOpsEnvironment().getRequestedBy());
         }
 

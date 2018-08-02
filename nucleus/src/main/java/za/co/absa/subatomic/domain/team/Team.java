@@ -23,6 +23,8 @@ public class Team {
     @AggregateIdentifier
     private String teamId;
 
+    private String messageId;
+
     private String name;
 
     private String description;
@@ -140,6 +142,7 @@ public class Team {
         }
         apply(new DevOpsEnvironmentRequested(
                 command.getTeamId(),
+                command.getMessageId(),
                 new DevOpsEnvironment(
                         buidDevOpsEnvironmentName(this.name)),
                 command.getRequestedBy()));
@@ -148,6 +151,7 @@ public class Team {
     @EventSourcingHandler
     void on(DevOpsEnvironmentRequested event) {
         this.devOpsEnvironment = event.getDevOpsEnvironment();
+        this.messageId = event.getMessageId();
     }
 
     @CommandHandler

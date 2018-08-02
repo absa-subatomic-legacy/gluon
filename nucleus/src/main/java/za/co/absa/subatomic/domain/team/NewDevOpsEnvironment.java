@@ -9,6 +9,8 @@ public class NewDevOpsEnvironment {
     @TargetAggregateIdentifier
     private String teamId;
 
+    private String messageId;
+
     private TeamMemberId requestedBy;
 
 }

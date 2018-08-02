@@ -85,7 +85,8 @@ public class TeamAutomationHandler {
     @EventHandler
     public void on(DevOpsEnvironmentRequested event) {
         log.info(
-                "A team DevOps environment was requested, sending event to Atomist...");
+                "A team DevOps environment was requested, sending event to Atomist...{}",
+                event);
 
         TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
         TeamMemberEntity teamMemberEntity = teamMemberRepository
@@ -102,6 +103,7 @@ public class TeamAutomationHandler {
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
                         teamSlackIdentity),
+                event.getMessageId(),
                 new DevOpsTeamMember(
                         null,
                         teamMemberEntity.getFirstName(),
@@ -278,6 +280,8 @@ public class TeamAutomationHandler {
     private class DevOpsEnvironmentRequestedWithDetails {
 
         private Team team;
+
+        private String messageId;
 
         private DevOpsTeamMember requestedBy;
     }
