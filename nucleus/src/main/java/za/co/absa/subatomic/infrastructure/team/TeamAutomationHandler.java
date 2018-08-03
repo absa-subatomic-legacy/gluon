@@ -85,8 +85,7 @@ public class TeamAutomationHandler {
     @EventHandler
     public void on(DevOpsEnvironmentRequested event) {
         log.info(
-                "A team DevOps environment was requested, sending event to Atomist...{}",
-                event);
+                "A team DevOps environment was requested, sending event to Atomist... ");
 
         TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
         TeamMemberEntity teamMemberEntity = teamMemberRepository

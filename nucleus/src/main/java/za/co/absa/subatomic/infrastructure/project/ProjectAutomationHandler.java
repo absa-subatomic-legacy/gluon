@@ -150,6 +150,7 @@ public class ProjectAutomationHandler {
         }
 
         BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
+                null,
                 ProjectCreated.builder()
                         .projectId(projectEntity.getProjectId())
                         .name(projectEntity.getName())
@@ -328,6 +329,7 @@ public class ProjectAutomationHandler {
         }
 
         BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
+                event.getMessageId(),
                 ProjectCreated.builder()
                         .projectId(projectEntity.getProjectId())
                         .name(projectEntity.getName())
@@ -465,6 +467,8 @@ public class ProjectAutomationHandler {
 
     @Value
     private class BitbucketProjectRequestedWithDetails {
+
+        private String messageId;
 
         private ProjectCreated project;
 

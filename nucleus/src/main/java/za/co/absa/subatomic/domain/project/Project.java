@@ -22,6 +22,8 @@ public class Project {
     @AggregateIdentifier
     private String projectId;
 
+    private String messageId;
+
     private String name;
 
     private String description;
@@ -148,6 +150,7 @@ public class Project {
         // TODO link environments to project
         // will only have meaning when environments are a concept
         // I.e. when people can choose which environments they want
+        this.messageId = event.getMessageId();
     }
 
     @CommandHandler
@@ -160,6 +163,7 @@ public class Project {
         }
         apply(new ProjectEnvironmentRequested(
                 command.getProjectId(),
+                command.getMessageId(),
                 command.getRequestedBy()));
     }
 

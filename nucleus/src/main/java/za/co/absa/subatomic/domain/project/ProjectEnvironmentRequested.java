@@ -8,5 +8,7 @@ public class ProjectEnvironmentRequested {
 
     private String projectId;
 
+    private String messageId;
+
     private TeamMemberId requestedBy;
 }

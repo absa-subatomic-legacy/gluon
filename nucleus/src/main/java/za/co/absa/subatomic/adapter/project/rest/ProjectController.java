@@ -100,6 +100,7 @@ public class ProjectController {
         }
         else if (request.getProjectEnvironment() != null) {
             projectService.newProjectEnvironment(id,
+                    request.getMessageId(),
                     request.getProjectEnvironment().getRequestedBy());
         }
 

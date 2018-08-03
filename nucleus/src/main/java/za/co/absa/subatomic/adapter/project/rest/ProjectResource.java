@@ -13,6 +13,8 @@ public class ProjectResource extends ResourceSupport {
 
     private String projectId;
 
+    private String messageId;
+
     private String name;
 
     private String description;

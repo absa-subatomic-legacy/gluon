@@ -13,6 +13,8 @@ public class NewProjectEnvironment {
     @TargetAggregateIdentifier
     private String projectId;
 
+    private String messageId;
+
     private TeamMemberId requestedBy;
 
     private Set<String> allAssociateProjectOwnerAndMemberIds;

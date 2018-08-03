@@ -144,13 +144,14 @@ public class ProjectService {
                 allMemberAndOwnerIds));
     }
 
-    public String newProjectEnvironment(String projectId, String requestedBy) {
+    public String newProjectEnvironment(String projectId, String messageId, String requestedBy) {
         Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
                 projectId);
         Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
                 projectAssociatedTeams);
         return commandGateway.sendAndWait(
                 new NewProjectEnvironment(projectId,
+                        messageId,
                         new TeamMemberId(requestedBy),
                         allMemberAndOwnerIds),
                 1,
