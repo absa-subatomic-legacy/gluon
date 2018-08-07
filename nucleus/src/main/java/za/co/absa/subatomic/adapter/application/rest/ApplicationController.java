@@ -86,7 +86,7 @@ public class ApplicationController {
         if (StringUtils.isNoneBlank(name, projectId)) {
             applications.add(
                     assembler.toResource(applicationService
-                            .findByNameAndProjectId(name, projectId)));
+                            .findByNameAndProjectProjectId(name, projectId)));
         }
         else if (StringUtils.isNotBlank(projectId)) {
             applications.addAll(

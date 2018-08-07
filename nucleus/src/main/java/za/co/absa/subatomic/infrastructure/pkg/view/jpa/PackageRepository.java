@@ -15,5 +15,5 @@ public interface PackageRepository
 
     PackageEntity findByNameAndProjectProjectId(String name, String projectId);
 
-    List<PackageEntity> findByProjectId(Long projectId);
+    List<PackageEntity> findByProjectId(String projectId);
 }
