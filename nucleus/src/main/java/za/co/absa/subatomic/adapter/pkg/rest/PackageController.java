@@ -80,7 +80,7 @@ public class PackageController {
         else if (StringUtils.isNoneBlank(name, projectName)) {
             packages.add(
                     assembler.toResource(packageService
-                            .findByNameAndProjectId(name, projectName)));
+                            .findByNameAndProjectName(name, projectName)));
         }
 
         if (StringUtils.isAllBlank(name, projectName, projectId)) {

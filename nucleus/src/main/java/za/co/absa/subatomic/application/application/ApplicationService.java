@@ -52,7 +52,8 @@ public class ApplicationService {
             String bitbucketRepoUrl,
             String bitbucketRepoRemoteUrl) {
         ApplicationEntity existingApplication = this
-                .findByNameAndProjectName(name, projectId);
+                .findByNameAndProjectProjectId(name, projectId);
+
         if (existingApplication != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Application with name {0} already exists in project with id {1}.",
@@ -120,10 +121,10 @@ public class ApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public ApplicationEntity findByNameAndProjectId(String name,
+    public ApplicationEntity findByNameAndProjectProjectId(String name,
             String projectId) {
-        return applicationRepository.findByNameAndProjectId(name,
-                Long.valueOf(projectId));
+        return applicationRepository.findByNameAndProjectProjectId(name,
+                projectId);
     }
 
     @Transactional(readOnly = true)

@@ -22,7 +22,7 @@ public interface ApplicationRepository
 
     ApplicationEntity findByNameAndProjectName(String name, String projectName);
 
-    ApplicationEntity findByNameAndProjectId(String name, Long projectId);
+    ApplicationEntity findByNameAndProjectProjectId(String name, String projectId);
 
     void deleteByApplicationId(String applicationId);
 }

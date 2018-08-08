@@ -41,7 +41,7 @@ public class PackageService {
 
     public String newApplication(String packageType, String name,
             String description, String createdBy, String projectId) {
-        PackageEntity existingPackage = this.findByNameAndProjectName(name,
+        PackageEntity existingPackage = this.findByNameAndProjectProjectId(name,
                 projectId);
         if (existingPackage != null) {
             throw new DuplicateRequestException(MessageFormat.format(
@@ -85,7 +85,7 @@ public class PackageService {
 
     @Transactional(readOnly = true)
     public List<PackageEntity> findByProjectId(String projectId) {
-        return packageRepository.findByProjectId(Long.valueOf(projectId));
+        return packageRepository.findByProjectId(projectId);
     }
 
     @Transactional(readOnly = true)
@@ -95,7 +95,7 @@ public class PackageService {
     }
 
     @Transactional(readOnly = true)
-    public PackageEntity findByNameAndProjectId(String name, String projectId) {
+    public PackageEntity findByNameAndProjectProjectId(String name, String projectId) {
         return packageRepository.findByNameAndProjectProjectId(name,
                 projectId);
     }
