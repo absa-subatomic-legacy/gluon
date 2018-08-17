@@ -3,4 +3,4 @@ COPY ./nucleus/target/nucleus-0.1.0.BUILD-SNAPSHOT.jar /app/gluon/gluon.jar
 WORKDIR /app/gluon
 EXPOSE 8080
 
-ENTRYPOINT exec java $JAVA_OPTS -jar gluon.jar
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar gluon.jar"]
