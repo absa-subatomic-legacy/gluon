@@ -52,7 +52,7 @@ public class ApplicationEntity {
     @Temporal(TemporalType.TIMESTAMP)
     private final Date createdAt = new Date();
 
-    @OneToOne
+    @ManyToOne
     private ProjectEntity project;
 
     @ManyToOne
@@ -61,4 +61,6 @@ public class ApplicationEntity {
     @Embedded
     @AttributeOverride(name = "name", column = @Column(name = "bitbucket_repo_name"))
     private BitbucketRepositoryEmbedded bitbucketRepository;
+
+
 }
