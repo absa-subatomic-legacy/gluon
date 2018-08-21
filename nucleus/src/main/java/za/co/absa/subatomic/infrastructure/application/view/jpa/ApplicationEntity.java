@@ -62,5 +62,4 @@ public class ApplicationEntity {
     @AttributeOverride(name = "name", column = @Column(name = "bitbucket_repo_name"))
     private BitbucketRepositoryEmbedded bitbucketRepository;
 
-
 }
