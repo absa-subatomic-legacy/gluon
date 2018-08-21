@@ -128,24 +128,25 @@ public class TeamController {
     Resources<TeamResource> list(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String slackScreenName,
-            @RequestParam(required = false) String slackTeamChannel) {
+            @RequestParam(required = false) String slackTeamChannel,
+            @RequestParam(required = false) String projectId) {
         Set<TeamResource> teams = new HashSet<>();
 
         // TODO see if we can't use that functional library for Java that has pattern matching?
         if (StringUtils.isNotBlank(name)) {
             teams.add(
                     assembler.toResource(teamService.findByName(name)));
-        }
-
-        if (StringUtils.isNotBlank(slackScreenName)) {
+        }else if (StringUtils.isNotBlank(slackScreenName)) {
             teams.addAll(teamService.findByMemberOrOwner(
                     slackScreenName).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
-        }
-
-        if (StringUtils.isNotBlank(slackTeamChannel)) {
+        }else if (StringUtils.isNotBlank(slackTeamChannel)) {
             teams.addAll(teamService.findBySlackTeamChannel(
                     slackTeamChannel).stream()
+                    .map(assembler::toResource).collect(Collectors.toList()));
+        }else if (StringUtils.isNotBlank(projectId)) {
+            teams.addAll(teamService.findTeamsAssociatedToProject(
+                    projectId).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
@@ -157,7 +158,7 @@ public class TeamController {
         return new Resources<>(teams,
                 linkTo(TeamController.class).withRel("self"),
                 linkTo(methodOn(TeamController.class).list(name,
-                        slackScreenName, slackTeamChannel))
+                        slackScreenName, slackTeamChannel, projectId))
                                 .withRel("self"));
     }
 
