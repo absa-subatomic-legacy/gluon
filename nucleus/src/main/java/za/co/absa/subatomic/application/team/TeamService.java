@@ -26,6 +26,8 @@ import za.co.absa.subatomic.domain.team.NewTeamFromSlack;
 import za.co.absa.subatomic.domain.team.SlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.domain.team.UpdateMembershipRequest;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -39,14 +41,18 @@ public class TeamService {
 
     private TeamRepository teamRepository;
 
+    private ProjectRepository projectRepository;
+
     private MembershipRequestRepository membershipRequestRepository;
 
     public TeamService(CommandGateway commandGateway,
             TeamRepository teamRepository,
-            MembershipRequestRepository membershipRequestRepository) {
+            MembershipRequestRepository membershipRequestRepository,
+            ProjectRepository projectRepository) {
         this.commandGateway = commandGateway;
         this.teamRepository = teamRepository;
         this.membershipRequestRepository = membershipRequestRepository;
+        this.projectRepository = projectRepository;
     }
 
     public String newTeam(String name, String description, String createdBy) {
@@ -103,13 +109,13 @@ public class TeamService {
     }
 
     public String removeTeamMembers(String teamId, String actionedBy,
-                                 List<String> teamOwnerIds,
-                                 List<String> teamMemberIds) {
+            List<String> teamOwnerIds,
+            List<String> teamMemberIds) {
         return commandGateway.sendAndWait(new AddTeamMembers(
-                        teamId,
-                        new TeamMemberId(actionedBy),
-                        teamOwnerIds,
-                        teamMemberIds),
+                teamId,
+                new TeamMemberId(actionedBy),
+                teamOwnerIds,
+                teamMemberIds),
                 1,
                 TimeUnit.SECONDS);
     }
@@ -163,6 +169,16 @@ public class TeamService {
                 new DeleteTeam(teamId),
                 1,
                 TimeUnit.SECONDS);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findTeamsAssociatedToProject(String projectId) {
+        ProjectEntity projectEntity = projectRepository
+                .findByProjectId(projectId);
+        Set<TeamEntity> associatedTeams = new HashSet<>();
+        associatedTeams.add(projectEntity.getOwningTeam());
+        associatedTeams.addAll(projectEntity.getTeams());
+        return associatedTeams;
     }
 
     @Transactional(readOnly = true)
