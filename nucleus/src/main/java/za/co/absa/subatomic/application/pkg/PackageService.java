@@ -85,7 +85,7 @@ public class PackageService {
 
     @Transactional(readOnly = true)
     public List<PackageEntity> findByProjectId(String projectId) {
-        return packageRepository.findByProjectId(projectId);
+        return packageRepository.findByProjectProjectId(projectId);
     }
 
     @Transactional(readOnly = true)

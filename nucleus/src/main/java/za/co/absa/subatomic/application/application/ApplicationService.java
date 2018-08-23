@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
-import za.co.absa.subatomic.domain.application.DeleteApplication;
 import za.co.absa.subatomic.domain.application.NewApplication;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
@@ -22,6 +21,7 @@ import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepository;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
@@ -85,12 +85,14 @@ public class ApplicationService {
                 TimeUnit.SECONDS);
     }
 
-    public String deleteApplication(String applicationId) {
-        return commandGateway.sendAndWait(
-                new DeleteApplication(
-                        applicationId),
-                1000,
-                TimeUnit.SECONDS);
+    @Transactional
+    public void deleteApplication(String applicationId) {
+        ApplicationEntity applicationEntity = applicationRepository
+                .findByApplicationId(applicationId);
+        ProjectEntity projectEntity = applicationEntity.getProject();
+        projectEntity.getApplications().remove(applicationEntity);
+        projectRepository.save(projectEntity);
+        applicationRepository.deleteByApplicationId(applicationId);
     }
 
     @Transactional(readOnly = true)
