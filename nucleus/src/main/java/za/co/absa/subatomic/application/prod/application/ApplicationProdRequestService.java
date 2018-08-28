@@ -6,8 +6,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
-
 import org.springframework.transaction.annotation.Transactional;
+
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResource;
 import za.co.absa.subatomic.application.application.ApplicationService;
 import za.co.absa.subatomic.application.member.TeamMemberService;
@@ -17,6 +17,7 @@ import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.openshift.view.jpa.OpenShiftResourceEntity;
+import za.co.absa.subatomic.infrastructure.prod.application.ApplicationProdRequestAutomationHandler;
 import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.ApplicationProdRequestEntity;
 import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.ApplicationProdRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -34,17 +35,21 @@ public class ApplicationProdRequestService {
 
     private ApplicationProdRequestRepository applicationProdRequestRepository;
 
+    private ApplicationProdRequestAutomationHandler applicationProdRequestAutomationHandler;
+
     public ApplicationProdRequestService(
             ApplicationService applicationService,
             TeamMemberService teamMemberService,
             TeamService teamService,
             OpenShiftResourceService openShiftResourceService,
-            ApplicationProdRequestRepository applicationProdRequestRepository) {
+            ApplicationProdRequestRepository applicationProdRequestRepository,
+            ApplicationProdRequestAutomationHandler applicationProdRequestAutomationHandler) {
         this.applicationService = applicationService;
         this.teamMemberService = teamMemberService;
         this.teamService = teamService;
         this.openShiftResourceService = openShiftResourceService;
         this.applicationProdRequestRepository = applicationProdRequestRepository;
+        this.applicationProdRequestAutomationHandler = applicationProdRequestAutomationHandler;
     }
 
     public ApplicationProdRequestEntity newApplicationProdRequest(
@@ -78,12 +83,22 @@ public class ApplicationProdRequestService {
                 .openshiftResources(openShiftResourceEntities)
                 .build();
 
-        return this.applicationProdRequestRepository
+        ApplicationProdRequestEntity applicationProdRequestResult = this.applicationProdRequestRepository
                 .save(applicationProdRequestEntity);
+
+        if (applicationProdRequestResult != null) {
+            this.applicationProdRequestAutomationHandler
+                    .applicationProdRequestCreated(
+                            applicationProdRequestResult);
+        }
+
+        return applicationProdRequestResult;
     }
 
     @Transactional(readOnly = true)
-    public ApplicationProdRequestEntity findApplicationProjectRequestById(String id){
-        return this.applicationProdRequestRepository.findByApplicationProdRequestId(id);
+    public ApplicationProdRequestEntity findApplicationProjectRequestById(
+            String id) {
+        return this.applicationProdRequestRepository
+                .findByApplicationProdRequestId(id);
     }
 }
