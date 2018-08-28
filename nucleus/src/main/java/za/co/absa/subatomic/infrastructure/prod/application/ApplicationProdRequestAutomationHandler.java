@@ -76,7 +76,8 @@ public class ApplicationProdRequestAutomationHandler {
                 actionedBy);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfigurationProperties.getApplicationCreatedEventUrl(),
+                atomistConfigurationProperties
+                        .getApplicationProdRequestedEventUrl(),
                 applicationProdRequestEvent,
                 String.class);
 
