@@ -109,7 +109,7 @@ public class TeamMemberService {
     }
 
     @Transactional(readOnly = true)
-    public TeamMemberEntity findByTeamId(String teamMemberId) {
+    public TeamMemberEntity findByTeamMemberId(String teamMemberId) {
         return teamMemberRepository.findByMemberId(teamMemberId);
     }
 

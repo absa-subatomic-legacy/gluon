@@ -18,5 +18,11 @@ public interface TeamRepository extends JpaRepository<TeamEntity, Long> {
     @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
     List<TeamEntity> findByOwners_SlackDetailsScreenName(String screenName);
 
+    @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
+    List<TeamEntity> findByMembers_MemberId(String teamMemberId);
+
+    @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
+    List<TeamEntity> findByOwners_MemberId (String teamMemberId);
+
     void deleteByTeamId(String teamId);
 }
