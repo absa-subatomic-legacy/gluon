@@ -53,5 +53,5 @@ public class ApplicationProdRequestEntity {
     private String projectName;
 
     @OneToMany
-    private List<OpenShiftResourceEntity> openshiftResources;
+    private List<OpenShiftResourceEntity> openShiftResources;
 }

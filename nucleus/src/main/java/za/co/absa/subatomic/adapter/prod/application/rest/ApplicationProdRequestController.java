@@ -82,7 +82,7 @@ public class ApplicationProdRequestController {
                 List<OpenShiftResource> openShiftResources = new ArrayList<>();
                 OpenShiftResourceAssembler openShiftResourceAssembler = new OpenShiftResourceAssembler();
                 openShiftResources
-                        .addAll(entity.getOpenshiftResources().stream()
+                        .addAll(entity.getOpenShiftResources().stream()
                                 .map(openShiftResourceAssembler::toResource)
                                 .collect(Collectors.toList()));
 

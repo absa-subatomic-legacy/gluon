@@ -80,7 +80,7 @@ public class ApplicationProdRequestService {
                 .applicationName(applicationEntity.getName())
                 .projectName(applicationEntity.getProject().getName())
                 .actionedBy(actionedBy)
-                .openshiftResources(openShiftResourceEntities)
+                .openShiftResources(openShiftResourceEntities)
                 .build();
 
         ApplicationProdRequestEntity applicationProdRequestResult = this.applicationProdRequestRepository
