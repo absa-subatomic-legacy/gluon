@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+    <changeSet author="kieranbristow (generated)" id="1535553471728-1">
+        <createSequence sequenceName="domainevententry_globalindex_seq"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-2">
+        <createSequence sequenceName="hibernate_sequence"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-3">
+        <createTable tableName="application">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="application_id" type="VARCHAR(255)"/>
+            <column name="application_type" type="VARCHAR(255)"/>
+            <column name="bitbucket_id" type="VARCHAR(255)"/>
+            <column name="bitbucket_repo_name" type="VARCHAR(255)"/>
+            <column name="remote_url" type="VARCHAR(255)"/>
+            <column name="repo_url" type="VARCHAR(255)"/>
+            <column name="slug" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(29) WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="created_by_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-4">
+        <createTable tableName="association_value_entry">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="association_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="association_value" type="VARCHAR(255)"/>
+            <column name="saga_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="saga_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-5">
+        <createTable tableName="bitbucket_project">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bitbucket_project_id" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(29) WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="key" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="url" type="VARCHAR(255)"/>
+            <column name="created_by_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-6">
+        <createTable tableName="domain_event_entry">
+            <column name="global_index" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_identifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="meta_data" type="OID(10)"/>
+            <column name="payload" type="OID(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload_revision" type="VARCHAR(255)"/>
+            <column name="payload_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time_stamp" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aggregate_identifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sequence_number" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-7">
+        <createTable tableName="domainevententry">
+            <column autoIncrement="true" name="globalindex" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="domainevententry_pkey"/>
+            </column>
+            <column name="aggregateidentifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sequencenumber" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)"/>
+            <column name="eventidentifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadata" type="BYTEA"/>
+            <column name="payload" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payloadrevision" type="VARCHAR(255)"/>
+            <column name="payloadtype" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-8">
+        <createTable tableName="membership_request">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="membership_request_id" type="VARCHAR(255)"/>
+            <column name="request_status" type="INT"/>
+            <column name="team_id" type="VARCHAR(255)"/>
+            <column name="approved_by_id" type="BIGINT"/>
+            <column name="requested_by_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-9">
+        <createTable tableName="pkg">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="application_id" type="VARCHAR(255)"/>
+            <column name="created_at" type="TIMESTAMP(29) WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="package_type" type="VARCHAR(255)"/>
+            <column name="created_by_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-10">
+        <createTable tableName="project">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(29) WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="project_id" type="VARCHAR(255)"/>
+            <column name="bitbucket_project_id" type="BIGINT"/>
+            <column name="created_by_id" type="BIGINT"/>
+            <column name="owning_team_id" type="BIGINT"/>
+            <column name="owning_tenant_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-11">
+        <createTable tableName="project_applications">
+            <column name="project_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="applications_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-12">
+        <createTable tableName="project_teams">
+            <column name="project_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="teams_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-13">
+        <createTable tableName="saga_entry">
+            <column name="saga_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="revision" type="VARCHAR(255)"/>
+            <column name="saga_type" type="VARCHAR(255)"/>
+            <column name="serialized_saga" type="OID(10)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-14">
+        <createTable tableName="snapshot_event_entry">
+            <column name="aggregate_identifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sequence_number" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_identifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="meta_data" type="OID(10)"/>
+            <column name="payload" type="OID(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload_revision" type="VARCHAR(255)"/>
+            <column name="payload_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time_stamp" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-15">
+        <createTable tableName="snapshotevententry">
+            <column name="aggregateidentifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sequencenumber" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="eventidentifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadata" type="BYTEA"/>
+            <column name="payload" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payloadrevision" type="VARCHAR(255)"/>
+            <column name="payloadtype" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-16">
+        <createTable tableName="team">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(29) WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="team_channel" type="VARCHAR(255)"/>
+            <column name="team_id" type="VARCHAR(255)"/>
+            <column name="created_by_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-17">
+        <createTable tableName="team_member">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="domain_username" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="first_name" type="VARCHAR(255)"/>
+            <column name="joined_at" type="TIMESTAMP(29) WITHOUT TIME ZONE"/>
+            <column name="last_name" type="VARCHAR(255)"/>
+            <column name="member_id" type="VARCHAR(255)"/>
+            <column name="screen_name" type="VARCHAR(255)"/>
+            <column name="user_id" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-18">
+        <createTable tableName="team_member_teams">
+            <column name="team_member_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="teams_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-19">
+        <createTable tableName="team_members">
+            <column name="team_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="members_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-20">
+        <createTable tableName="team_membership_requests">
+            <column name="team_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="membership_requests_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-21">
+        <createTable tableName="team_owners">
+            <column name="team_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owners_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-22">
+        <createTable tableName="tenant">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP(29) WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="tenant_id" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-23">
+        <createTable tableName="tenant_projects">
+            <column name="tenant_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="projects_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-24">
+        <createTable tableName="token_entry">
+            <column name="processor_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="segment" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner" type="VARCHAR(255)"/>
+            <column name="timestamp" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token" type="OID(10)"/>
+            <column name="token_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-25">
+        <addPrimaryKey columnNames="id" constraintName="application_pkey" tableName="application"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-26">
+        <addPrimaryKey columnNames="id" constraintName="association_value_entry_pkey" tableName="association_value_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-27">
+        <addPrimaryKey columnNames="id" constraintName="bitbucket_project_pkey" tableName="bitbucket_project"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-28">
+        <addPrimaryKey columnNames="global_index" constraintName="domain_event_entry_pkey" tableName="domain_event_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-29">
+        <addPrimaryKey columnNames="id" constraintName="membership_request_pkey" tableName="membership_request"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-30">
+        <addPrimaryKey columnNames="id" constraintName="pkg_pkey" tableName="pkg"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-31">
+        <addPrimaryKey columnNames="project_entity_id, applications_id" constraintName="project_applications_pkey" tableName="project_applications"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-32">
+        <addPrimaryKey columnNames="id" constraintName="project_pkey" tableName="project"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-33">
+        <addPrimaryKey columnNames="project_entity_id, teams_id" constraintName="project_teams_pkey" tableName="project_teams"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-34">
+        <addPrimaryKey columnNames="saga_id" constraintName="saga_entry_pkey" tableName="saga_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-35">
+        <addPrimaryKey columnNames="aggregate_identifier, sequence_number, type" constraintName="snapshot_event_entry_pkey" tableName="snapshot_event_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-36">
+        <addPrimaryKey columnNames="aggregateidentifier, sequencenumber" constraintName="snapshotevententry_pkey" tableName="snapshotevententry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-37">
+        <addPrimaryKey columnNames="id" constraintName="team_member_pkey" tableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-38">
+        <addPrimaryKey columnNames="team_member_entity_id, teams_id" constraintName="team_member_teams_pkey" tableName="team_member_teams"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-39">
+        <addPrimaryKey columnNames="team_entity_id, members_id" constraintName="team_members_pkey" tableName="team_members"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-40">
+        <addPrimaryKey columnNames="team_entity_id, membership_requests_id" constraintName="team_membership_requests_pkey" tableName="team_membership_requests"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-41">
+        <addPrimaryKey columnNames="team_entity_id, owners_id" constraintName="team_owners_pkey" tableName="team_owners"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-42">
+        <addPrimaryKey columnNames="id" constraintName="team_pkey" tableName="team"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-43">
+        <addPrimaryKey columnNames="id" constraintName="tenant_pkey" tableName="tenant"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-44">
+        <addPrimaryKey columnNames="tenant_entity_id, projects_id" constraintName="tenant_projects_pkey" tableName="tenant_projects"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-45">
+        <addPrimaryKey columnNames="processor_name, segment" constraintName="token_entry_pkey" tableName="token_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-46">
+        <addUniqueConstraint columnNames="aggregateidentifier, sequencenumber" constraintName="domainevententry_aggregateidentifier_sequencenumber_key" tableName="domainevententry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-47">
+        <addUniqueConstraint columnNames="eventidentifier" constraintName="domainevententry_eventidentifier_key" tableName="domainevententry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-48">
+        <addUniqueConstraint columnNames="eventidentifier" constraintName="snapshotevententry_eventidentifier_key" tableName="snapshotevententry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-49">
+        <addUniqueConstraint columnNames="aggregate_identifier, sequence_number" constraintName="uk8s1f994p4la2ipb13me2xqm1w" tableName="domain_event_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-50">
+        <addUniqueConstraint columnNames="membership_requests_id" constraintName="uk_9mbewv9de6twv357ab1bw9xtv" tableName="team_membership_requests"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-51">
+        <addUniqueConstraint columnNames="projects_id" constraintName="uk_ad1kqxfo5ltxs1mp1ygnorvcm" tableName="tenant_projects"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-52">
+        <addUniqueConstraint columnNames="event_identifier" constraintName="uk_e1uucjseo68gopmnd0vgdl44h" tableName="snapshot_event_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-53">
+        <addUniqueConstraint columnNames="event_identifier" constraintName="uk_fwe6lsa8bfo6hyas6ud3m8c7x" tableName="domain_event_entry"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-54">
+        <addUniqueConstraint columnNames="applications_id" constraintName="uk_i117fossikgg7wq1iwjns6qf3" tableName="project_applications"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-55">
+        <createIndex indexName="idxgv5k1v2mh6frxuy5c0hgbau94" tableName="association_value_entry">
+            <column name="saga_id"/>
+            <column name="saga_type"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-56">
+        <createIndex indexName="idxk45eqnxkgd8hpdn6xixn8sgft" tableName="association_value_entry">
+            <column name="saga_type"/>
+            <column name="association_key"/>
+            <column name="association_value"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-57">
+        <addForeignKeyConstraint baseColumnNames="team_member_entity_id" baseTableName="team_member_teams" constraintName="fk18pxw38m15sftmjyvu8sc7fhv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-58">
+        <addForeignKeyConstraint baseColumnNames="project_entity_id" baseTableName="project_teams" constraintName="fk1a2epcac78838ykid9bx5pw8h" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-59">
+        <addForeignKeyConstraint baseColumnNames="applications_id" baseTableName="project_applications" constraintName="fk1skgk1nqtacwoly4r4ljb5h5e" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="application"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-60">
+        <addForeignKeyConstraint baseColumnNames="requested_by_id" baseTableName="membership_request" constraintName="fk2gvq2cpftoh0ventitrjtpo07" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-61">
+        <addForeignKeyConstraint baseColumnNames="tenant_entity_id" baseTableName="tenant_projects" constraintName="fk37vw1xwdglebnevcsx88lk5wp" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tenant"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-62">
+        <addForeignKeyConstraint baseColumnNames="created_by_id" baseTableName="project" constraintName="fk38ppb6fv8u1l8qhdkqy0jp9ct" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-63">
+        <addForeignKeyConstraint baseColumnNames="members_id" baseTableName="team_members" constraintName="fk3d90dqttrv7mdpfxgdml4oljk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-64">
+        <addForeignKeyConstraint baseColumnNames="membership_requests_id" baseTableName="team_membership_requests" constraintName="fk3n5jpl779x59bkh686ei4g1pk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="membership_request"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-65">
+        <addForeignKeyConstraint baseColumnNames="teams_id" baseTableName="project_teams" constraintName="fk4wh13emifjt1w3o6nuny6ivh5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-66">
+        <addForeignKeyConstraint baseColumnNames="approved_by_id" baseTableName="membership_request" constraintName="fk6phf6h17rl2a7m5o86wjqur30" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-67">
+        <addForeignKeyConstraint baseColumnNames="created_by_id" baseTableName="team" constraintName="fk7xjwdh6q290ady4hi4nyiu5w8" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-68">
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="pkg" constraintName="fkaqbsre4b2watdnx85x2ewfn5q" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-69">
+        <addForeignKeyConstraint baseColumnNames="created_by_id" baseTableName="bitbucket_project" constraintName="fkbj8folxe7b8crd0hskncqo0it" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-70">
+        <addForeignKeyConstraint baseColumnNames="project_entity_id" baseTableName="project_applications" constraintName="fkd2sd9p8isge5vsp07ulonc6jt" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-71">
+        <addForeignKeyConstraint baseColumnNames="projects_id" baseTableName="tenant_projects" constraintName="fkd97nvbsq9wxdjn5vvsflbr3lv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-72">
+        <addForeignKeyConstraint baseColumnNames="owning_team_id" baseTableName="project" constraintName="fkdsogm9fls4kcjlfvsuaqk6um0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-73">
+        <addForeignKeyConstraint baseColumnNames="teams_id" baseTableName="team_member_teams" constraintName="fke662inkr5ag9pteqsdpix1aba" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-74">
+        <addForeignKeyConstraint baseColumnNames="created_by_id" baseTableName="pkg" constraintName="fkerqll8uujl8d6vdds14g32q4k" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-75">
+        <addForeignKeyConstraint baseColumnNames="team_entity_id" baseTableName="team_membership_requests" constraintName="fkh9fpw1ulm944y76ass5ml25os" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-76">
+        <addForeignKeyConstraint baseColumnNames="team_entity_id" baseTableName="team_owners" constraintName="fkl0dohrfcg1a6qjtupr0dhr26e" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-77">
+        <addForeignKeyConstraint baseColumnNames="owners_id" baseTableName="team_owners" constraintName="fkm5gm2lne8sohc3ulquxpiw1l" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-78">
+        <addForeignKeyConstraint baseColumnNames="created_by_id" baseTableName="application" constraintName="fknvu8eqvkrsjpvvojhklvs6yrm" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team_member"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-79">
+        <addForeignKeyConstraint baseColumnNames="bitbucket_project_id" baseTableName="project" constraintName="fknvvm0x6840p1rpb6mj96hh3kt" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="bitbucket_project"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-80">
+        <addForeignKeyConstraint baseColumnNames="owning_tenant_id" baseTableName="project" constraintName="fkpjh6l9sxo9dtsk8590sneau3a" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="tenant"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-81">
+        <addForeignKeyConstraint baseColumnNames="team_entity_id" baseTableName="team_members" constraintName="fkql6g4srg78r0n5uagxvtwlj12" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="team"/>
+    </changeSet>
+    <changeSet author="kieranbristow (generated)" id="1535553471728-82">
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="application" constraintName="fkrxh04lcvhpj4owpuk43oa0njh" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project"/>
+    </changeSet>
+</databaseChangeLog>
