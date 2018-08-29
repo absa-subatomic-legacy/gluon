@@ -17,9 +17,9 @@ public class OpenShiftResourceAssembler extends
             OpenShiftResourceEntity entity) {
         if (entity != null) {
             OpenShiftResource resource = createResourceWithId(
-                    entity.getOpenshiftResourceId(), entity);
+                    entity.getOpenShiftResourceId(), entity);
 
-            resource.setOpenshiftResourceId(entity.getOpenshiftResourceId());
+            resource.setOpenshiftResourceId(entity.getOpenShiftResourceId());
             resource.setKind(entity.getKind());
             resource.setName(entity.getName());
             resource.setResourceDetails(entity.getResourceDetails());

@@ -30,7 +30,7 @@ public class OpenShiftResourceService {
         for (OpenShiftResource resource : openShiftResources) {
             openShiftResourceEntities.add(
                     OpenShiftResourceEntity.builder()
-                            .openshiftResourceId(UUID.randomUUID().toString())
+                            .openShiftResourceId(UUID.randomUUID().toString())
                             .kind(resource.getKind())
                             .name(resource.getName())
                             .resourceDetails(resource.getResourceDetails())
@@ -42,6 +42,6 @@ public class OpenShiftResourceService {
 
     @Transactional(readOnly = true)
     public OpenShiftResourceEntity findByOpenshiftResourceId(String id) {
-        return this.openShiftResourceRepository.findByOpenshiftResourceId(id);
+        return this.openShiftResourceRepository.findByOpenShiftResourceId(id);
     }
 }

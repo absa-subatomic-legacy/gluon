@@ -4,5 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface OpenShiftResourceRepository
         extends JpaRepository<OpenShiftResourceEntity, Long> {
-    OpenShiftResourceEntity findByOpenshiftResourceId(String openShiftResourceId);
+    OpenShiftResourceEntity findByOpenShiftResourceId(String openShiftResourceId);
 }

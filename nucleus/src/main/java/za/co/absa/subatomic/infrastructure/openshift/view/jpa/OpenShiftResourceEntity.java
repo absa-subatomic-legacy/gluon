@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.infrastructure.openshift.view.jpa;
 
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -26,12 +27,13 @@ public class OpenShiftResourceEntity {
     @GeneratedValue
     private Long id;
 
-    private String openshiftResourceId;
+    private String openShiftResourceId;
 
     private String kind;
 
     private String name;
 
     @Convert(converter = EncryptedAttributeConverter.class)
+    @Column(length = 65535)
     private String resourceDetails;
 }

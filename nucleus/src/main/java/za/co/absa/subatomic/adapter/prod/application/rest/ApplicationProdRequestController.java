@@ -33,6 +33,7 @@ public class ApplicationProdRequestController {
     public ApplicationProdRequestController(
             ApplicationProdRequestService applicationProdRequestService) {
         this.applicationProdRequestService = applicationProdRequestService;
+        this.assembler = new ApplicationProdRequestResourceAssembler();
     }
 
     @PostMapping
@@ -74,6 +75,8 @@ public class ApplicationProdRequestController {
             if (entity != null) {
                 ApplicationProdRequestResource resource = createResourceWithId(
                         entity.getApplicationProdRequestId(), entity);
+                resource.setApplicationProdRequestId(
+                        entity.getApplicationProdRequestId());
                 resource.setApplicationId(
                         entity.getApplication().getApplicationId());
                 resource.setActionedBy(entity.getActionedBy().getMemberId());
