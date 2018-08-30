@@ -1,15 +1,17 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    url: jdbc:h2:./testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
     driverClassName: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   h2:
     console:
       enabled: true
       path: /h2-console
   data.rest.detection-strategy: visibility
+  liquibase:
+    change-log: classpath:db/liquibase-changelog.xml
 encryption:
   encryptionKey: "REPLACE_THIS"
