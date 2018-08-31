@@ -202,7 +202,17 @@ public class TeamService {
     }
 
     @Transactional(readOnly = true)
-    public Set<TeamEntity> findByMemberOrOwner(String slackScreenName) {
+    public Set<TeamEntity> findByMemberOrOwnerMemberId(String teamMemberId) {
+        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByMembers_MemberId(teamMemberId));
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByOwners_MemberId(teamMemberId));
+        return teamsWithMemberOrOwner;
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(String slackScreenName) {
         Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
         teamsWithMemberOrOwner.addAll(teamRepository
                 .findByMembers_SlackDetailsScreenName(slackScreenName));

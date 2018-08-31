@@ -92,7 +92,7 @@ public class ApplicationAutomationHandler {
 
         za.co.absa.subatomic.domain.team.SlackIdentity owningTeamSlackIdentity = null;
 
-        if (teamMemberEntity.getSlackDetails() != null) {
+        if (owningTeam.getSlackDetails() != null) {
             owningTeamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
                     owningTeam.getSlackDetails().getTeamChannel());
         }

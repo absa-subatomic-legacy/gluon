@@ -1,8 +1,8 @@
 package za.co.absa.subatomic.infrastructure;
 
-import lombok.Data;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 @Data
 @ConfigurationProperties("atomist")
@@ -33,4 +33,6 @@ public class AtomistConfigurationProperties {
     private String membersAddedToTeamEventUrl;
 
     private String teamsLinkedToProjectEventUrl;
+
+    private String applicationProdRequestedEventUrl;
 }

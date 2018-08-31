@@ -86,12 +86,12 @@ public class TeamMemberController {
                 .addSlackDetails(id, slack.getScreenName(), slack.getUserId()));
 
         return ResponseEntity.accepted()
-                .body(assembler.toResource(teamMemberService.findByTeamId(id)));
+                .body(assembler.toResource(teamMemberService.findByTeamMemberId(id)));
     }
 
     @GetMapping("/{id}")
     TeamMemberResource get(@PathVariable String id) {
-        return assembler.toResource(teamMemberService.findByTeamId(id));
+        return assembler.toResource(teamMemberService.findByTeamMemberId(id));
     }
 
     @GetMapping
