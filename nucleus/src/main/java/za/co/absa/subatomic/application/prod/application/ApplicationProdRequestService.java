@@ -52,6 +52,7 @@ public class ApplicationProdRequestService {
         this.applicationProdRequestAutomationHandler = applicationProdRequestAutomationHandler;
     }
 
+    @Transactional
     public ApplicationProdRequestEntity newApplicationProdRequest(
             String applicationId,
             String actionedByMemberId,

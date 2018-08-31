@@ -6,16 +6,12 @@ import java.util.List;
 
 import lombok.Data;
 
+import lombok.EqualsAndHashCode;
 import org.springframework.hateoas.ResourceSupport;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class ProjectResource extends ResourceSupport {
-
-    private String projectId;
-
-    private String name;
-
-    private String description;
+public class ProjectResource extends ProjectResourceBase {
 
     private Date createdAt;
 
