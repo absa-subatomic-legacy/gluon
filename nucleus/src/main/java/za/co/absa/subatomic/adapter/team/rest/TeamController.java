@@ -137,7 +137,7 @@ public class TeamController {
             teams.add(
                     assembler.toResource(teamService.findByName(name)));
         }else if (StringUtils.isNotBlank(slackScreenName)) {
-            teams.addAll(teamService.findByMemberOrOwner(
+            teams.addAll(teamService.findByMemberOrOwnerSlackScreenName(
                     slackScreenName).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }else if (StringUtils.isNotBlank(slackTeamChannel)) {
