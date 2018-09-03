@@ -48,7 +48,6 @@ public class ProjectProdRequestService {
         this.automationHandler = automationHandler;
     }
 
-    @Transactional
     public ProjectProdRequestEntity createProjectProdRequest(String projectId,
             String actionedByMemberId) {
         ProjectEntity projectEntity = this.projectService
@@ -63,23 +62,22 @@ public class ProjectProdRequestService {
                 projectId, memberAssociatedTeams, projectEntity.getTeams());
 
         // Close and mark any open requests as rejected
-        for (ProjectProdRequestEntity openProdRequests : this.projectProdRequestRepository
+        for (ProjectProdRequestEntity openProdRequest : this.projectProdRequestRepository
                 .findByApprovalStatus(ProjectProductionRequestStatus.PENDING)) {
-            openProdRequests.setRejectingMember(actionedBy);
-            openProdRequests.close();
-            this.projectProdRequestRepository.save(openProdRequests);
+            openProdRequest.setRejectingMember(actionedBy);
+            openProdRequest
+                    .setApprovalStatus(ProjectProductionRequestStatus.REJECTED);
+            openProdRequest.close();
+            this.projectProdRequestRepository.save(openProdRequest);
+            ProjectProdRequestEntity rejectedProdRequest = this
+                    .addRejectionToProjectProdRequest(openProdRequest,
+                            actionedBy);
+            this.automationHandler
+                    .projectProdRequestClosed(rejectedProdRequest);
         }
 
-        ProjectProdRequestEntity projectProdRequestEntityInitial = ProjectProdRequestEntity
-                .builder()
-                .projectProdRequestId(UUID.randomUUID().toString())
-                .project(projectEntity)
-                .projectName(projectEntity.getName())
-                .actionedBy(actionedBy)
-                .approvalStatus(ProjectProductionRequestStatus.PENDING)
-                .build();
-        ProjectProdRequestEntity projectProdRequestEntity = projectProdRequestRepository
-                .save(projectProdRequestEntityInitial);
+        ProjectProdRequestEntity projectProdRequestEntity = this
+                .createProdProjectRequestEntity(projectEntity, actionedBy);
 
         if (projectProdRequestEntity != null) {
             this.automationHandler
@@ -90,6 +88,20 @@ public class ProjectProdRequestService {
     }
 
     @Transactional
+    protected ProjectProdRequestEntity createProdProjectRequestEntity(
+            ProjectEntity projectEntity, TeamMemberEntity actionedBy) {
+        ProjectProdRequestEntity projectProdRequestEntityInitial = ProjectProdRequestEntity
+                .builder()
+                .projectProdRequestId(UUID.randomUUID().toString())
+                .project(projectEntity)
+                .projectName(projectEntity.getName())
+                .actionedBy(actionedBy)
+                .approvalStatus(ProjectProductionRequestStatus.PENDING)
+                .build();
+        return projectProdRequestRepository
+                .save(projectProdRequestEntityInitial);
+    }
+
     public ProjectProdRequestEntity addProjectProdRequestApproval(
             String projectProdRequestId, String approvingMemberId) {
         ProjectProdRequestEntity projectProdRequest = projectProdRequestRepository
@@ -109,6 +121,23 @@ public class ProjectProdRequestService {
         throwErrorIfMemberIsHasAlreadyAuthorizedRequest(approvingMemberId,
                 projectProdRequest);
 
+        ProjectProdRequestEntity projectProdRequestEntity = this
+                .addApprovalToProjectProdRequest(projectProdRequest,
+                        approvingMember);
+
+        if (projectProdRequestEntity != null && projectProdRequestEntity
+                .getApprovalStatus() == ProjectProductionRequestStatus.APPROVED) {
+            this.automationHandler
+                    .projectProdRequestClosed(projectProdRequestEntity);
+        }
+
+        return projectProdRequestEntity;
+    }
+
+    @Transactional
+    protected ProjectProdRequestEntity addApprovalToProjectProdRequest(
+            ProjectProdRequestEntity projectProdRequest,
+            TeamMemberEntity approvingMember) {
         projectProdRequest.getAuthorizingMembers().add(approvingMember);
 
         if (projectProdRequest.getAuthorizingMembers().size() >= 1) {
@@ -117,17 +146,10 @@ public class ProjectProdRequestService {
             projectProdRequest.close();
         }
 
-        ProjectProdRequestEntity projectProdRequestEntity = projectProdRequestRepository
+        return projectProdRequestRepository
                 .save(projectProdRequest);
-
-        if (projectProdRequestEntity != null) {
-            // automation handler stuff goes here
-        }
-
-        return projectProdRequestEntity;
     }
 
-    @Transactional
     public ProjectProdRequestEntity rejectProjectProdRequest(
             String projectProdRequestId, String rejectingMemberId) {
         ProjectProdRequestEntity projectProdRequest = projectProdRequestRepository
@@ -147,20 +169,29 @@ public class ProjectProdRequestService {
         throwErrorIfMemberIsHasAlreadyAuthorizedRequest(rejectingMemberId,
                 projectProdRequest);
 
+        ProjectProdRequestEntity projectProdRequestEntity = this
+                .addRejectionToProjectProdRequest(projectProdRequest,
+                        rejectingMember);
+        if (projectProdRequestEntity != null) {
+            this.automationHandler
+                    .projectProdRequestClosed(projectProdRequestEntity);
+        }
+
+        return projectProdRequestEntity;
+    }
+
+    @Transactional
+    protected ProjectProdRequestEntity addRejectionToProjectProdRequest(
+            ProjectProdRequestEntity projectProdRequest,
+            TeamMemberEntity rejectingMember) {
         projectProdRequest.setRejectingMember(rejectingMember);
 
         projectProdRequest
                 .setApprovalStatus(ProjectProductionRequestStatus.REJECTED);
         projectProdRequest.close();
 
-        ProjectProdRequestEntity projectProdRequestEntity = projectProdRequestRepository
+        return projectProdRequestRepository
                 .save(projectProdRequest);
-
-        if (projectProdRequestEntity != null) {
-            // automation handler stuff goes here
-        }
-
-        return projectProdRequestEntity;
     }
 
     @Transactional(readOnly = true)

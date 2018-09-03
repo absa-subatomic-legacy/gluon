@@ -36,7 +36,25 @@ public class ProjectProdRequestAutomationHandler {
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested event successfully: {} -> {}",
+            log.info("Atomist has ingested ProjectProdEnvironmentsRequested event successfully: {} -> {}",
+                    response.getHeaders(), response.getBody());
+        }
+    }
+
+    public void projectProdRequestClosed(
+            ProjectProdRequestEntity projectProdRequestEntity) {
+
+        ProjectProdRequest requestEvent = new ProjectProdRequest(
+                projectProdRequestEntity.getProjectProdRequestId());
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getProjectProductionEnvironmentsRequestClosedEventUrl(),
+                requestEvent,
+                String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("Atomist has ingested ProjectProdEnvironmentsRequestClosed event successfully: {} -> {}",
                     response.getHeaders(), response.getBody());
         }
     }

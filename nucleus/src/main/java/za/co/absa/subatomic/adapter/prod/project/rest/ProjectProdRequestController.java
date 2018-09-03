@@ -27,6 +27,7 @@ import za.co.absa.subatomic.adapter.application.rest.ApplicationController;
 import za.co.absa.subatomic.adapter.member.rest.Slack;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
+import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
 import za.co.absa.subatomic.adapter.project.rest.ProjectController;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResourceBase;
 import za.co.absa.subatomic.application.prod.project.ProjectProdRequestService;
@@ -211,38 +212,6 @@ public class ProjectProdRequestController {
 
                 return resource;
             }
-            return null;
-        }
-    }
-
-    private class TeamMemberResourceBaseAssembler extends
-            ResourceAssemblerSupport<TeamMemberEntity, TeamMemberResourceBase> {
-
-        public TeamMemberResourceBaseAssembler() {
-            super(TeamMemberController.class, TeamMemberResourceBase.class);
-        }
-
-        @Override
-        public TeamMemberResourceBase toResource(TeamMemberEntity entity) {
-            if (entity != null) {
-                TeamMemberResourceBase resource = createResourceWithId(
-                        entity.getMemberId(), entity);
-                resource.setMemberId(entity.getMemberId());
-                resource.setFirstName(entity.getFirstName());
-                resource.setLastName(entity.getLastName());
-                resource.setEmail(entity.getEmail());
-                resource.setDomainUsername(entity.getDomainUsername());
-                resource.setJoinedAt(entity.getJoinedAt());
-
-                ofNullable(entity.getSlackDetails())
-                        .ifPresent(slackDetails -> resource
-                                .setSlack(
-                                        new Slack(slackDetails.getScreenName(),
-                                                slackDetails.getUserId())));
-
-                return resource;
-            }
-
             return null;
         }
     }
