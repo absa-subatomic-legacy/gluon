@@ -2,6 +2,7 @@ package za.co.absa.subatomic.application.prod.project;
 
 import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,6 +16,7 @@ import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.prod.project.ProjectProductionRequestStatus;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.prod.project.ProjectProdRequestAutomationHandler;
 import za.co.absa.subatomic.infrastructure.prod.project.view.jpa.ProjectProdRequestEntity;
 import za.co.absa.subatomic.infrastructure.prod.project.view.jpa.ProjectProdRequestRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -31,15 +33,19 @@ public class ProjectProdRequestService {
 
     private ProjectProdRequestRepository projectProdRequestRepository;
 
+    private ProjectProdRequestAutomationHandler automationHandler;
+
     public ProjectProdRequestService(
             ProjectService projectService,
             TeamMemberService teamMemberService,
             TeamService teamService,
-            ProjectProdRequestRepository projectProdRequestRepository) {
+            ProjectProdRequestRepository projectProdRequestRepository,
+            ProjectProdRequestAutomationHandler automationHandler) {
         this.projectService = projectService;
         this.teamMemberService = teamMemberService;
         this.teamService = teamService;
         this.projectProdRequestRepository = projectProdRequestRepository;
+        this.automationHandler = automationHandler;
     }
 
     @Transactional
@@ -56,6 +62,14 @@ public class ProjectProdRequestService {
         throwErrorIfMemberIsNotAMemberOfAssociatedTeam(actionedByMemberId,
                 projectId, memberAssociatedTeams, projectEntity.getTeams());
 
+        // Close and mark any open requests as rejected
+        for (ProjectProdRequestEntity openProdRequests : this.projectProdRequestRepository
+                .findByApprovalStatus(ProjectProductionRequestStatus.PENDING)) {
+            openProdRequests.setRejectingMember(actionedBy);
+            openProdRequests.close();
+            this.projectProdRequestRepository.save(openProdRequests);
+        }
+
         ProjectProdRequestEntity projectProdRequestEntityInitial = ProjectProdRequestEntity
                 .builder()
                 .projectProdRequestId(UUID.randomUUID().toString())
@@ -68,7 +82,8 @@ public class ProjectProdRequestService {
                 .save(projectProdRequestEntityInitial);
 
         if (projectProdRequestEntity != null) {
-            // automation handler stuff goes here
+            this.automationHandler
+                    .projectProdRequestCreated(projectProdRequestEntity);
         }
 
         return projectProdRequestEntity;
@@ -96,7 +111,7 @@ public class ProjectProdRequestService {
 
         projectProdRequest.getAuthorizingMembers().add(approvingMember);
 
-        if (projectProdRequest.getAuthorizingMembers().size() > 1) {
+        if (projectProdRequest.getAuthorizingMembers().size() >= 1) {
             projectProdRequest
                     .setApprovalStatus(ProjectProductionRequestStatus.APPROVED);
             projectProdRequest.close();
@@ -149,8 +164,13 @@ public class ProjectProdRequestService {
     }
 
     @Transactional(readOnly = true)
-    public ProjectProdRequestEntity findByProjectProdRequestId(String id){
+    public ProjectProdRequestEntity findByProjectProdRequestId(String id) {
         return this.projectProdRequestRepository.findByProjectProdRequestId(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProjectProdRequestEntity> findAll() {
+        return this.projectProdRequestRepository.findAll();
     }
 
     private void throwErrorIfMemberIsNotAMemberOfAssociatedTeam(String memberId,

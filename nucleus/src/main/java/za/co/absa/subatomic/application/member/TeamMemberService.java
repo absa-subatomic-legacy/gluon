@@ -133,4 +133,10 @@ public class TeamMemberService {
         return teamMemberRepository
                 .findBySlackDetailsScreenName(slackScreenName);
     }
+
+    @Transactional(readOnly = true)
+    public List<TeamMemberEntity> findMembersAssociatedToTeam(String teamId) {
+        return teamMemberRepository
+                .findByTeams_TeamId(teamId);
+    }
 }

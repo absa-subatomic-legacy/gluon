@@ -26,6 +26,8 @@ public class AtomistConfigurationProperties {
 
     private String projectEnvironmentsRequestedEventUrl;
 
+    private String projectProductionEnvironmentsRequestedEventUrl;
+
     private String applicationCreatedEventUrl;
 
     private String membershipRequestCreatedEventUrl;

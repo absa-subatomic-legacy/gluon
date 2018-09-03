@@ -1,6 +1,8 @@
 package za.co.absa.subatomic.adapter.prod.project.rest;
 
 import static java.util.Optional.ofNullable;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.hateoas.ExposesResourceFor;
+import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import za.co.absa.subatomic.adapter.application.rest.ApplicationController;
 import za.co.absa.subatomic.adapter.member.rest.Slack;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
@@ -72,7 +76,7 @@ public class ProjectProdRequestController {
         return ResponseEntity.created(location).build();
     }
 
-    @PutMapping("/id")
+    @PutMapping("/{id}")
     ResponseEntity<ProjectProdRequestResource> update(@PathVariable String id,
             @RequestBody ProjectProdRequestResource request) {
 
@@ -92,6 +96,10 @@ public class ProjectProdRequestController {
                         .rejectProjectProdRequest(id, actionedById);
             }
         }
+        else {
+            throw new InvalidRequestException(
+                    "Project prod request update is malformed.");
+        }
 
         return ResponseEntity.accepted()
                 .body(assembler.toResource(projectProdRequestService
@@ -102,6 +110,21 @@ public class ProjectProdRequestController {
     ProjectProdRequestResource get(@PathVariable String id) {
         return assembler.toResource(this.projectProdRequestService
                 .findByProjectProdRequestId(id));
+    }
+
+    @GetMapping
+    Resources<ProjectProdRequestResource> list() {
+
+        List<ProjectProdRequestResource> projectProdRequests = new ArrayList<>();
+
+        projectProdRequests.addAll(this.projectProdRequestService.findAll()
+                .stream()
+                .map(assembler::toResource).collect(Collectors.toList()));
+
+        return new Resources<>(projectProdRequests,
+                linkTo(ApplicationController.class).withRel("self"),
+                linkTo(methodOn(ProjectProdRequestController.class).list())
+                        .withRel("self"));
     }
 
     private String tryGetActionByMemberId(
