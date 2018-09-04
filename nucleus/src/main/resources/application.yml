@@ -17,5 +17,8 @@ spring:
   data.rest.detection-strategy: visibility
 flyway:
   enabled: true
-encryption:
-  encryptionKey: "REPLACE_THIS"
+gluon:
+  encryption:
+    encryptionKey: "REPLACE_THIS"
+  project:
+    defaultProdApprovals: 3

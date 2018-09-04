@@ -9,9 +9,11 @@ import org.springframework.http.client.BufferingClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
+import za.co.absa.subatomic.infrastructure.configuration.GluonProperties;
+
 @Configuration
 @EnableConfigurationProperties({ AtomistConfigurationProperties.class,
-        DatabaseEncryptionProperties.class })
+        GluonProperties.class })
 public class NucleusConfiguration {
 
     @Bean

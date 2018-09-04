@@ -15,6 +15,7 @@ import za.co.absa.subatomic.application.team.TeamService;
 import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.prod.project.ProjectProductionRequestStatus;
+import za.co.absa.subatomic.infrastructure.configuration.GluonProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.prod.project.ProjectProdRequestAutomationHandler;
 import za.co.absa.subatomic.infrastructure.prod.project.view.jpa.ProjectProdRequestEntity;
@@ -35,17 +36,21 @@ public class ProjectProdRequestService {
 
     private ProjectProdRequestAutomationHandler automationHandler;
 
+    private GluonProperties gluonProperties;
+
     public ProjectProdRequestService(
             ProjectService projectService,
             TeamMemberService teamMemberService,
             TeamService teamService,
             ProjectProdRequestRepository projectProdRequestRepository,
-            ProjectProdRequestAutomationHandler automationHandler) {
+            ProjectProdRequestAutomationHandler automationHandler,
+            GluonProperties gluonProperties) {
         this.projectService = projectService;
         this.teamMemberService = teamMemberService;
         this.teamService = teamService;
         this.projectProdRequestRepository = projectProdRequestRepository;
         this.automationHandler = automationHandler;
+        this.gluonProperties = gluonProperties;
     }
 
     public ProjectProdRequestEntity createProjectProdRequest(String projectId,
@@ -140,7 +145,9 @@ public class ProjectProdRequestService {
             TeamMemberEntity approvingMember) {
         projectProdRequest.getAuthorizingMembers().add(approvingMember);
 
-        if (projectProdRequest.getAuthorizingMembers().size() >= 1) {
+        if (projectProdRequest.getAuthorizingMembers().size() >= this
+                .getRequiredProdApprovalCount(
+                        projectProdRequest.getProject().getOwningTeam())) {
             projectProdRequest
                     .setApprovalStatus(ProjectProductionRequestStatus.APPROVED);
             projectProdRequest.close();
@@ -237,5 +244,14 @@ public class ProjectProdRequestService {
                     "The actioning member with id {0} has already approved this request.",
                     memberId));
         }
+    }
+
+    private int getRequiredProdApprovalCount(TeamEntity teamEntity) {
+        int defaultProdApprovals = this.gluonProperties.getProject()
+                .getDefaultProdApprovals();
+        int totalMemberCount = teamEntity.getMembers().size()
+                + teamEntity.getOwners().size();
+
+        return Math.min(defaultProdApprovals, totalMemberCount);
     }
 }

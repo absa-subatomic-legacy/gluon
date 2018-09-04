@@ -23,7 +23,8 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.exception.AttributeDecryptionException;
 import za.co.absa.subatomic.domain.exception.AttributeEncryptionException;
-import za.co.absa.subatomic.infrastructure.DatabaseEncryptionProperties;
+import za.co.absa.subatomic.infrastructure.configuration.DatabaseEncryptionProperties;
+import za.co.absa.subatomic.infrastructure.configuration.GluonProperties;
 
 // See https://www.thoughts-on-java.org/how-to-use-jpa-type-converter-to/
 // and https://stackoverflow.com/a/44891805/1630111
@@ -106,8 +107,9 @@ public class EncryptedAttributeConverter
 
     @Autowired
     public void injectEncryptionProperties(
-            DatabaseEncryptionProperties databaseEncryptionProperties) {
-        EncryptedAttributeConverter.databaseEncryptionProperties = databaseEncryptionProperties;
+            GluonProperties gluonProperties) {
+        EncryptedAttributeConverter.databaseEncryptionProperties = gluonProperties
+                .getEncryption();
     }
 
     private String getKey() {
