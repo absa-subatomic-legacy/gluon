@@ -1,22 +1,21 @@
 package za.co.absa.subatomic.adapter.team.rest;
 
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
-import za.co.absa.subatomic.application.team.TeamService;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,10 +26,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import lombok.extern.slf4j.Slf4j;
+import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
+import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
+import za.co.absa.subatomic.application.team.TeamService;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @RestController
 @RequestMapping("/teams")
@@ -76,10 +76,10 @@ public class TeamController {
             teamService.addTeamMembers(id,
                     request.getCreatedBy(),
                     request.getOwners().stream()
-                            .map(TeamMemberIdResource::getMemberId)
+                            .map(TeamMemberResourceBase::getMemberId)
                             .collect(toList()),
                     request.getMembers().stream()
-                            .map(TeamMemberIdResource::getMemberId)
+                            .map(TeamMemberResourceBase::getMemberId)
                             .collect(toList()));
         }
 
@@ -136,15 +136,18 @@ public class TeamController {
         if (StringUtils.isNotBlank(name)) {
             teams.add(
                     assembler.toResource(teamService.findByName(name)));
-        }else if (StringUtils.isNotBlank(slackScreenName)) {
+        }
+        else if (StringUtils.isNotBlank(slackScreenName)) {
             teams.addAll(teamService.findByMemberOrOwnerSlackScreenName(
                     slackScreenName).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
-        }else if (StringUtils.isNotBlank(slackTeamChannel)) {
+        }
+        else if (StringUtils.isNotBlank(slackTeamChannel)) {
             teams.addAll(teamService.findBySlackTeamChannel(
                     slackTeamChannel).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
-        }else if (StringUtils.isNotBlank(projectId)) {
+        }
+        else if (StringUtils.isNotBlank(projectId)) {
             teams.addAll(teamService.findTeamsAssociatedToProject(
                     projectId).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
@@ -166,11 +169,13 @@ public class TeamController {
     ResponseEntity delete(@PathVariable String id,
             @RequestBody TeamResource request) {
         if (!request.getMembers().isEmpty() || !request.getOwners().isEmpty()) {
-            teamService.removeTeamMembers(id, request.getCreatedBy(), request.getOwners().stream()
-                    .map(TeamMemberIdResource::getMemberId)
-                    .collect(toList()), request.getMembers().stream()
-                    .map(TeamMemberIdResource::getMemberId)
-                    .collect(toList()));
+            teamService.removeTeamMembers(id, request.getCreatedBy(),
+                    request.getOwners().stream()
+                            .map(TeamMemberResourceBase::getMemberId)
+                            .collect(toList()),
+                    request.getMembers().stream()
+                            .map(TeamMemberResourceBase::getMemberId)
+                            .collect(toList()));
         }
         else {
             teamService.deleteTeam(id);
@@ -197,10 +202,12 @@ public class TeamController {
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
 
-                resource.getOwners().addAll(new TeamMemberIdResourceAssembler()
-                        .toResources(entity.getOwners()));
-                resource.getMembers().addAll(new TeamMemberIdResourceAssembler()
-                        .toResources(entity.getMembers()));
+                resource.getOwners()
+                        .addAll(new TeamMemberResourceBaseAssembler()
+                                .toResources(entity.getOwners()));
+                resource.getMembers()
+                        .addAll(new TeamMemberResourceBaseAssembler()
+                                .toResources(entity.getMembers()));
 
                 ofNullable(entity.getSlackDetails())
                         .ifPresent(slackDetails -> resource
@@ -212,23 +219,6 @@ public class TeamController {
             else {
                 return null;
             }
-        }
-    }
-
-    private class TeamMemberIdResourceAssembler extends
-            ResourceAssemblerSupport<TeamMemberEntity, TeamMemberIdResource> {
-
-        public TeamMemberIdResourceAssembler() {
-            super(TeamMemberController.class, TeamMemberIdResource.class);
-        }
-
-        @Override
-        public TeamMemberIdResource toResource(TeamMemberEntity entity) {
-            TeamMemberIdResource resource = createResourceWithId(
-                    entity.getMemberId(),
-                    entity);
-            resource.setMemberId(entity.getMemberId());
-            return resource;
         }
     }
 }
