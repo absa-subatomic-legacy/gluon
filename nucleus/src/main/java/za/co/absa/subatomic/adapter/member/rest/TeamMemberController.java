@@ -1,5 +1,9 @@
 package za.co.absa.subatomic.adapter.member.rest;
 
+import static java.util.Optional.ofNullable;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,11 +12,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import za.co.absa.subatomic.adapter.team.rest.TeamController;
-import za.co.absa.subatomic.application.member.TeamMemberService;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
@@ -27,9 +26,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import static java.util.Optional.ofNullable;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import za.co.absa.subatomic.adapter.team.rest.TeamController;
+import za.co.absa.subatomic.application.member.TeamMemberService;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @RestController
 @RequestMapping("/members")
@@ -86,7 +86,8 @@ public class TeamMemberController {
                 .addSlackDetails(id, slack.getScreenName(), slack.getUserId()));
 
         return ResponseEntity.accepted()
-                .body(assembler.toResource(teamMemberService.findByTeamMemberId(id)));
+                .body(assembler
+                        .toResource(teamMemberService.findByTeamMemberId(id)));
     }
 
     @GetMapping("/{id}")
@@ -97,7 +98,8 @@ public class TeamMemberController {
     @GetMapping
     Resources<TeamMemberResource> list(
             @RequestParam(required = false) String email,
-            @RequestParam(required = false) String slackScreenName) {
+            @RequestParam(required = false) String slackScreenName,
+            @RequestParam(required = false) String teamId) {
         List<TeamMemberResource> members = new ArrayList<>();
 
         // TODO see if we can't use that functional library for Java that has pattern matching?
@@ -105,14 +107,19 @@ public class TeamMemberController {
             members.add(
                     assembler.toResource(teamMemberService.findByEmail(email)));
         }
-
-        if (StringUtils.isNotBlank(slackScreenName)) {
+        else if (StringUtils.isNotBlank(slackScreenName)) {
             members.add(
                     assembler.toResource(teamMemberService
                             .findBySlackScreenName(slackScreenName)));
         }
-
-        if (StringUtils.isAllBlank(email, slackScreenName)) {
+        else if (StringUtils.isNotBlank(teamId)) {
+            members.addAll(
+                    teamMemberService.findMembersAssociatedToTeam(teamId)
+                            .stream()
+                            .map(assembler::toResource)
+                            .collect(Collectors.toList()));
+        }
+        else if (StringUtils.isAllBlank(email, slackScreenName)) {
             members.addAll(teamMemberService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
@@ -120,7 +127,7 @@ public class TeamMemberController {
         return new Resources<>(members,
                 linkTo(TeamMemberController.class).withRel("self"),
                 linkTo(methodOn(TeamMemberController.class).list(email,
-                        slackScreenName))
+                        slackScreenName, teamId))
                                 .withRel("self"));
     }
 
