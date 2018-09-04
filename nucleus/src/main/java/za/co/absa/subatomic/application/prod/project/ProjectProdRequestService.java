@@ -63,8 +63,9 @@ public class ProjectProdRequestService {
         Set<TeamEntity> memberAssociatedTeams = this.teamService
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
-        throwErrorIfMemberIsNotAMemberOfAssociatedTeam(actionedByMemberId,
-                projectId, memberAssociatedTeams, projectEntity.getTeams());
+        throwErrorIfMemberIsNotAMemberOfOwningTeam(actionedByMemberId,
+                projectId, memberAssociatedTeams,
+                projectEntity.getOwningTeam());
 
         // Close and mark any open requests as rejected
         for (ProjectProdRequestEntity openProdRequest : this.projectProdRequestRepository
@@ -116,14 +117,14 @@ public class ProjectProdRequestService {
         Set<TeamEntity> memberAssociatedTeams = this.teamService
                 .findByMemberOrOwnerMemberId(approvingMemberId);
 
-        throwErrorIfMemberIsNotAMemberOfAssociatedTeam(approvingMemberId,
+        throwErrorIfMemberIsNotAMemberOfOwningTeam(approvingMemberId,
                 projectProdRequest.getProject().getProjectId(),
                 memberAssociatedTeams,
-                projectProdRequest.getProject().getTeams());
+                projectProdRequest.getProject().getOwningTeam());
 
         throwErrorIfProjectProdRequestIsClosed(projectProdRequest);
 
-        throwErrorIfMemberIsHasAlreadyAuthorizedRequest(approvingMemberId,
+        throwErrorIfMemberHasAlreadyAuthorizedRequest(approvingMemberId,
                 projectProdRequest);
 
         ProjectProdRequestEntity projectProdRequestEntity = this
@@ -166,14 +167,14 @@ public class ProjectProdRequestService {
         Set<TeamEntity> memberAssociatedTeams = this.teamService
                 .findByMemberOrOwnerMemberId(rejectingMemberId);
 
-        throwErrorIfMemberIsNotAMemberOfAssociatedTeam(rejectingMemberId,
+        throwErrorIfMemberIsNotAMemberOfOwningTeam(rejectingMemberId,
                 projectProdRequest.getProject().getProjectId(),
                 memberAssociatedTeams,
-                projectProdRequest.getProject().getTeams());
+                projectProdRequest.getProject().getOwningTeam());
 
         throwErrorIfProjectProdRequestIsClosed(projectProdRequest);
 
-        throwErrorIfMemberIsHasAlreadyAuthorizedRequest(rejectingMemberId,
+        throwErrorIfMemberHasAlreadyAuthorizedRequest(rejectingMemberId,
                 projectProdRequest);
 
         ProjectProdRequestEntity projectProdRequestEntity = this
@@ -211,13 +212,13 @@ public class ProjectProdRequestService {
         return this.projectProdRequestRepository.findAll();
     }
 
-    private void throwErrorIfMemberIsNotAMemberOfAssociatedTeam(String memberId,
+    private void throwErrorIfMemberIsNotAMemberOfOwningTeam(String memberId,
             String projectId, Collection<TeamEntity> memberAssociatedTeams,
-            Collection<TeamEntity> projectAssociatedTeams) {
-        if (projectAssociatedTeams.stream()
-                .noneMatch(memberAssociatedTeams::contains)) {
+            TeamEntity projectOwningTeam) {
+        if (memberAssociatedTeams.stream()
+                .noneMatch(projectOwningTeam::equals)) {
             throw new ApplicationAuthorisationException(MessageFormat.format(
-                    "TeamMember with id {0} is not a member of any team associated to the project {1}.",
+                    "TeamMember with id {0} is not a member of the projects owning team for project with id {1}.",
                     memberId,
                     projectId));
         }
@@ -235,7 +236,7 @@ public class ProjectProdRequestService {
         }
     }
 
-    private void throwErrorIfMemberIsHasAlreadyAuthorizedRequest(
+    private void throwErrorIfMemberHasAlreadyAuthorizedRequest(
             String memberId, ProjectProdRequestEntity projectProdRequest) {
         if (projectProdRequest.getAuthorizingMembers().stream()
                 .map(TeamMemberEntity::getMemberId)
