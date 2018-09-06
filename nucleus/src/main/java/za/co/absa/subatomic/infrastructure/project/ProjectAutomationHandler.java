@@ -1,17 +1,26 @@
 package za.co.absa.subatomic.infrastructure.project;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.axonframework.eventhandling.EventHandler;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import com.google.gson.Gson;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.axonframework.eventhandling.EventHandler;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
-import za.co.absa.subatomic.domain.project.*;
+import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
+import za.co.absa.subatomic.domain.project.BitbucketProjectLinked;
+import za.co.absa.subatomic.domain.project.BitbucketProjectRequested;
+import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.domain.project.ProjectEnvironmentRequested;
+import za.co.absa.subatomic.domain.project.TeamsLinkedToProject;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
@@ -21,10 +30,6 @@ import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantRepository;
 
@@ -382,6 +387,11 @@ public class ProjectAutomationHandler {
                         createdBy.getEmail(),
                         slackIdentity));
 
+        Gson gson = new Gson();
+
+        String jsonRepresentation = gson.toJson(bitbucketProjectRequested);
+        log.info("Sending payload to atomist: {}", jsonRepresentation);
+
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
                         .getProjectEnvironmentsRequestedEventUrl(),
@@ -416,7 +426,8 @@ public class ProjectAutomationHandler {
         }
 
         TeamEntity newTeam = teamRepository
-                .findByTeamId(event.getTeamsLinked().iterator().next().getTeamId());
+                .findByTeamId(
+                        event.getTeamsLinked().iterator().next().getTeamId());
 
         List<Team> currentTeams = projectEntity.getTeams().stream()
                 .map(teamEntity -> new Team(
@@ -427,9 +438,11 @@ public class ProjectAutomationHandler {
                                         .getTeamChannel())))
                 .collect(Collectors.toList());
 
-        currentTeams.add(0, new Team(newTeam.getTeamId(), newTeam.getName(), new za.co.absa.subatomic.domain.team.SlackIdentity(
-                newTeam.getSlackDetails()
-                        .getTeamChannel())));
+        currentTeams.add(0,
+                new Team(newTeam.getTeamId(), newTeam.getName(),
+                        new za.co.absa.subatomic.domain.team.SlackIdentity(
+                                newTeam.getSlackDetails()
+                                        .getTeamChannel())));
 
         TeamAssociated teamAssociated = new TeamAssociated(
                 currentTeams,
@@ -441,12 +454,14 @@ public class ProjectAutomationHandler {
                         slackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
-                atomistConfigurationProperties.getTeamsLinkedToProjectEventUrl(),
+                atomistConfigurationProperties
+                        .getTeamsLinkedToProjectEventUrl(),
                 teamAssociated,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested team associated event successfully: {} -> {}",
+            log.info(
+                    "Atomist has ingested team associated event successfully: {} -> {}",
                     response.getHeaders(), response.getBody());
         }
     }
