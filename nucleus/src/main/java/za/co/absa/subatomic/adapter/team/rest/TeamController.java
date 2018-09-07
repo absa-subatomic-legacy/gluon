@@ -152,8 +152,8 @@ public class TeamController {
                     projectId).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
-
-        if (StringUtils.isAllBlank(name, slackScreenName, slackTeamChannel)) {
+        else if (StringUtils.isAllBlank(name, slackScreenName, slackTeamChannel,
+                projectId)) {
             teams.addAll(teamService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
