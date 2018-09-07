@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +17,9 @@ import za.co.absa.subatomic.application.team.TeamService;
 import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.openshift.view.jpa.OpenShiftResourceEntity;
-import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.application.GenericProdRequestAutomationHandler;
-import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.application.view.jpa.GenericProdRequestEntity;
-import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.application.view.jpa.GenericProdRequestRepository;
+import za.co.absa.subatomic.infrastructure.prod.generic.GenericProdRequestAutomationHandler;
+import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.GenericProdRequestEntity;
+import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.GenericProdRequestRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
@@ -73,6 +74,7 @@ public class GenericProdRequestService {
 
         GenericProdRequestEntity genericProdRequestEntity = GenericProdRequestEntity
                 .builder()
+                .genericProdRequestId(UUID.randomUUID().toString())
                 .actionedBy(actioningMember)
                 .openShiftResources(openShiftResourceEntities)
                 .project(projectEntity)

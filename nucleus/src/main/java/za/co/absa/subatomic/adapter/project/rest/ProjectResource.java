@@ -21,8 +21,6 @@ public class ProjectResource extends ProjectResourceBase {
 
     private TeamResource owningTeam;
 
-    private String owningTenant;
-
     private List<TeamResource> teams = new ArrayList<>();
 
     private ProjectEnvironment projectEnvironment;

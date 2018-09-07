@@ -39,4 +39,6 @@ public class AtomistConfigurationProperties {
     private String teamsLinkedToProjectEventUrl;
 
     private String applicationProdRequestedEventUrl;
+
+    private String genericProdRequestedEventUrl;
 }

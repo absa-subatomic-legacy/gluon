@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.application.view.jpa;
+package za.co.absa.subatomic.infrastructure.prod.generic.view.jpa;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

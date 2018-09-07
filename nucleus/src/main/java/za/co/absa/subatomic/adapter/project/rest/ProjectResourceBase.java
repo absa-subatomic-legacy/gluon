@@ -14,4 +14,6 @@ public class ProjectResourceBase extends ResourceSupport {
     protected String name;
 
     protected String description;
+
+    protected String owningTenant;
 }

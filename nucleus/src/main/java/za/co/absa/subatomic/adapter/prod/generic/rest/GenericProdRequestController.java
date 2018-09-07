@@ -21,7 +21,7 @@ import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResource;
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResourceAssembler;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResourceBaseAssembler;
 import za.co.absa.subatomic.application.prod.generic.GenericProdRequestService;
-import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.application.view.jpa.GenericProdRequestEntity;
+import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.GenericProdRequestEntity;
 
 @RestController
 @RequestMapping("/genericProdRequests")
