@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.gson.Gson;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
-import za.co.absa.subatomic.domain.team.DevOpsEnvironmentRequested;
 import za.co.absa.subatomic.domain.team.MembershipRequestCreated;
 import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
@@ -82,14 +82,10 @@ public class TeamAutomationHandler {
         }
     }
 
-    @EventHandler
-    public void on(DevOpsEnvironmentRequested event) {
+    public void devOpsEnvironmentRequested(TeamEntity teamEntity,
+            TeamMemberEntity teamMemberEntity) {
         log.info(
                 "A team DevOps environment was requested, sending event to Atomist...");
-
-        TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
-        TeamMemberEntity teamMemberEntity = teamMemberRepository
-                .findByMemberId(event.getRequestedBy().getTeamMemberId());
 
         za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
@@ -132,6 +128,11 @@ public class TeamAutomationHandler {
                                         memberEntity.getSlackDetails()
                                                 .getUserId())))
                         .collect(Collectors.toList()));
+
+
+        String jsonRepresentation = new Gson().toJson(newDevOpsEnvironmentRequested);
+
+        log.info("Sending payload to atomist: {}", jsonRepresentation);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
