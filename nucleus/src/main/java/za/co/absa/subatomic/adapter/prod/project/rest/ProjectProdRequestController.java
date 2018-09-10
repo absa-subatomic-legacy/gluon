@@ -30,6 +30,7 @@ import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
 import za.co.absa.subatomic.adapter.project.rest.ProjectController;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResourceBase;
+import za.co.absa.subatomic.adapter.project.rest.ProjectResourceBaseAssembler;
 import za.co.absa.subatomic.application.prod.project.ProjectProdRequestService;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.prod.project.ProjectProductionRequestStatus;
@@ -191,28 +192,6 @@ public class ProjectProdRequestController {
             else {
                 return null;
             }
-        }
-    }
-
-    private class ProjectResourceBaseAssembler extends
-            ResourceAssemblerSupport<ProjectEntity, ProjectResourceBase> {
-
-        public ProjectResourceBaseAssembler() {
-            super(ProjectController.class, ProjectResourceBase.class);
-        }
-
-        @Override
-        public ProjectResourceBase toResource(ProjectEntity entity) {
-            if (entity != null) {
-                ProjectResourceBase resource = createResourceWithId(
-                        entity.getProjectId(), entity);
-                resource.setProjectId(entity.getProjectId());
-                resource.setDescription(entity.getDescription());
-                resource.setName(entity.getName());
-
-                return resource;
-            }
-            return null;
         }
     }
 }
