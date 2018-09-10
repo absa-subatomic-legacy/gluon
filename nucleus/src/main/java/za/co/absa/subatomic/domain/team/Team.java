@@ -117,19 +117,6 @@ public class Team {
         apply(new TeamMembersRemoved(this.teamId, newOwners, newMembers));
     }
 
-
-    @CommandHandler
-    void when(AddSlackIdentity command) {
-        apply(new SlackIdentityAdded(
-                command.getTeamId(),
-                new SlackIdentity(command.getTeamChannel())));
-    }
-
-    @EventSourcingHandler
-    void on(SlackIdentityAdded event) {
-        this.slackIdentity = event.getSlackIdentity();
-    }
-
     @CommandHandler
     void when(NewDevOpsEnvironment command) {
         if (!this.teamMembers.contains(command.getRequestedBy())
@@ -148,39 +135,6 @@ public class Team {
     @EventSourcingHandler
     void on(DevOpsEnvironmentRequested event) {
         this.devOpsEnvironment = event.getDevOpsEnvironment();
-    }
-
-    @CommandHandler
-    public void when(NewMembershipRequest command) {
-        if (this.teamMembers
-                .contains(command.getMembershipRequest().getRequestedBy()) ||
-                this.owners.contains(
-                        command.getMembershipRequest().getRequestedBy())) {
-            throw new InvalidRequestException(MessageFormat.format(
-                    "Requesting user {0} is already a member of the team {1}.",
-                    command.getMembershipRequest().getRequestedBy()
-                            .getTeamMemberId(),
-                    command.getTeamId()));
-        }
-        for (MembershipRequest request : this.membershipRequests) {
-            if (request.getRequestStatus() == MembershipRequestStatus.OPEN &&
-                    request.getRequestedBy().equals(
-                            command.getMembershipRequest().getRequestedBy())) {
-                throw new InvalidRequestException(MessageFormat.format(
-                        "An open membership request to team {0} already exists for requesting user {1}",
-                        command.getTeamId(), command.getMembershipRequest()
-                                .getRequestedBy().getTeamMemberId()));
-            }
-        }
-        apply(new MembershipRequestCreated(
-                command.getTeamId(),
-                command.getMembershipRequest()));
-    }
-
-    @EventSourcingHandler
-    void on(MembershipRequestCreated event) {
-        this.teamId = event.getTeamId();
-        this.membershipRequests.add(event.getMembershipRequest());
     }
 
     @CommandHandler

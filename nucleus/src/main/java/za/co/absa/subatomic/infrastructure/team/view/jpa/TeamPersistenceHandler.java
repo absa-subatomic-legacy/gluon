@@ -1,18 +1,25 @@
 package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
+import java.text.MessageFormat;
 import java.util.Collections;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.axonframework.eventhandling.EventHandler;
-import za.co.absa.subatomic.domain.team.*;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
-
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
+import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
+import za.co.absa.subatomic.domain.team.TeamCreated;
+import za.co.absa.subatomic.domain.team.TeamDeleted;
+import za.co.absa.subatomic.domain.team.TeamMembersAdded;
+import za.co.absa.subatomic.domain.team.TeamMembersRemoved;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
+
 @Component
-public class TeamHandler {
+public class TeamPersistenceHandler {
 
     private TeamRepository teamRepository;
 
@@ -20,7 +27,7 @@ public class TeamHandler {
 
     private MembershipRequestRepository membershipRequestRepository;
 
-    public TeamHandler(TeamRepository teamRepository,
+    public TeamPersistenceHandler(TeamRepository teamRepository,
             TeamMemberRepository teamMemberRepository,
             MembershipRequestRepository membershipRequestRepository) {
         this.teamRepository = teamRepository;
@@ -51,14 +58,16 @@ public class TeamHandler {
         teamRepository.save(teamEntity);
     }
 
-    @EventHandler
     @Transactional
-    void on(SlackIdentityAdded event) {
-        TeamEntity team = teamRepository.findByTeamId(event.getTeamId());
-        team.setSlackDetails(new SlackDetailsEmbedded(
-                event.getSlackIdentity().getTeamChannel()));
+    public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
+        TeamEntity team = teamRepository.findByTeamId(teamId);
+        if (team == null) {
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Could not find team with ID {}.", teamId));
+        }
+        team.setSlackDetails(new SlackDetailsEmbedded(teamChannel));
 
-        teamRepository.save(team);
+        return teamRepository.save(team);
     }
 
     @EventHandler
@@ -115,28 +124,44 @@ public class TeamHandler {
         teamRepository.save(team);
     }
 
-    @EventHandler
     @Transactional
-    void on(MembershipRequestCreated event) {
-        TeamMemberEntity requestedBy = teamMemberRepository
-                .findByMemberId(event.getMembershipRequest().getRequestedBy()
-                        .getTeamMemberId());
+    public MembershipRequestEntity closeMembershipRequest(
+            String membershipRequestId, MembershipRequestStatus status,
+            String closedById) {
+        TeamMemberEntity closedBy = this.teamMemberRepository
+                .findByMemberId(closedById);
+        MembershipRequestEntity membershipRequest = this.membershipRequestRepository
+                .findByMembershipRequestId(membershipRequestId);
+
+        membershipRequest.setRequestStatus(status);
+
+        membershipRequest.setApprovedBy(closedBy);
+
+        return this.membershipRequestRepository
+                .save(membershipRequest);
+    }
+
+    @Transactional
+    public MembershipRequestEntity createMembershipRequest(String teamId,
+            String requestedById) {
+        TeamEntity team = teamRepository.findByTeamId(teamId);
+        TeamMemberEntity requestedBy = this.teamMemberRepository
+                .findByMemberId(requestedById);
 
         MembershipRequestEntity membershipRequestEntity = MembershipRequestEntity
                 .builder()
-                .membershipRequestId(
-                        event.getMembershipRequest().getMembershipRequestId())
-                .teamId(event.getTeamId())
+                .membershipRequestId(UUID.randomUUID().toString())
+                .teamId(teamId)
                 .requestedBy(requestedBy)
-                .requestStatus(event.getMembershipRequest().getRequestStatus())
+                .requestStatus(MembershipRequestStatus.OPEN)
                 .build();
 
-        membershipRequestEntity = membershipRequestRepository
+        membershipRequestEntity = this.membershipRequestRepository
                 .save(membershipRequestEntity);
 
-        TeamEntity team = teamRepository.findByTeamId(event.getTeamId());
         team.getMembershipRequests().add(membershipRequestEntity);
         teamRepository.save(team);
+        return membershipRequestEntity;
     }
 
     @EventHandler
