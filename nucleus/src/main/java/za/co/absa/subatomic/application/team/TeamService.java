@@ -13,21 +13,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
+import za.co.absa.subatomic.application.member.TeamMemberService;
+import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.team.AddSlackIdentity;
 import za.co.absa.subatomic.domain.team.AddTeamMembers;
 import za.co.absa.subatomic.domain.team.DeleteTeam;
 import za.co.absa.subatomic.domain.team.MembershipRequest;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.domain.team.NewDevOpsEnvironment;
 import za.co.absa.subatomic.domain.team.NewMembershipRequest;
 import za.co.absa.subatomic.domain.team.NewTeam;
 import za.co.absa.subatomic.domain.team.NewTeamFromSlack;
 import za.co.absa.subatomic.domain.team.SlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.domain.team.UpdateMembershipRequest;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
+import za.co.absa.subatomic.infrastructure.team.TeamAutomationHandler;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -43,16 +46,24 @@ public class TeamService {
 
     private ProjectRepository projectRepository;
 
+    private TeamMemberService teamMemberService;
+
+    private TeamAutomationHandler automationHandler;
+
     private MembershipRequestRepository membershipRequestRepository;
 
     public TeamService(CommandGateway commandGateway,
             TeamRepository teamRepository,
             MembershipRequestRepository membershipRequestRepository,
-            ProjectRepository projectRepository) {
+            ProjectRepository projectRepository,
+            TeamMemberService teamMemberService,
+            TeamAutomationHandler automationHandler) {
         this.commandGateway = commandGateway;
         this.teamRepository = teamRepository;
         this.membershipRequestRepository = membershipRequestRepository;
         this.projectRepository = projectRepository;
+        this.teamMemberService = teamMemberService;
+        this.automationHandler = automationHandler;
     }
 
     public String newTeam(String name, String description, String createdBy) {
@@ -128,11 +139,14 @@ public class TeamService {
                 TimeUnit.SECONDS);
     }
 
-    public String newDevOpsEnvironment(String teamId, String requestedBy) {
-        return commandGateway.sendAndWait(
-                new NewDevOpsEnvironment(teamId, new TeamMemberId(requestedBy)),
-                1,
-                TimeUnit.SECONDS);
+    public void newDevOpsEnvironment(String teamId, String requestedById) {
+        TeamEntity team = this.teamRepository.findByTeamId(teamId);
+        TeamMemberEntity requestedBy = this.teamMemberService
+                .findByTeamMemberId(requestedById);
+
+        assertMemberBelongsToTeam(requestedBy, team);
+
+        this.automationHandler.devOpsEnvironmentRequested(team, requestedBy);
     }
 
     public String updateMembershipRequest(String teamId,
@@ -212,7 +226,8 @@ public class TeamService {
     }
 
     @Transactional(readOnly = true)
-    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(String slackScreenName) {
+    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(
+            String slackScreenName) {
         Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
         teamsWithMemberOrOwner.addAll(teamRepository
                 .findByMembers_SlackDetailsScreenName(slackScreenName));
@@ -224,5 +239,20 @@ public class TeamService {
     @Transactional(readOnly = true)
     public List<TeamEntity> findBySlackTeamChannel(String slackTeamChannel) {
         return teamRepository.findBySlackDetailsTeamChannel(slackTeamChannel);
+    }
+
+    private void assertMemberBelongsToTeam(TeamMemberEntity memberEntity,
+            TeamEntity teamEntity) {
+        Set<TeamMemberEntity> allMembers = new HashSet<>();
+        allMembers.addAll(teamEntity.getMembers());
+        allMembers.addAll(teamEntity.getOwners());
+
+        if (allMembers.stream().map(TeamMemberEntity::getMemberId)
+                .noneMatch(memberEntity.getMemberId()::equals)) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "TeamMember with id {0} is not a member of the team with id {1}.",
+                    memberEntity.getMemberId(),
+                    teamEntity.getTeamId()));
+        }
     }
 }
