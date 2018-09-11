@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
@@ -22,9 +21,6 @@ import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.AddTeamMembers;
 import za.co.absa.subatomic.domain.team.DeleteTeam;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.domain.team.NewTeam;
-import za.co.absa.subatomic.domain.team.NewTeamFromSlack;
-import za.co.absa.subatomic.domain.team.SlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -70,25 +66,7 @@ public class TeamService {
         this.persistenceHandler = persistenceHandler;
     }
 
-    public String newTeam(String name, String description, String createdBy) {
-        TeamEntity existingTeam = this.findByName(name);
-        if (existingTeam != null) {
-            throw new DuplicateRequestException(MessageFormat.format(
-                    "Requested team name {0} is not available.",
-                    name));
-        }
-
-        return commandGateway.sendAndWait(
-                new NewTeam(
-                        UUID.randomUUID().toString(),
-                        name,
-                        description,
-                        new TeamMemberId(createdBy)),
-                1,
-                TimeUnit.SECONDS);
-    }
-
-    public String newTeamFromSlack(String name, String description,
+    public TeamEntity newTeamFromSlack(String name, String description,
             String createdBy,
             String teamChannel) {
         TeamEntity existingTeam = this.findByName(name);
@@ -97,18 +75,13 @@ public class TeamService {
                     "Requested team name {0} is not available.",
                     name));
         }
-        // TODO use the TeamMemberService to add a member for the owner
 
-        return commandGateway.sendAndWait(
-                new NewTeamFromSlack(new NewTeam(
-                        UUID.randomUUID().toString(),
-                        name,
-                        description,
-                        new TeamMemberId(createdBy)),
-                        new SlackIdentity(teamChannel)),
-                1,
-                TimeUnit.SECONDS);
+        TeamEntity newTeam = this.persistenceHandler.createTeam(name,
+                description, teamChannel, createdBy);
 
+        this.automationHandler.createNewTeam(newTeam);
+
+        return newTeam;
     }
 
     public void addTeamMembers(String teamId, String actionedBy,

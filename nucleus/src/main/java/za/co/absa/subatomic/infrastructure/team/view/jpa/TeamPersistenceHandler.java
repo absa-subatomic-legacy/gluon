@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.domain.team.TeamDeleted;
 import za.co.absa.subatomic.domain.team.TeamMembersRemoved;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -36,27 +35,35 @@ public class TeamPersistenceHandler {
         this.membershipRequestRepository = membershipRequestRepository;
     }
 
-    @EventHandler
     @Transactional
-    void on(TeamCreated event) {
-        TeamMemberEntity createdBy = teamMemberRepository
-                .findByMemberId(event.getCreatedBy().getTeamMemberId());
+    public TeamEntity createTeam(String name, String description,
+            String slackTeamChannel,
+            String createdById) {
+
+        TeamMemberEntity createdBy = this.teamMemberRepository
+                .findByMemberId(createdById);
 
         TeamEntity teamEntity = TeamEntity.builder()
-                .teamId(event.getTeamId())
-                .name(event.getName())
-                .description(event.getDescription())
+                .teamId(UUID.randomUUID().toString())
+                .description(description)
+                .name(name)
                 .createdBy(createdBy)
                 .owners(Collections.singleton(createdBy))
                 .build();
+
+        if (slackTeamChannel != null) {
+            teamEntity.setSlackDetails(
+                    new SlackDetailsEmbedded(slackTeamChannel));
+        }
+
+        teamEntity = this.teamRepository.save(teamEntity);
+
         createdBy.getTeams().add(teamEntity);
 
-        event.getSlackIdentity()
-                .ifPresent(slackIdentity -> teamEntity.setSlackDetails(
-                        new SlackDetailsEmbedded(
-                                slackIdentity.getTeamChannel())));
+        this.teamMemberRepository.save(createdBy);
 
-        teamRepository.save(teamEntity);
+        return teamEntity;
+
     }
 
     @Transactional

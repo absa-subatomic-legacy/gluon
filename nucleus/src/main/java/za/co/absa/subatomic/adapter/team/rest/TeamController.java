@@ -49,20 +49,18 @@ public class TeamController {
 
     @PostMapping
     ResponseEntity<TeamResource> create(@RequestBody TeamResource request) {
-        String aggregateId;
+        String teamSlackChannel = null;
         if (request.getSlack() != null) {
-            aggregateId = teamService.newTeamFromSlack(request.getName(),
-                    request.getDescription(), request.getCreatedBy(),
-                    request.getSlack().getTeamChannel());
+            teamSlackChannel = request.getSlack().getTeamChannel();
         }
-        else {
-            aggregateId = teamService.newTeam(request.getName(),
-                    request.getDescription(), request.getCreatedBy());
-        }
+
+        TeamEntity newTeam = teamService.newTeamFromSlack(request.getName(),
+                request.getDescription(), request.getCreatedBy(),
+                teamSlackChannel);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(aggregateId)
+                .buildAndExpand(newTeam.getTeamId())
                 .toUri();
 
         return ResponseEntity.created(location).build();

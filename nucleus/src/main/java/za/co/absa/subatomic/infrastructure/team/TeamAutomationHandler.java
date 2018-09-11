@@ -15,6 +15,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamCreated;
+import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
@@ -43,12 +44,12 @@ public class TeamAutomationHandler {
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
-    @EventHandler
-    public void on(TeamCreated event) {
-        log.info("A team was created, sending event to Atomist...{}", event);
+    public void createNewTeam(TeamEntity newTeamEntity) {
+        log.info("A team was created, sending event to Atomist...{}",
+                newTeamEntity);
 
         TeamMemberEntity teamMemberEntity = teamMemberRepository
-                .findByMemberId(event.getCreatedBy().getTeamMemberId());
+                .findByMemberId(newTeamEntity.getCreatedBy().getMemberId());
 
         SlackIdentity slackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
@@ -59,7 +60,17 @@ public class TeamAutomationHandler {
                             .getUserId());
         }
 
-        TeamCreatedWithDetails newTeam = new TeamCreatedWithDetails(event,
+        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+        if (newTeamEntity.getSlackDetails() != null) {
+            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                    newTeamEntity.getSlackDetails().getTeamChannel());
+        }
+        TeamCreated teamCreated = new TeamCreated(newTeamEntity.getTeamId(),
+                newTeamEntity.getName(), newTeamEntity.getDescription(),
+                new TeamMemberId(newTeamEntity.getCreatedBy().getMemberId()),
+                teamSlackIdentity);
+
+        TeamCreatedWithDetails newTeam = new TeamCreatedWithDetails(teamCreated,
                 new TeamMember(
                         teamMemberEntity.getMemberId(),
                         teamMemberEntity.getDomainUsername(),
