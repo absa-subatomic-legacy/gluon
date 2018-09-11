@@ -2,6 +2,8 @@ package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
 import java.text.MessageFormat;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -13,7 +15,6 @@ import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
 import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.domain.team.TeamDeleted;
-import za.co.absa.subatomic.domain.team.TeamMembersAdded;
 import za.co.absa.subatomic.domain.team.TeamMembersRemoved;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
@@ -70,29 +71,57 @@ public class TeamPersistenceHandler {
         return teamRepository.save(team);
     }
 
-    @EventHandler
     @Transactional
-    void on(TeamMembersAdded event) {
-        TeamEntity team = teamRepository.findByTeamId(event.getTeamId());
-        team.getOwners().addAll(event.getOwners().stream()
-                .map(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId()))
-                .collect(Collectors.toList()));
+    public void addTeamMembers(String teamId,
+            List<String> teamOwnerIdsRequested,
+            List<String> teamMemberIdsRequested) {
+        TeamEntity team = teamRepository.findByTeamId(teamId);
 
-        team.getMembers().addAll(event.getTeamMembers().stream()
-                .map(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId()))
-                .collect(Collectors.toList()));
+        // Filter existing members
+        List<String> teamMemberIds = teamMemberIdsRequested.stream()
+                .filter(memberId -> !teamMemberIdsRequested.contains(memberId))
+                .collect(Collectors.toList());
 
-        event.getOwners()
-                .forEach(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId())
-                        .getTeams().add(team));
+        // Filter existing owners
+        List<String> teamOwnerIds = teamOwnerIdsRequested.stream()
+                .filter(memberId -> !teamOwnerIdsRequested.contains(memberId))
+                .collect(Collectors.toList());
 
-        event.getTeamMembers()
-                .forEach(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId())
-                        .getTeams().add(team));
+        for (String ownerId : teamOwnerIds) {
+            Optional<TeamMemberEntity> newOwnerWasMemberResult = team
+                    .getMembers().stream()
+                    .filter(memberEntity -> memberEntity.getMemberId()
+                            .equals(ownerId))
+                    .findFirst();
+
+            newOwnerWasMemberResult.ifPresent(
+                    memberEntity -> team.getMembers().remove(memberEntity));
+
+            TeamMemberEntity newOwner = newOwnerWasMemberResult
+                    .orElse(this.teamMemberRepository.findByMemberId(ownerId));
+
+            team.getOwners().add(newOwner);
+            newOwner.getTeams().add(team);
+            teamMemberRepository.save(newOwner);
+        }
+
+        for (String memberId : teamMemberIds) {
+            Optional<TeamMemberEntity> newMemberWasOwner = team
+                    .getOwners().stream()
+                    .filter(memberEntity -> memberEntity.getMemberId()
+                            .equals(memberId))
+                    .findFirst();
+
+            newMemberWasOwner.ifPresent(
+                    memberEntity -> team.getOwners().remove(memberEntity));
+
+            TeamMemberEntity newMember = newMemberWasOwner
+                    .orElse(this.teamMemberRepository.findByMemberId(memberId));
+
+            team.getMembers().add(newMember);
+            newMember.getTeams().add(team);
+            teamMemberRepository.save(newMember);
+        }
 
         teamRepository.save(team);
     }

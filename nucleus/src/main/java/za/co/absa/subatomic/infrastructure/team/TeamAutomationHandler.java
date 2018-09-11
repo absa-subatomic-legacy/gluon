@@ -15,8 +15,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamCreated;
-import za.co.absa.subatomic.domain.team.TeamMemberId;
-import za.co.absa.subatomic.domain.team.TeamMembersAdded;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
@@ -192,10 +190,10 @@ public class TeamAutomationHandler {
         }
     }
 
-    @EventHandler
-    @Transactional
-    void on(TeamMembersAdded event) {
-        TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
+    @Transactional(readOnly = true)
+    public void teamMembersAdded(TeamEntity teamEntity,
+            List<TeamMemberEntity> teamOwnersRequested,
+            List<TeamMemberEntity> teamMembersRequested) {
         za.co.absa.subatomic.domain.team.SlackIdentity teamEntitySlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
             teamEntitySlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
@@ -206,10 +204,10 @@ public class TeamAutomationHandler {
         Team team = new Team(teamEntity.getTeamId(), teamEntity.getName(),
                 teamEntitySlackIdentity);
 
-        List<TeamMember> owners = teamMemberIdCollectionToTeamMemberList(
-                event.getOwners());
-        List<TeamMember> members = teamMemberIdCollectionToTeamMemberList(
-                event.getTeamMembers());
+        List<TeamMember> owners = teamMemberEntityCollectionToTeamMemberList(
+                teamOwnersRequested);
+        List<TeamMember> members = teamMemberEntityCollectionToTeamMemberList(
+                teamMembersRequested);
 
         MembersAddedToTeamWithDetails membersAddedEvent = new MembersAddedToTeamWithDetails(
                 team, owners, members);
@@ -230,12 +228,10 @@ public class TeamAutomationHandler {
         }
     }
 
-    private List<TeamMember> teamMemberIdCollectionToTeamMemberList(
-            Collection<TeamMemberId> teamMemberIdList) {
+    private List<TeamMember> teamMemberEntityCollectionToTeamMemberList(
+            Collection<TeamMemberEntity> teamMemberEntities) {
         List<TeamMember> members = new ArrayList<>();
-        for (TeamMemberId member : teamMemberIdList) {
-            TeamMemberEntity memberEntity = teamMemberRepository.findByMemberId(
-                    member.getTeamMemberId());
+        for (TeamMemberEntity memberEntity : teamMemberEntities) {
             za.co.absa.subatomic.domain.member.SlackIdentity memberSlackIdentity = null;
             if (memberEntity.getSlackDetails() != null) {
                 memberSlackIdentity = new za.co.absa.subatomic.domain.member.SlackIdentity(

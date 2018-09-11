@@ -1,6 +1,7 @@
 package za.co.absa.subatomic.infrastructure.member.view.jpa;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import za.co.absa.subatomic.domain.member.TeamMember;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ public interface TeamMemberRepository
     TeamMemberEntity findByDomainUsername(String domainUsername);
 
     List<TeamMemberEntity> findByTeams_TeamId(String teamId);
+
+    List<TeamMemberEntity> findByMemberIdIn(List<String> memberIds);
 }

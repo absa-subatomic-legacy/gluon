@@ -183,21 +183,6 @@ public class Team {
                 command.getMembershipRequest()));
     }
 
-    @EventSourcingHandler
-    void on(MembershipRequestUpdated event) {
-        this.teamId = event.getTeamId();
-        MembershipRequest originalRequest = event
-                .getOriginalMembershipRequest();
-        MembershipRequest updatedRequest = event.getUpdatedMembershipRequest();
-
-        this.membershipRequests.remove(originalRequest);
-        this.membershipRequests.add(
-                new MembershipRequest(originalRequest.getMembershipRequestId(),
-                        originalRequest.getRequestedBy(),
-                        updatedRequest.getApprovedBy(),
-                        updatedRequest.getRequestStatus()));
-    }
-
     @CommandHandler
     void when(DeleteTeam command) {
         apply(new TeamDeleted(

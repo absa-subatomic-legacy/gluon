@@ -6,6 +6,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.member.AddSlackDetails;
 import za.co.absa.subatomic.domain.member.NewTeamMember;
@@ -13,9 +16,6 @@ import za.co.absa.subatomic.domain.member.NewTeamMemberFromSlack;
 import za.co.absa.subatomic.domain.member.SlackIdentity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TeamMemberService {
@@ -94,7 +94,8 @@ public class TeamMemberService {
 
     public String addSlackDetails(String memberId, String screenName,
             String userId) {
-        TeamMemberEntity existingMember = this.findBySlackScreenName(screenName);
+        TeamMemberEntity existingMember = this
+                .findBySlackScreenName(screenName);
         if (existingMember != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested slack username {0} is already in use.",
@@ -106,6 +107,12 @@ public class TeamMemberService {
                 userId),
                 1,
                 TimeUnit.SECONDS);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamMemberEntity> findAllTeamMembersById(
+            List<String> teamMemberIdList) {
+        return this.teamMemberRepository.findByMemberIdIn(teamMemberIdList);
     }
 
     @Transactional(readOnly = true)

@@ -4,6 +4,7 @@ import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -110,16 +111,54 @@ public class TeamService {
 
     }
 
-    public String addTeamMembers(String teamId, String actionedBy,
+    public void addTeamMembers(String teamId, String actionedBy,
             List<String> teamOwnerIds,
             List<String> teamMemberIds) {
-        return commandGateway.sendAndWait(new AddTeamMembers(
-                teamId,
-                new TeamMemberId(actionedBy),
-                teamOwnerIds,
-                teamMemberIds),
-                1,
-                TimeUnit.SECONDS);
+
+        TeamEntity team = this.teamRepository.findByTeamId(teamId);
+
+        Optional<TeamMemberEntity> existingMember = team.getMembers().stream()
+                .filter(memberEntity -> teamMemberIds
+                        .contains(memberEntity.getMemberId()))
+                .findFirst();
+        Optional<TeamMemberEntity> existingOwner = team.getOwners().stream()
+                .filter(memberEntity -> teamOwnerIds
+                        .contains(memberEntity.getMemberId()))
+                .findFirst();
+        Optional<TeamMemberEntity> actionedByIsOwner = team.getOwners().stream()
+                .filter(memberEntity -> memberEntity.getMemberId()
+                        .equals(actionedBy))
+                .findFirst();
+
+        existingMember.ifPresent(teamMemberEntity -> {
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Member {0} is already a member of team {1}",
+                    teamMemberEntity.getMemberId(), teamId));
+        });
+
+        existingOwner.ifPresent(teamMemberEntity -> {
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Member {0} is already an owner of team {1}",
+                    teamMemberEntity.getMemberId(), teamId));
+        });
+
+        if (!actionedByIsOwner.isPresent()) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "Actioning member with id {0} is not an owner of team {1}",
+                    actionedBy, teamId));
+        }
+
+        this.persistenceHandler.addTeamMembers(teamId, teamOwnerIds,
+                teamMemberIds);
+
+        List<TeamMemberEntity> newTeamMembers = this.teamMemberService
+                .findAllTeamMembersById(teamMemberIds);
+        List<TeamMemberEntity> newOwners = this.teamMemberService
+                .findAllTeamMembersById(teamOwnerIds);
+
+        this.automationHandler.teamMembersAdded(team, newOwners,
+                newTeamMembers);
+
     }
 
     public String removeTeamMembers(String teamId, String actionedBy,
