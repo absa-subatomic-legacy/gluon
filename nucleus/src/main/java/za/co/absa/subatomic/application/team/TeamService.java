@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
@@ -18,10 +17,7 @@ import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
-import za.co.absa.subatomic.domain.team.AddTeamMembers;
-import za.co.absa.subatomic.domain.team.DeleteTeam;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
@@ -90,6 +86,11 @@ public class TeamService {
 
         TeamEntity team = this.teamRepository.findByTeamId(teamId);
 
+        TeamMemberEntity actionedByEntity = this.teamMemberService
+                .findByTeamMemberId(actionedBy);
+
+        assertMemberIsOwnerOfTeam(actionedByEntity, team);
+
         Optional<TeamMemberEntity> existingMember = team.getMembers().stream()
                 .filter(memberEntity -> teamMemberIds
                         .contains(memberEntity.getMemberId()))
@@ -115,12 +116,6 @@ public class TeamService {
                     teamMemberEntity.getMemberId(), teamId));
         });
 
-        if (!actionedByIsOwner.isPresent()) {
-            throw new ApplicationAuthorisationException(MessageFormat.format(
-                    "Actioning member with id {0} is not an owner of team {1}",
-                    actionedBy, teamId));
-        }
-
         this.persistenceHandler.addTeamMembers(teamId, teamOwnerIds,
                 teamMemberIds);
 
@@ -134,16 +129,18 @@ public class TeamService {
 
     }
 
-    public String removeTeamMembers(String teamId, String actionedBy,
+    public void removeTeamMembers(String teamId, String actionedBy,
             List<String> teamOwnerIds,
             List<String> teamMemberIds) {
-        return commandGateway.sendAndWait(new AddTeamMembers(
-                teamId,
-                new TeamMemberId(actionedBy),
-                teamOwnerIds,
-                teamMemberIds),
-                1,
-                TimeUnit.SECONDS);
+        TeamMemberEntity actionedByEntity = this.teamMemberService
+                .findByTeamMemberId(
+                        actionedBy);
+        TeamEntity team = this.findByTeamId(teamId);
+
+        assertMemberIsOwnerOfTeam(actionedByEntity, team);
+
+        this.persistenceHandler.removeTeamMembers(teamId, teamOwnerIds,
+                teamMemberIds);
     }
 
     public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
@@ -220,14 +217,8 @@ public class TeamService {
         MembershipRequestEntity membershipRequest = this.persistenceHandler
                 .createMembershipRequest(teamId, requestByMemberId);
 
-        this.automationHandler.membershipRequestCreated(membershipRequest);
-    }
-
-    public String deleteTeam(String teamId) {
-        return commandGateway.sendAndWait(
-                new DeleteTeam(teamId),
-                1,
-                TimeUnit.SECONDS);
+        this.automationHandler.membershipRequestCreated(teamEntity,
+                membershipRequest);
     }
 
     @Transactional(readOnly = true)

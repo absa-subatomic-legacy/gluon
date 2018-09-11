@@ -175,10 +175,6 @@ public class TeamController {
                             .map(TeamMemberResourceBase::getMemberId)
                             .collect(toList()));
         }
-        else {
-            teamService.deleteTeam(id);
-        }
-
         return ResponseEntity.accepted().build();
     }
 

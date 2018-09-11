@@ -7,14 +7,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.domain.team.TeamDeleted;
-import za.co.absa.subatomic.domain.team.TeamMembersRemoved;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 
@@ -133,29 +130,35 @@ public class TeamPersistenceHandler {
         teamRepository.save(team);
     }
 
-    @EventHandler
     @Transactional
-    void on(TeamMembersRemoved event) {
-        TeamEntity team = teamRepository.findByTeamId(event.getTeamId());
-        team.getOwners().removeAll(event.getOwners().stream()
-                .map(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId()))
-                .collect(Collectors.toList()));
+    public void removeTeamMembers(String teamId,
+            List<String> teamOwnerIdsRequested,
+            List<String> teamMemberIdsRequested) {
+        TeamEntity team = teamRepository.findByTeamId(teamId);
 
-        team.getMembers().removeAll(event.getTeamMembers().stream()
-                .map(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId()))
-                .collect(Collectors.toList()));
+        team.setMembers(team.getMembers().stream()
+                .filter(teamMemberEntity -> teamMemberIdsRequested
+                        .contains(teamMemberEntity.getMemberId()))
+                .collect(Collectors.toSet()));
 
-        event.getOwners()
-                .forEach(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId())
-                        .getTeams().remove(team));
+        team.setOwners(team.getOwners().stream()
+                .filter(teamMemberEntity -> teamOwnerIdsRequested
+                        .contains(teamMemberEntity.getMemberId()))
+                .collect(Collectors.toSet()));
 
-        event.getTeamMembers()
-                .forEach(teamMemberId -> teamMemberRepository
-                        .findByMemberId(teamMemberId.getTeamMemberId())
-                        .getTeams().remove(team));
+        teamOwnerIdsRequested.forEach(teamMemberId -> {
+            TeamMemberEntity memberEntity = teamMemberRepository
+                    .findByMemberId(teamMemberId);
+            memberEntity.getTeams().remove(team);
+            teamMemberRepository.save(memberEntity);
+        });
+
+        teamMemberIdsRequested.forEach(teamMemberId -> {
+            TeamMemberEntity memberEntity = teamMemberRepository
+                    .findByMemberId(teamMemberId);
+            memberEntity.getTeams().remove(team);
+            teamMemberRepository.save(memberEntity);
+        });
 
         teamRepository.save(team);
     }
@@ -198,21 +201,6 @@ public class TeamPersistenceHandler {
         team.getMembershipRequests().add(membershipRequestEntity);
         teamRepository.save(team);
         return membershipRequestEntity;
-    }
-
-    @EventHandler
-    @Transactional
-    void on(TeamDeleted event) {
-        TeamEntity teamEntity = teamRepository.findByTeamId(event.getTeamId());
-        teamEntity.getOwners().forEach(teamMemberEntity -> {
-            teamMemberEntity.getTeams().remove(teamEntity);
-            teamMemberRepository.save(teamMemberEntity);
-        });
-        teamEntity.getMembers().forEach(teamMemberEntity -> {
-            teamMemberEntity.getTeams().remove(teamEntity);
-            teamMemberRepository.save(teamMemberEntity);
-        });
-        teamRepository.deleteByTeamId(event.getTeamId());
     }
 
 }

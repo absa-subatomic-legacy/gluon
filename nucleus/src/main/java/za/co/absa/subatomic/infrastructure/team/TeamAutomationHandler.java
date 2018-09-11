@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.axonframework.eventhandling.EventHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +17,6 @@ import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
@@ -27,18 +25,15 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 @Slf4j
 public class TeamAutomationHandler {
 
-    private TeamMemberRepository teamMemberRepository;
-
     private TeamRepository teamRepository;
 
     private RestTemplate restTemplate;
 
     private AtomistConfigurationProperties atomistConfigurationProperties;
 
-    public TeamAutomationHandler(TeamMemberRepository teamMemberRepository,
+    public TeamAutomationHandler(
             TeamRepository teamRepository, RestTemplate restTemplate,
             AtomistConfigurationProperties atomistConfigurationProperties) {
-        this.teamMemberRepository = teamMemberRepository;
         this.teamRepository = teamRepository;
         this.restTemplate = restTemplate;
         this.atomistConfigurationProperties = atomistConfigurationProperties;
@@ -48,8 +43,7 @@ public class TeamAutomationHandler {
         log.info("A team was created, sending event to Atomist...{}",
                 newTeamEntity);
 
-        TeamMemberEntity teamMemberEntity = teamMemberRepository
-                .findByMemberId(newTeamEntity.getCreatedBy().getMemberId());
+        TeamMemberEntity teamMemberEntity = newTeamEntity.getCreatedBy();
 
         SlackIdentity slackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
@@ -152,7 +146,9 @@ public class TeamAutomationHandler {
         }
     }
 
+    @Transactional(readOnly = true)
     public void membershipRequestCreated(
+            TeamEntity teamEntity,
             MembershipRequestEntity membershipRequestEntity) {
         TeamMemberEntity requestedBy = membershipRequestEntity.getRequestedBy();
         za.co.absa.subatomic.domain.member.SlackIdentity requestedBySlackIdentity = null;
@@ -164,8 +160,6 @@ public class TeamAutomationHandler {
                             .getUserId());
         }
 
-        TeamEntity teamEntity = teamRepository
-                .findByTeamId(membershipRequestEntity.getTeamId());
         za.co.absa.subatomic.domain.team.SlackIdentity teamEntitySlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
             teamEntitySlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
@@ -201,7 +195,6 @@ public class TeamAutomationHandler {
         }
     }
 
-    @Transactional(readOnly = true)
     public void teamMembersAdded(TeamEntity teamEntity,
             List<TeamMemberEntity> teamOwnersRequested,
             List<TeamMemberEntity> teamMembersRequested) {
