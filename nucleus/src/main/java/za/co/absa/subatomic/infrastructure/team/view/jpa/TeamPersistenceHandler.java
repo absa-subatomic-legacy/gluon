@@ -81,14 +81,18 @@ public class TeamPersistenceHandler {
             List<String> teamMemberIdsRequested) {
         TeamEntity team = teamRepository.findByTeamId(teamId);
 
+        List<String> existingMemberIds = team.getMembers().stream().map(TeamMemberEntity::getMemberId).collect(Collectors.toList());
+
+        List<String> existingOwnerIds = team.getOwners().stream().map(TeamMemberEntity::getMemberId).collect(Collectors.toList());
+
         // Filter existing members
         List<String> teamMemberIds = teamMemberIdsRequested.stream()
-                .filter(memberId -> !teamMemberIdsRequested.contains(memberId))
+                .filter(memberId -> !existingMemberIds.contains(memberId))
                 .collect(Collectors.toList());
 
         // Filter existing owners
         List<String> teamOwnerIds = teamOwnerIdsRequested.stream()
-                .filter(memberId -> !teamOwnerIdsRequested.contains(memberId))
+                .filter(memberId -> !existingOwnerIds.contains(memberId))
                 .collect(Collectors.toList());
 
         for (String ownerId : teamOwnerIds) {
