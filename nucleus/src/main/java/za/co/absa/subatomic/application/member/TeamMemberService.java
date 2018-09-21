@@ -2,97 +2,73 @@ package za.co.absa.subatomic.application.member;
 
 import java.text.MessageFormat;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
-import za.co.absa.subatomic.domain.member.AddSlackDetails;
-import za.co.absa.subatomic.domain.member.NewTeamMember;
-import za.co.absa.subatomic.domain.member.NewTeamMemberFromSlack;
-import za.co.absa.subatomic.domain.member.SlackIdentity;
+import za.co.absa.subatomic.domain.member.TeamMember;
+import za.co.absa.subatomic.infrastructure.member.TeamMemberAutomationHandler;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 
 @Service
 public class TeamMemberService {
 
-    private CommandGateway commandGateway;
-
     private TeamMemberRepository teamMemberRepository;
 
-    public TeamMemberService(CommandGateway commandGateway,
-            TeamMemberRepository teamMemberRepository) {
-        this.commandGateway = commandGateway;
+    private TeamMemberPersistenceHandler teamMemberPersistenceHandler;
+
+    private TeamMemberAutomationHandler teamMemberAutomationHandler;
+
+    public TeamMemberService(
+            TeamMemberRepository teamMemberRepository,
+            TeamMemberPersistenceHandler teamMemberPersistenceHandler,
+            TeamMemberAutomationHandler teamMemberAutomationHandler) {
         this.teamMemberRepository = teamMemberRepository;
+        this.teamMemberPersistenceHandler = teamMemberPersistenceHandler;
+        this.teamMemberAutomationHandler = teamMemberAutomationHandler;
     }
 
-    public String newTeamMember(String firstName, String lastName,
-            String email, String domainUsername) {
-        TeamMemberEntity existingMember = this.findByEmail(email);
+    public TeamMemberEntity newTeamMember(TeamMember teamMember) {
+        TeamMemberEntity existingMember = this
+                .findByEmail(teamMember.getEmail());
         if (existingMember != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested email address {0} is already in use.",
-                    email));
+                    teamMember.getEmail()));
         }
 
-        existingMember = this.findByDomainUsername(domainUsername);
+        existingMember = this
+                .findByDomainUsername(teamMember.getDomainUsername());
         if (existingMember != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested domain username {0} is already in use.",
-                    domainUsername));
+                    teamMember.getDomainUsername()));
         }
-        return commandGateway.sendAndWait(
-                new NewTeamMember(
-                        UUID.randomUUID().toString(),
-                        firstName,
-                        lastName,
-                        email,
-                        domainUsername),
-                1000,
-                TimeUnit.SECONDS);
+
+        if (teamMember.getSlack() != null) {
+            existingMember = this.findBySlackScreenName(
+                    teamMember.getSlack().getScreenName());
+            if (existingMember != null) {
+                throw new DuplicateRequestException(MessageFormat.format(
+                        "Requested slack username {0} is already in use.",
+                        teamMember.getSlack().getScreenName()));
+            }
+        }
+
+        TeamMemberEntity newTeamMember = this.teamMemberPersistenceHandler
+                .createTeamMember(teamMember);
+
+        if (newTeamMember != null) {
+            this.teamMemberAutomationHandler.teamMemberCreated(newTeamMember);
+        }
+
+        return newTeamMember;
     }
 
-    public String newTeamMemberFromSlack(String firstName, String lastName,
-            String email, String domainUsername, String screenName,
-            String userId) {
-        TeamMemberEntity existingMember = this.findByEmail(email);
-        if (existingMember != null) {
-            throw new DuplicateRequestException(MessageFormat.format(
-                    "Requested email address {0} is already in use.",
-                    email));
-        }
-
-        existingMember = this.findByDomainUsername(domainUsername);
-        if (existingMember != null) {
-            throw new DuplicateRequestException(MessageFormat.format(
-                    "Requested domain username {0} is already in use.",
-                    domainUsername));
-        }
-
-        existingMember = this.findBySlackScreenName(screenName);
-        if (existingMember != null) {
-            throw new DuplicateRequestException(MessageFormat.format(
-                    "Requested slack username {0} is already in use.",
-                    screenName));
-        }
-        return commandGateway.sendAndWait(
-                new NewTeamMemberFromSlack(
-                        new NewTeamMember(
-                                UUID.randomUUID().toString(),
-                                firstName,
-                                lastName,
-                                email,
-                                domainUsername),
-                        new SlackIdentity(screenName, userId)),
-                1,
-                TimeUnit.SECONDS);
-    }
-
-    public String addSlackDetails(String memberId, String screenName,
+    public TeamMemberEntity addSlackDetails(String memberId, String screenName,
             String userId) {
         TeamMemberEntity existingMember = this
                 .findBySlackScreenName(screenName);
@@ -101,12 +77,8 @@ public class TeamMemberService {
                     "Requested slack username {0} is already in use.",
                     screenName));
         }
-        return commandGateway.sendAndWait(new AddSlackDetails(
-                memberId,
-                screenName,
-                userId),
-                1,
-                TimeUnit.SECONDS);
+        return this.teamMemberPersistenceHandler.addSlackDetails(memberId,
+                screenName, userId);
     }
 
     @Transactional(readOnly = true)

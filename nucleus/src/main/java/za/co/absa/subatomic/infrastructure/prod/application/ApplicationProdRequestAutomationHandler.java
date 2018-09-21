@@ -11,7 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
-import za.co.absa.subatomic.domain.member.SlackIdentity;
+import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
@@ -122,9 +122,9 @@ public class ApplicationProdRequestAutomationHandler {
 
     private ActionedBy teamMemberToActionedBy(
             TeamMemberEntity teamMemberEntity) {
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     teamMemberEntity.getSlackDetails()
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
@@ -136,7 +136,7 @@ public class ApplicationProdRequestAutomationHandler {
                 teamMemberEntity.getFirstName(),
                 teamMemberEntity.getLastName(),
                 teamMemberEntity.getEmail(),
-                slackIdentity);
+                teamMemberSlackIdentity);
     }
 
     @Value
@@ -182,6 +182,6 @@ public class ApplicationProdRequestAutomationHandler {
 
         private String email;
 
-        private za.co.absa.subatomic.domain.member.SlackIdentity slackIdentity;
+        private TeamMemberSlackIdentity slackIdentity;
     }
 }

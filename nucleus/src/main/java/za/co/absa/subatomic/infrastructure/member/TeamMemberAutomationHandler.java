@@ -1,13 +1,14 @@
 package za.co.absa.subatomic.infrastructure.member;
 
-import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
-import za.co.absa.subatomic.domain.member.TeamMemberCreated;
-import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+
+import lombok.extern.slf4j.Slf4j;
+import za.co.absa.subatomic.domain.member.DomainCredentials;
+import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 
 @Component
 @Slf4j
@@ -24,13 +25,24 @@ public class TeamMemberAutomationHandler {
     }
 
     @EventHandler
-    void on(TeamMemberCreated event) {
+    public void teamMemberCreated(TeamMemberEntity memberEntity) {
         log.info("A team member was created, sending event to Atomist: {}",
-                event);
+                memberEntity);
+
+        AtomistTeamMemberRepresentation atomistTeamMember = AtomistTeamMemberRepresentation
+                .builder()
+                .memberId(memberEntity.getMemberId())
+                .domainCredentials(
+                        new DomainCredentials(memberEntity.getDomainUsername()))
+                .email(memberEntity.getEmail())
+                .firstName(memberEntity.getFirstName())
+                .lastName(memberEntity.getLastName())
+                .slackIdentity(memberEntity.getSlackDetails())
+                .build();
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties.getTeamMemberCreatedEventUrl(),
-                event,
+                atomistTeamMember,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {

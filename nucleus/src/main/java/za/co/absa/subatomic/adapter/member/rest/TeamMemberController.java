@@ -51,23 +51,8 @@ public class TeamMemberController {
     @PostMapping
     ResponseEntity<TeamMemberResource> onboard(
             @RequestBody TeamMemberResource request) {
-        String aggregateId;
-        if (request.getSlack() != null) {
-            aggregateId = teamMemberService.newTeamMemberFromSlack(
-                    request.getFirstName(),
-                    request.getLastName(),
-                    request.getEmail(),
-                    request.getDomainUsername(),
-                    request.getSlack().getScreenName(),
-                    request.getSlack().getUserId());
-        }
-        else {
-            aggregateId = teamMemberService.newTeamMember(
-                    request.getFirstName(),
-                    request.getLastName(),
-                    request.getEmail(),
-                    request.getDomainUsername());
-        }
+        String aggregateId = teamMemberService.newTeamMember(request)
+                .getMemberId();
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")

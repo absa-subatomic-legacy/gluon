@@ -13,7 +13,7 @@ import com.google.gson.Gson;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import za.co.absa.subatomic.domain.member.SlackIdentity;
+import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.pkg.ProjectId;
 import za.co.absa.subatomic.domain.project.BitbucketProjectAdded;
 import za.co.absa.subatomic.domain.project.BitbucketProjectLinked;
@@ -78,9 +78,9 @@ public class ProjectAutomationHandler {
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getCreatedBy().getTeamMemberId());
 
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     teamMemberEntity.getSlackDetails()
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
@@ -113,7 +113,7 @@ public class ProjectAutomationHandler {
                         teamMemberEntity.getFirstName(),
                         teamMemberEntity.getLastName(),
                         teamMemberEntity.getEmail(),
-                        slackIdentity));
+                        teamMemberSlackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties.getProjectCreatedEventUrl(),
@@ -138,9 +138,9 @@ public class ProjectAutomationHandler {
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getRequestedBy().getTeamMemberId());
 
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     teamMemberEntity.getSlackDetails()
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
@@ -179,7 +179,7 @@ public class ProjectAutomationHandler {
                                                             .getDomainUsername(),
                                                     memberEntity
                                                             .getFirstName(),
-                                                    new SlackIdentity(
+                                                    new TeamMemberSlackIdentity(
                                                             memberEntity
                                                                     .getSlackDetails()
                                                                     .getScreenName(),
@@ -193,7 +193,7 @@ public class ProjectAutomationHandler {
                                                     memberEntity
                                                             .getDomainUsername(),
                                                     memberEntity.getFirstName(),
-                                                    new SlackIdentity(
+                                                    new TeamMemberSlackIdentity(
                                                             memberEntity
                                                                     .getSlackDetails()
                                                                     .getScreenName(),
@@ -210,7 +210,7 @@ public class ProjectAutomationHandler {
                         teamMemberEntity.getFirstName(),
                         teamMemberEntity.getLastName(),
                         teamMemberEntity.getEmail(),
-                        slackIdentity));
+                        teamMemberSlackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
@@ -255,11 +255,11 @@ public class ProjectAutomationHandler {
         ProjectEntity projectEntity = projectRepository
                 .findByProjectId(projectId.getProjectId());
 
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         TeamMemberEntity createdBy = teamMemberRepository
                 .findByMemberId(createdByMemberId);
         if (createdBy.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     createdBy.getSlackDetails()
                             .getScreenName(),
                     createdBy.getSlackDetails()
@@ -291,7 +291,7 @@ public class ProjectAutomationHandler {
                         createdBy.getFirstName(),
                         createdBy.getLastName(),
                         createdBy.getEmail(),
-                        slackIdentity));
+                        teamMemberSlackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
@@ -314,11 +314,11 @@ public class ProjectAutomationHandler {
         ProjectEntity projectEntity = projectRepository
                 .findByProjectId(event.getProjectId());
 
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         TeamMemberEntity createdBy = teamMemberRepository
                 .findByMemberId(event.getRequestedBy().getTeamMemberId());
         if (createdBy.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     createdBy.getSlackDetails()
                             .getScreenName(),
                     createdBy.getSlackDetails()
@@ -354,7 +354,7 @@ public class ProjectAutomationHandler {
                                                             .getDomainUsername(),
                                                     memberEntity
                                                             .getFirstName(),
-                                                    new SlackIdentity(
+                                                    new TeamMemberSlackIdentity(
                                                             memberEntity
                                                                     .getSlackDetails()
                                                                     .getScreenName(),
@@ -368,7 +368,7 @@ public class ProjectAutomationHandler {
                                                     memberEntity
                                                             .getDomainUsername(),
                                                     memberEntity.getFirstName(),
-                                                    new SlackIdentity(
+                                                    new TeamMemberSlackIdentity(
                                                             memberEntity
                                                                     .getSlackDetails()
                                                                     .getScreenName(),
@@ -385,7 +385,7 @@ public class ProjectAutomationHandler {
                         createdBy.getFirstName(),
                         createdBy.getLastName(),
                         createdBy.getEmail(),
-                        slackIdentity));
+                        teamMemberSlackIdentity));
 
         Gson gson = new Gson();
 
@@ -416,9 +416,9 @@ public class ProjectAutomationHandler {
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getRequestedBy().getTeamMemberId());
 
-        za.co.absa.subatomic.domain.member.SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     teamMemberEntity.getSlackDetails()
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
@@ -451,7 +451,7 @@ public class ProjectAutomationHandler {
                         teamMemberEntity.getFirstName(),
                         teamMemberEntity.getLastName(),
                         teamMemberEntity.getEmail(),
-                        slackIdentity));
+                        teamMemberSlackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
@@ -563,7 +563,7 @@ public class ProjectAutomationHandler {
 
         private String email;
 
-        private za.co.absa.subatomic.domain.member.SlackIdentity slackIdentity;
+        private TeamMemberSlackIdentity slackIdentity;
     }
 
     @Value
@@ -573,7 +573,7 @@ public class ProjectAutomationHandler {
 
         private String firstName;
 
-        private SlackIdentity slackIdentity;
+        private TeamMemberSlackIdentity slackIdentity;
     }
 
     @Value
