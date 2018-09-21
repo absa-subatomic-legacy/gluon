@@ -19,22 +19,17 @@ import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 
 @Component
 @Slf4j
 public class TeamAutomationHandler {
 
-    private TeamRepository teamRepository;
-
     private RestTemplate restTemplate;
 
     private AtomistConfigurationProperties atomistConfigurationProperties;
 
-    public TeamAutomationHandler(
-            TeamRepository teamRepository, RestTemplate restTemplate,
+    public TeamAutomationHandler(RestTemplate restTemplate,
             AtomistConfigurationProperties atomistConfigurationProperties) {
-        this.teamRepository = teamRepository;
         this.restTemplate = restTemplate;
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }

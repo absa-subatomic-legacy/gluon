@@ -1,5 +1,7 @@
 package za.co.absa.subatomic.infrastructure.tenant.view.jpa;
 
+import java.util.UUID;
+
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,11 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 import za.co.absa.subatomic.domain.tenant.TenantCreated;
 
 @Component
-public class TenantHandler {
+public class TenantPersistenceHandler {
 
     private TenantRepository tenantRepository;
 
-    public TenantHandler(TenantRepository tenantRepository) {
+    public TenantPersistenceHandler(TenantRepository tenantRepository) {
         this.tenantRepository = tenantRepository;
     }
 
@@ -28,4 +30,14 @@ public class TenantHandler {
         tenantRepository.save(tenantEntity);
     }
 
+    public TenantEntity createTenant(String name,
+            String description) {
+        TenantEntity tenantEntity = TenantEntity.builder()
+                .tenantId(UUID.randomUUID().toString())
+                .name(name)
+                .description(description)
+                .build();
+
+        return tenantRepository.save(tenantEntity);
+    }
 }
