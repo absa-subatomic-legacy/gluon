@@ -12,29 +12,24 @@ import org.springframework.web.client.RestTemplate;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import za.co.absa.subatomic.domain.member.SlackIdentity;
+import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 
 @Component
 @Slf4j
 public class TeamAutomationHandler {
 
-    private TeamRepository teamRepository;
-
     private RestTemplate restTemplate;
 
     private AtomistConfigurationProperties atomistConfigurationProperties;
 
-    public TeamAutomationHandler(
-            TeamRepository teamRepository, RestTemplate restTemplate,
+    public TeamAutomationHandler(RestTemplate restTemplate,
             AtomistConfigurationProperties atomistConfigurationProperties) {
-        this.teamRepository = teamRepository;
         this.restTemplate = restTemplate;
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
@@ -45,9 +40,9 @@ public class TeamAutomationHandler {
 
         TeamMemberEntity teamMemberEntity = newTeamEntity.getCreatedBy();
 
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     teamMemberEntity.getSlackDetails()
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
@@ -71,7 +66,7 @@ public class TeamAutomationHandler {
                         teamMemberEntity.getFirstName(),
                         teamMemberEntity.getLastName(),
                         teamMemberEntity.getEmail(),
-                        slackIdentity));
+                        teamMemberSlackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties.getTeamCreatedEventUrl(),
@@ -103,7 +98,7 @@ public class TeamAutomationHandler {
                 new DevOpsTeamMember(
                         null,
                         teamMemberEntity.getFirstName(),
-                        new SlackIdentity(
+                        new TeamMemberSlackIdentity(
                                 teamMemberEntity.getSlackDetails()
                                         .getScreenName(),
                                 teamMemberEntity.getSlackDetails()
@@ -113,7 +108,7 @@ public class TeamAutomationHandler {
                         .map(memberEntity -> new DevOpsTeamMember(
                                 memberEntity.getDomainUsername(),
                                 memberEntity.getFirstName(),
-                                new SlackIdentity(
+                                new TeamMemberSlackIdentity(
                                         memberEntity.getSlackDetails()
                                                 .getScreenName(),
                                         memberEntity.getSlackDetails()
@@ -124,7 +119,7 @@ public class TeamAutomationHandler {
                         .map(memberEntity -> new DevOpsTeamMember(
                                 memberEntity.getDomainUsername(),
                                 memberEntity.getFirstName(),
-                                new SlackIdentity(
+                                new TeamMemberSlackIdentity(
                                         memberEntity.getSlackDetails()
                                                 .getScreenName(),
                                         memberEntity.getSlackDetails()
@@ -151,9 +146,9 @@ public class TeamAutomationHandler {
             TeamEntity teamEntity,
             MembershipRequestEntity membershipRequestEntity) {
         TeamMemberEntity requestedBy = membershipRequestEntity.getRequestedBy();
-        za.co.absa.subatomic.domain.member.SlackIdentity requestedBySlackIdentity = null;
+        TeamMemberSlackIdentity requestedBySlackIdentity = null;
         if (requestedBy.getSlackDetails() != null) {
-            requestedBySlackIdentity = new za.co.absa.subatomic.domain.member.SlackIdentity(
+            requestedBySlackIdentity = new TeamMemberSlackIdentity(
                     requestedBy.getSlackDetails()
                             .getScreenName(),
                     requestedBy.getSlackDetails()
@@ -236,9 +231,9 @@ public class TeamAutomationHandler {
             Collection<TeamMemberEntity> teamMemberEntities) {
         List<TeamMember> members = new ArrayList<>();
         for (TeamMemberEntity memberEntity : teamMemberEntities) {
-            za.co.absa.subatomic.domain.member.SlackIdentity memberSlackIdentity = null;
+            TeamMemberSlackIdentity memberSlackIdentity = null;
             if (memberEntity.getSlackDetails() != null) {
-                memberSlackIdentity = new za.co.absa.subatomic.domain.member.SlackIdentity(
+                memberSlackIdentity = new TeamMemberSlackIdentity(
                         memberEntity.getSlackDetails()
                                 .getScreenName(),
                         memberEntity.getSlackDetails()
@@ -306,7 +301,7 @@ public class TeamAutomationHandler {
 
         private String email;
 
-        private SlackIdentity slackIdentity;
+        private TeamMemberSlackIdentity slackIdentity;
     }
 
     @Value
@@ -316,7 +311,7 @@ public class TeamAutomationHandler {
 
         private String firstName;
 
-        private SlackIdentity slackIdentity;
+        private TeamMemberSlackIdentity slackIdentity;
     }
 
     @Value

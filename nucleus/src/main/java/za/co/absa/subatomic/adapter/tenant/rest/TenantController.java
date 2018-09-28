@@ -42,13 +42,12 @@ public class TenantController {
     @PostMapping
     ResponseEntity<TenantResource> create(
             @RequestBody TenantResource request) {
-        // TODO do better error checking on the initial team
-        String aggregateId = tenantService.newTenant(request.getName(),
+        TenantEntity newTenant = tenantService.newTenant(request.getName(),
                 request.getDescription());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(aggregateId)
+                .buildAndExpand(newTenant.getTenantId())
                 .toUri();
 
         return ResponseEntity.created(location).build();

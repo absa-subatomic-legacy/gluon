@@ -3,7 +3,7 @@ package za.co.absa.subatomic.infrastructure.pkg;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.eventhandling.EventHandler;
-import za.co.absa.subatomic.domain.member.SlackIdentity;
+import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.pkg.PackageCreated;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -39,9 +39,9 @@ public class PackageAutomationHandler {
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getCreatedBy().getTeamMemberId());
 
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     teamMemberEntity.getSlackDetails()
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
@@ -55,7 +55,7 @@ public class PackageAutomationHandler {
                         teamMemberEntity.getFirstName(),
                         teamMemberEntity.getLastName(),
                         teamMemberEntity.getEmail(),
-                        slackIdentity));
+                        teamMemberSlackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties.getProjectCreatedEventUrl(),
@@ -87,6 +87,6 @@ public class PackageAutomationHandler {
 
         private String email;
 
-        private SlackIdentity slackIdentity;
+        private TeamMemberSlackIdentity slackIdentity;
     }
 }

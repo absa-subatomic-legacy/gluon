@@ -12,7 +12,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
-import za.co.absa.subatomic.domain.member.SlackIdentity;
+import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
@@ -66,9 +66,9 @@ public class ApplicationAutomationHandler {
         TeamMemberEntity teamMemberEntity = teamMemberRepository
                 .findByMemberId(event.getCreatedBy().getTeamMemberId());
 
-        SlackIdentity slackIdentity = null;
+        TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
-            slackIdentity = new SlackIdentity(
+            teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                     teamMemberEntity.getSlackDetails()
                             .getScreenName(),
                     teamMemberEntity.getSlackDetails()
@@ -132,7 +132,7 @@ public class ApplicationAutomationHandler {
                         teamMemberEntity.getFirstName(),
                         teamMemberEntity.getLastName(),
                         teamMemberEntity.getEmail(),
-                        slackIdentity),
+                        teamMemberSlackIdentity),
                 event.getRequestConfiguration());
 
         ResponseEntity<String> response = restTemplate.postForEntity(
@@ -187,6 +187,6 @@ public class ApplicationAutomationHandler {
 
         private String email;
 
-        private za.co.absa.subatomic.domain.member.SlackIdentity slackIdentity;
+        private TeamMemberSlackIdentity slackIdentity;
     }
 }
