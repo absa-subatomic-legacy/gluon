@@ -168,6 +168,22 @@ public class TeamPersistenceHandler {
     }
 
     @Transactional
+    public void removeTeamMember(String teamId,
+                                 String memberId) {
+
+        TeamEntity team = teamRepository.findByTeamId(teamId);
+
+        TeamMemberEntity member = this.teamMemberRepository
+                .findByMemberId(memberId);
+
+        member.getTeams().remove(team);
+        teamMemberRepository.save(member);
+
+        team.getMembers().remove(member);
+        teamRepository.save(team);
+    }
+
+    @Transactional
     public MembershipRequestEntity closeMembershipRequest(
             String membershipRequestId, MembershipRequestStatus status,
             String closedById) {

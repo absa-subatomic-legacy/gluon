@@ -163,19 +163,19 @@ public class TeamController {
                                 .withRel("self"));
     }
 
-    @DeleteMapping("/{id}")
-    ResponseEntity delete(@PathVariable String id,
-            @RequestBody TeamResource request) {
-        if (!request.getMembers().isEmpty() || !request.getOwners().isEmpty()) {
-            teamService.removeTeamMembers(id, request.getCreatedBy(),
-                    request.getOwners().stream()git
-                            .map(TeamMemberResourceBase::getMemberId)
-                            .collect(toList()),
-                    request.getMembers().stream()
-                            .map(TeamMemberResourceBase::getMemberId)
-                            .collect(toList()));
+    @DeleteMapping("/{teamId}/members/{memberId}")
+    ResponseEntity delete(@PathVariable String teamId,
+                          @PathVariable String memberId,
+                          @RequestParam("requestedById") String requestedById) {
+
+        log.info("Trying to delete member " + memberId + " from team " + teamId + " by requestor " + requestedById);
+
+        if(!teamId.isEmpty() && !memberId.isEmpty() && !requestedById.isEmpty()) {
+            teamService.removeTeamMember(teamId, memberId, requestedById);
+            return ResponseEntity.accepted().build();
+        } else {
+            return  ResponseEntity.badRequest().build();
         }
-        return ResponseEntity.accepted().build();
     }
 
     private class TeamResourceAssembler

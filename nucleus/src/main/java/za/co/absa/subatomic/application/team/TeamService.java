@@ -135,12 +135,25 @@ public class TeamService {
         TeamMemberEntity actionedByEntity = this.teamMemberService
                 .findByTeamMemberId(
                         actionedBy);
+
         TeamEntity team = this.findByTeamId(teamId);
 
         assertMemberIsOwnerOfTeam(actionedByEntity, team);
 
         this.persistenceHandler.removeTeamMembers(teamId, teamOwnerIds,
                 teamMemberIds);
+    }
+
+    public void removeTeamMember(String teamId, String memberId, String requestedById){
+
+        TeamEntity team = this.findByTeamId(teamId);
+
+        TeamMemberEntity actionedByEntity = this.teamMemberService
+                .findByTeamMemberId(requestedById);
+
+        assertMemberIsOwnerOfTeam(actionedByEntity, team);
+
+        this.persistenceHandler.removeTeamMember(teamId, memberId);
     }
 
     public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
