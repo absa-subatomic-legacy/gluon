@@ -265,4 +265,4 @@ application-local.yml
 liquibase.properties
 
 # DB files
-.db
+*.db

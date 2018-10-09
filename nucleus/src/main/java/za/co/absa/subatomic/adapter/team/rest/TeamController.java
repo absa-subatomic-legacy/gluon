@@ -168,7 +168,7 @@ public class TeamController {
             @RequestBody TeamResource request) {
         if (!request.getMembers().isEmpty() || !request.getOwners().isEmpty()) {
             teamService.removeTeamMembers(id, request.getCreatedBy(),
-                    request.getOwners().stream()
+                    request.getOwners().stream()git
                             .map(TeamMemberResourceBase::getMemberId)
                             .collect(toList()),
                     request.getMembers().stream()
