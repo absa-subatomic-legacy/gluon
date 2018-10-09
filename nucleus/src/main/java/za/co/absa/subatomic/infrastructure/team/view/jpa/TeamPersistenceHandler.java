@@ -60,7 +60,6 @@ public class TeamPersistenceHandler {
         this.teamMemberRepository.save(createdBy);
 
         return teamEntity;
-
     }
 
     @Transactional

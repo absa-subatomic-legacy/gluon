@@ -154,6 +154,10 @@ public class TeamService {
         assertMemberIsOwnerOfTeam(actionedByEntity, team);
 
         this.persistenceHandler.removeTeamMember(teamId, memberId);
+
+        TeamMemberEntity member = this.teamMemberService.findByTeamMemberId(memberId);
+
+        this.automationHandler.teamMemberRemoved(team, member, actionedByEntity);
     }
 
     public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
@@ -205,7 +209,6 @@ public class TeamService {
                     Collections.emptyList(),
                     Collections.singletonList(newMemberEntity.getMemberId()));
         }
-
     }
 
     public void newMembershipRequest(String teamId,
