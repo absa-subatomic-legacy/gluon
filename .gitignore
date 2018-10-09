@@ -263,3 +263,6 @@ local.properties
 atomist-registration.json
 application-local.yml
 liquibase.properties
+
+# DB files
+.db
