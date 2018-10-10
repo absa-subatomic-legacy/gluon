@@ -1,6 +1,5 @@
 package za.co.absa.subatomic.infrastructure.team;
 
-import java.lang.reflect.Member;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -82,8 +81,7 @@ public class TeamAutomationHandler {
 
     public void devOpsEnvironmentRequested(TeamEntity teamEntity,
             TeamMemberEntity teamMemberEntity) {
-        log.info(
-                "A team DevOps environment was requested, sending event to Atomist...");
+        log.info("A team DevOps environment was requested, sending event to Atomist...");
 
         za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
@@ -258,17 +256,15 @@ public class TeamAutomationHandler {
                 GetTeamMemberSlackIdentity(requesterEntity));
 
 
-        MemberRemovedFromTeamWithDetails memberRemovedEvent = new MemberRemovedFromTeamWithDetails(
+        MemberRemovedFromTeam memberRemovedFromTeam = new MemberRemovedFromTeam(
                 team, memberRemoved, memberRequested);
 
-        log.info(
-                "A member has been removed from a team, sending event to Atomist...{}",
-                memberRemovedEvent);
+        log.info("A member has been removed from a team, sending event to Atomist...{}", memberRemovedFromTeam);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
                         .getMembersRemovedFromTeamEventUrl(),
-                memberRemovedEvent,
+                memberRemovedFromTeam,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
@@ -319,12 +315,12 @@ public class TeamAutomationHandler {
     }
 
     @Value
-    private class MemberRemovedFromTeamWithDetails {
+    private class MemberRemovedFromTeam {
         private Team team;
 
         private TeamMember memberRemoved;
 
-        private TeamMember memberRequestor;
+        private TeamMember memberRequester;
     }
 
     @Value
