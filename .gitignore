@@ -266,3 +266,6 @@ liquibase.properties
 
 # DB files
 *.db
+
+Andre Scripts
+woo.sh

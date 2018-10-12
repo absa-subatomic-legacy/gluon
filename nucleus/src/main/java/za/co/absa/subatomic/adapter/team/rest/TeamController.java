@@ -71,6 +71,7 @@ public class TeamController {
             @RequestBody TeamResource request) {
         log.info("Trying to update Team with: {}", request);
         if (!request.getOwners().isEmpty() || !request.getMembers().isEmpty()) {
+
             teamService.addTeamMembers(id,
                     request.getCreatedBy(),
                     request.getOwners().stream()

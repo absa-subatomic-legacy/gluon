@@ -255,16 +255,16 @@ public class TeamAutomationHandler {
                 requesterEntity.getEmail(),
                 GetTeamMemberSlackIdentity(requesterEntity));
 
-
-        MemberRemovedFromTeam memberRemovedFromTeam = new MemberRemovedFromTeam(
+        // Build the ingestable object
+        MemberRemovedFromTeam ingestableObject = new MemberRemovedFromTeam(
                 team, memberRemoved, memberRequested);
 
-        log.info("A member has been removed from a team, sending event to Atomist...{}", memberRemovedFromTeam);
+        log.info("A member has been removed from a team, sending event to Atomist for ingestion", ingestableObject);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
                         .getMembersRemovedFromTeamEventUrl(),
-                memberRemovedFromTeam,
+                ingestableObject,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
