@@ -245,7 +245,7 @@ public class TeamAutomationHandler {
                 memberEntity.getFirstName(),
                 memberEntity.getLastName(),
                 memberEntity.getEmail(),
-                GetTeamMemberSlackIdentity(memberEntity));
+                getTeamMemberSlackIdentity(memberEntity));
 
         TeamMember memberRequested = new TeamMember(
                 requesterEntity.getMemberId(),
@@ -253,7 +253,7 @@ public class TeamAutomationHandler {
                 requesterEntity.getFirstName(),
                 requesterEntity.getLastName(),
                 requesterEntity.getEmail(),
-                GetTeamMemberSlackIdentity(requesterEntity));
+                getTeamMemberSlackIdentity(requesterEntity));
 
         // Build the ingestable object
         MemberRemovedFromTeam ingestableObject = new MemberRemovedFromTeam(
@@ -273,7 +273,7 @@ public class TeamAutomationHandler {
         }
     }
 
-    private TeamMemberSlackIdentity GetTeamMemberSlackIdentity(TeamMemberEntity memberEntity)
+    private TeamMemberSlackIdentity getTeamMemberSlackIdentity(TeamMemberEntity memberEntity)
     {
         TeamMemberSlackIdentity memberSlackIdentity = null;
 
@@ -293,7 +293,7 @@ public class TeamAutomationHandler {
         List<TeamMember> members = new ArrayList<>();
         for (TeamMemberEntity memberEntity : teamMemberEntities) {
 
-            TeamMemberSlackIdentity memberSlackIdentity = GetTeamMemberSlackIdentity(memberEntity);
+            TeamMemberSlackIdentity memberSlackIdentity = getTeamMemberSlackIdentity(memberEntity);
 
             members.add(new TeamMember(memberEntity.getMemberId(),
                     memberEntity.getDomainUsername(),
