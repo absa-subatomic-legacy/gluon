@@ -60,7 +60,6 @@ public class TeamPersistenceHandler {
         this.teamMemberRepository.save(createdBy);
 
         return teamEntity;
-
     }
 
     @Transactional
@@ -164,6 +163,22 @@ public class TeamPersistenceHandler {
             teamMemberRepository.save(memberEntity);
         });
 
+        teamRepository.save(team);
+    }
+
+    @Transactional
+    public void removeTeamMember(String teamId,
+                                 String memberId) {
+
+        TeamEntity team = teamRepository.findByTeamId(teamId);
+
+        TeamMemberEntity member = this.teamMemberRepository
+                .findByMemberId(memberId);
+
+        member.getTeams().remove(team);
+        teamMemberRepository.save(member);
+
+        team.getMembers().remove(member);
         teamRepository.save(team);
     }
 

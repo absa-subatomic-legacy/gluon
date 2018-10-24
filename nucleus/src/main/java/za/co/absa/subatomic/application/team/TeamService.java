@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.ArrayList;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
@@ -129,18 +130,17 @@ public class TeamService {
 
     }
 
-    public void removeTeamMembers(String teamId, String actionedBy,
-            List<String> teamOwnerIds,
-            List<String> teamMemberIds) {
-        TeamMemberEntity actionedByEntity = this.teamMemberService
-                .findByTeamMemberId(
-                        actionedBy);
+    public void removeTeamMember(String teamId, String memberId, String requestedById){
+
         TeamEntity team = this.findByTeamId(teamId);
+        TeamMemberEntity actionedByEntity = this.teamMemberService.findByTeamMemberId(requestedById);
+        TeamMemberEntity member = this.teamMemberService.findByTeamMemberId(memberId);
 
         assertMemberIsOwnerOfTeam(actionedByEntity, team);
 
-        this.persistenceHandler.removeTeamMembers(teamId, teamOwnerIds,
-                teamMemberIds);
+        this.persistenceHandler.removeTeamMember(teamId, memberId);
+
+        this.automationHandler.teamMemberRemoved(team, member, actionedByEntity);
     }
 
     public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
@@ -192,7 +192,6 @@ public class TeamService {
                     Collections.emptyList(),
                     Collections.singletonList(newMemberEntity.getMemberId()));
         }
-
     }
 
     public void newMembershipRequest(String teamId,
