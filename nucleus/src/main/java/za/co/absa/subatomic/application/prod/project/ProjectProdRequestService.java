@@ -212,6 +212,11 @@ public class ProjectProdRequestService {
         return this.projectProdRequestRepository.findAll();
     }
 
+    public ProjectProdRequestEntity findByProjectId(String projectId) {
+        return this.projectProdRequestRepository
+                .findByProjectProjectId(projectId);
+    }
+
     private void assertMemberIsAMemberOfOwningTeam(String memberId,
             String projectId, Collection<TeamEntity> memberAssociatedTeams,
             TeamEntity projectOwningTeam) {

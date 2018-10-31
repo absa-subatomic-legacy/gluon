@@ -11,4 +11,6 @@ public interface ProjectProdRequestRepository
     ProjectProdRequestEntity findByProjectProdRequestId(String id);
 
     List<ProjectProdRequestEntity> findByApprovalStatus(ProjectProductionRequestStatus status);
+
+    ProjectProdRequestEntity findByProjectProjectId(String projectId);
 }
