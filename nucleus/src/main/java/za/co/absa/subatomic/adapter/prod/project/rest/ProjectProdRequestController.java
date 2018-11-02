@@ -114,8 +114,10 @@ public class ProjectProdRequestController {
 
         List<ProjectProdRequestResource> projectProdRequests = new ArrayList<>();
         if (StringUtils.isNotBlank(projectId)) {
-            projectProdRequests.add(assembler.toResource(
-                    this.projectProdRequestService.findByProjectId(projectId)));
+            projectProdRequests.addAll(this.projectProdRequestService
+                    .findByProjectId(projectId)
+                    .stream()
+                    .map(assembler::toResource).collect(Collectors.toList()));
         }
         else {
             projectProdRequests.addAll(this.projectProdRequestService.findAll()
