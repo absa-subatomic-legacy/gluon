@@ -212,7 +212,7 @@ public class ProjectProdRequestService {
         return this.projectProdRequestRepository.findAll();
     }
 
-    public ProjectProdRequestEntity findByProjectId(String projectId) {
+    public List<ProjectProdRequestEntity> findByProjectId(String projectId) {
         return this.projectProdRequestRepository
                 .findByProjectProjectId(projectId);
     }
