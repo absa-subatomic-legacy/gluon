@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.ArrayList;
 
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
@@ -64,6 +63,7 @@ public class TeamService {
     }
 
     public TeamEntity newTeamFromSlack(String name, String description,
+            String openShiftCloud,
             String createdBy,
             String teamChannel) {
         TeamEntity existingTeam = this.findByName(name);
@@ -74,7 +74,7 @@ public class TeamService {
         }
 
         TeamEntity newTeam = this.persistenceHandler.createTeam(name,
-                description, teamChannel, createdBy);
+                description, openShiftCloud, teamChannel, createdBy);
 
         this.automationHandler.createNewTeam(newTeam);
 
@@ -130,17 +130,21 @@ public class TeamService {
 
     }
 
-    public void removeTeamMember(String teamId, String memberId, String requestedById){
+    public void removeTeamMember(String teamId, String memberId,
+            String requestedById) {
 
         TeamEntity team = this.findByTeamId(teamId);
-        TeamMemberEntity actionedByEntity = this.teamMemberService.findByTeamMemberId(requestedById);
-        TeamMemberEntity member = this.teamMemberService.findByTeamMemberId(memberId);
+        TeamMemberEntity actionedByEntity = this.teamMemberService
+                .findByTeamMemberId(requestedById);
+        TeamMemberEntity member = this.teamMemberService
+                .findByTeamMemberId(memberId);
 
         assertMemberIsOwnerOfTeam(actionedByEntity, team);
 
         this.persistenceHandler.removeTeamMember(teamId, memberId);
 
-        this.automationHandler.teamMemberRemoved(team, member, actionedByEntity);
+        this.automationHandler.teamMemberRemoved(team, member,
+                actionedByEntity);
     }
 
     public TeamEntity addSlackIdentity(String teamId, String teamChannel) {

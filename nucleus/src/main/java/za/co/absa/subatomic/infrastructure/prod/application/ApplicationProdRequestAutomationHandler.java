@@ -117,6 +117,7 @@ public class ApplicationProdRequestAutomationHandler {
         return new Team(
                 teamEntity.getTeamId(),
                 teamEntity.getName(),
+                teamEntity.getOpenShiftCloud(),
                 teamSlackIdentity);
     }
 
@@ -167,6 +168,8 @@ public class ApplicationProdRequestAutomationHandler {
         private String teamId;
 
         private String name;
+
+        private String openShiftCloud;
 
         private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
     }

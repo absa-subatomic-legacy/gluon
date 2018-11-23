@@ -18,6 +18,8 @@ public class TeamResource extends ResourceSupport {
 
     private String description;
 
+    private String openShiftCloud;
+
     private Date createdAt;
 
     private String createdBy;

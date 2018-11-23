@@ -85,6 +85,7 @@ public class ApplicationAutomationHandler {
             teamList.add(new Team(
                     teamEntity.getTeamId(),
                     teamEntity.getName(),
+                    teamEntity.getOpenShiftCloud(),
                     teamSlackIdentity));
         }
 
@@ -125,6 +126,7 @@ public class ApplicationAutomationHandler {
                         projectEntity.getBitbucketProject().getDescription(),
                         projectEntity.getBitbucketProject().getUrl()),
                 new Team(owningTeam.getTeamId(), owningTeam.getName(),
+                        owningTeam.getOpenShiftCloud(),
                         owningTeamSlackIdentity),
                 teamList,
                 new CreatedBy(
@@ -172,6 +174,8 @@ public class ApplicationAutomationHandler {
         private String teamId;
 
         private String name;
+
+        private String openShiftCloud;
 
         private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
     }

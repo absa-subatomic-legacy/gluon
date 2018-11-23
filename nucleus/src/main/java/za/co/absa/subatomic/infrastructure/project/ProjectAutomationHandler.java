@@ -106,6 +106,7 @@ public class ProjectAutomationHandler {
                 new Team(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
+                        teamEntity.getOpenShiftCloud(),
                         teamSlackIdentity),
                 tenant,
                 new CreatedBy(
@@ -169,6 +170,7 @@ public class ProjectAutomationHandler {
                             Team team = new Team(
                                     teamEntity.getTeamId(),
                                     teamEntity.getName(),
+                                    teamEntity.getOpenShiftCloud(),
                                     new za.co.absa.subatomic.domain.team.SlackIdentity(
                                             teamEntity.getSlackDetails()
                                                     .getTeamChannel()));
@@ -282,6 +284,7 @@ public class ProjectAutomationHandler {
                         .map(teamEntity -> new Team(
                                 teamEntity.getTeamId(),
                                 teamEntity.getName(),
+                                teamEntity.getOpenShiftCloud(),
                                 new za.co.absa.subatomic.domain.team.SlackIdentity(
                                         teamEntity.getSlackDetails()
                                                 .getTeamChannel())))
@@ -344,6 +347,7 @@ public class ProjectAutomationHandler {
                             Team team = new Team(
                                     teamEntity.getTeamId(),
                                     teamEntity.getName(),
+                                    teamEntity.getOpenShiftCloud(),
                                     new za.co.absa.subatomic.domain.team.SlackIdentity(
                                             teamEntity.getSlackDetails()
                                                     .getTeamChannel()));
@@ -433,6 +437,7 @@ public class ProjectAutomationHandler {
                 .map(teamEntity -> new Team(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
+                        teamEntity.getOpenShiftCloud(),
                         new za.co.absa.subatomic.domain.team.SlackIdentity(
                                 teamEntity.getSlackDetails()
                                         .getTeamChannel())))
@@ -440,6 +445,7 @@ public class ProjectAutomationHandler {
 
         currentTeams.add(0,
                 new Team(newTeam.getTeamId(), newTeam.getName(),
+                        newTeam.getOpenShiftCloud(),
                         new za.co.absa.subatomic.domain.team.SlackIdentity(
                                 newTeam.getSlackDetails()
                                         .getTeamChannel())));
@@ -534,6 +540,8 @@ public class ProjectAutomationHandler {
         private String teamId;
 
         private String name;
+
+        private String openShiftCloud;
 
         private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
 
