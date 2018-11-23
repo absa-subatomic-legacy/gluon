@@ -15,6 +15,7 @@ import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepository;
@@ -77,9 +78,9 @@ public class ApplicationAutomationHandler {
 
         List<Team> teamList = new ArrayList<>();
         for (TeamEntity teamEntity : projectEntity.getTeams()) {
-            za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+            TeamSlackIdentity teamSlackIdentity = null;
             if (teamEntity.getSlackDetails() != null) {
-                teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                teamSlackIdentity = new TeamSlackIdentity(
                         teamEntity.getSlackDetails().getTeamChannel());
             }
             teamList.add(new Team(
@@ -91,10 +92,10 @@ public class ApplicationAutomationHandler {
 
         TeamEntity owningTeam = projectEntity.getOwningTeam();
 
-        za.co.absa.subatomic.domain.team.SlackIdentity owningTeamSlackIdentity = null;
+        TeamSlackIdentity owningTeamSlackIdentity = null;
 
         if (owningTeam.getSlackDetails() != null) {
-            owningTeamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            owningTeamSlackIdentity = new TeamSlackIdentity(
                     owningTeam.getSlackDetails().getTeamChannel());
         }
 
@@ -177,7 +178,7 @@ public class ApplicationAutomationHandler {
 
         private String openShiftCloud;
 
-        private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
+        private TeamSlackIdentity slackIdentity;
     }
 
     @Value

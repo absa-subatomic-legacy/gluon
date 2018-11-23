@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.infrastructure.member;
+package za.co.absa.subatomic.infrastructure.atomist.resource;
 
 import lombok.Builder;
 import lombok.Value;
@@ -7,7 +7,7 @@ import za.co.absa.subatomic.domain.member.TeamMemberSlack;
 
 @Value
 @Builder
-class AtomistTeamMemberRepresentation {
+public class AtomistMemberCreated {
     private String memberId;
 
     private String firstName;

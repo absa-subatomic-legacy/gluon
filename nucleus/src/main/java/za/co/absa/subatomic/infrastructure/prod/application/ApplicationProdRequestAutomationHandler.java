@@ -14,6 +14,7 @@ import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.domain.project.TenantId;
+import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -108,9 +109,9 @@ public class ApplicationProdRequestAutomationHandler {
     }
 
     private Team teamEntityToTeam(TeamEntity teamEntity) {
-        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+        TeamSlackIdentity teamSlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
-            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            teamSlackIdentity = new TeamSlackIdentity(
                     teamEntity.getSlackDetails().getTeamChannel());
         }
 
@@ -171,7 +172,7 @@ public class ApplicationProdRequestAutomationHandler {
 
         private String openShiftCloud;
 
-        private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
+        private TeamSlackIdentity slackIdentity;
     }
 
     @Value
