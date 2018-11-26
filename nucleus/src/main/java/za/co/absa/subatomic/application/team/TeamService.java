@@ -300,7 +300,7 @@ public class TeamService {
             TeamEntity teamEntity) {
         if (teamEntity.getOwners().stream().map(TeamMemberEntity::getMemberId)
                 .noneMatch(memberEntity.getMemberId()::equals)) {
-            throw new InvalidRequestException(MessageFormat.format(
+            throw new ApplicationAuthorisationException(MessageFormat.format(
                     "TeamMember with id {0} is not an owner of the team with id {1}.",
                     memberEntity.getMemberId(),
                     teamEntity.getTeamId()));
