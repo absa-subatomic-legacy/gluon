@@ -43,6 +43,8 @@ public class TeamEntity {
 
     private String description;
 
+    private String openShiftCloud;
+
     @Temporal(TemporalType.TIMESTAMP)
     private final Date createdAt = new Date();
 

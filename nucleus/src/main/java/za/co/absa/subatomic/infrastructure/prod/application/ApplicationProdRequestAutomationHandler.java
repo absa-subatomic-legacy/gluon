@@ -14,8 +14,10 @@ import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.domain.project.TenantId;
+import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistTeamBase;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.ApplicationProdRequestEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -55,9 +57,9 @@ public class ApplicationProdRequestAutomationHandler {
 
         TeamEntity owningTeamEntity = projectEntity.getOwningTeam();
 
-        Team owningTeam = this.teamEntityToTeam(owningTeamEntity);
+        AtomistTeamBase owningTeam = this.teamEntityToTeam(owningTeamEntity);
 
-        List<Team> associatedTeams = new ArrayList<>();
+        List<AtomistTeamBase> associatedTeams = new ArrayList<>();
         for (TeamEntity team : projectEntity.getTeams()) {
             associatedTeams.add(this.teamEntityToTeam(team));
         }
@@ -107,16 +109,17 @@ public class ApplicationProdRequestAutomationHandler {
                 .build();
     }
 
-    private Team teamEntityToTeam(TeamEntity teamEntity) {
-        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+    private AtomistTeamBase teamEntityToTeam(TeamEntity teamEntity) {
+        TeamSlackIdentity teamSlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
-            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            teamSlackIdentity = new TeamSlackIdentity(
                     teamEntity.getSlackDetails().getTeamChannel());
         }
 
-        return new Team(
+        return new AtomistTeamBase(
                 teamEntity.getTeamId(),
                 teamEntity.getName(),
+                teamEntity.getOpenShiftCloud(),
                 teamSlackIdentity);
     }
 
@@ -147,9 +150,9 @@ public class ApplicationProdRequestAutomationHandler {
 
         private ProjectCreated project;
 
-        private Team owningTeam;
+        private AtomistTeamBase owningTeam;
 
-        private List<Team> teams;
+        private List<AtomistTeamBase> teams;
 
         private ActionedBy actionedBy;
     }
@@ -159,16 +162,6 @@ public class ApplicationProdRequestAutomationHandler {
         private String applicationProdRequestId;
 
         private Date createdAt;
-    }
-
-    @Value
-    private class Team {
-
-        private String teamId;
-
-        private String name;
-
-        private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
     }
 
     @Value

@@ -34,6 +34,7 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public TeamEntity createTeam(String name, String description,
+            String openShiftCloud,
             String slackTeamChannel,
             String createdById) {
 
@@ -44,6 +45,7 @@ public class TeamPersistenceHandler {
                 .teamId(UUID.randomUUID().toString())
                 .description(description)
                 .name(name)
+                .openShiftCloud(openShiftCloud)
                 .createdBy(createdBy)
                 .owners(Collections.singleton(createdBy))
                 .build();
@@ -80,9 +82,13 @@ public class TeamPersistenceHandler {
             List<String> teamMemberIdsRequested) {
         TeamEntity team = teamRepository.findByTeamId(teamId);
 
-        List<String> existingMemberIds = team.getMembers().stream().map(TeamMemberEntity::getMemberId).collect(Collectors.toList());
+        List<String> existingMemberIds = team.getMembers().stream()
+                .map(TeamMemberEntity::getMemberId)
+                .collect(Collectors.toList());
 
-        List<String> existingOwnerIds = team.getOwners().stream().map(TeamMemberEntity::getMemberId).collect(Collectors.toList());
+        List<String> existingOwnerIds = team.getOwners().stream()
+                .map(TeamMemberEntity::getMemberId)
+                .collect(Collectors.toList());
 
         // Filter existing members
         List<String> teamMemberIds = teamMemberIdsRequested.stream()
@@ -168,7 +174,7 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public void removeTeamMember(String teamId,
-                                 String memberId) {
+            String memberId) {
 
         TeamEntity team = teamRepository.findByTeamId(teamId);
 

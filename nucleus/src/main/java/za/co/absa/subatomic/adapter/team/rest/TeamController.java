@@ -55,7 +55,8 @@ public class TeamController {
         }
 
         TeamEntity newTeam = teamService.newTeamFromSlack(request.getName(),
-                request.getDescription(), request.getCreatedBy(),
+                request.getDescription(), request.getOpenShiftCloud(),
+                request.getCreatedBy(),
                 teamSlackChannel);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -166,16 +167,19 @@ public class TeamController {
 
     @DeleteMapping("/{teamId}/members/{memberId}")
     ResponseEntity delete(@PathVariable String teamId,
-                          @PathVariable String memberId,
-                          @RequestParam("requestedById") String requestedById) {
+            @PathVariable String memberId,
+            @RequestParam("requestedById") String requestedById) {
 
-        log.info("Trying to delete member " + memberId + " from team " + teamId + " by requestor " + requestedById);
+        log.info("Trying to delete member " + memberId + " from team " + teamId
+                + " by requestor " + requestedById);
 
-        if(!teamId.isEmpty() && !memberId.isEmpty() && !requestedById.isEmpty()) {
+        if (!teamId.isEmpty() && !memberId.isEmpty()
+                && !requestedById.isEmpty()) {
             teamService.removeTeamMember(teamId, memberId, requestedById);
             return ResponseEntity.accepted().build();
-        } else {
-            return  ResponseEntity.badRequest().build();
+        }
+        else {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -194,6 +198,7 @@ public class TeamController {
                 resource.setTeamId(entity.getTeamId());
                 resource.setName(entity.getName());
                 resource.setDescription(entity.getDescription());
+                resource.setOpenShiftCloud(entity.getOpenShiftCloud());
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
 
