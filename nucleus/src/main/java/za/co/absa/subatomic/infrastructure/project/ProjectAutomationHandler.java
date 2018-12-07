@@ -1,6 +1,5 @@
 package za.co.absa.subatomic.infrastructure.project;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +14,10 @@ import za.co.absa.subatomic.domain.project.ProjectCreated;
 import za.co.absa.subatomic.domain.project.TeamId;
 import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -57,9 +59,9 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
-        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+        TeamSlackIdentity teamSlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
-            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            teamSlackIdentity = new TeamSlackIdentity(
                     teamEntity.getSlackDetails().getTeamChannel());
         }
 
@@ -68,9 +70,10 @@ public class ProjectAutomationHandler {
 
         ProjectCreatedWithDetails newProject = new ProjectCreatedWithDetails(
                 projectCreated,
-                new Team(
+                new AtomistTeam(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
+                        teamEntity.getOpenShiftCloud(),
                         teamSlackIdentity),
                 tenant,
                 new CreatedBy(
@@ -120,10 +123,11 @@ public class ProjectAutomationHandler {
                         bitbucketProject.getDescription(),
                         bitbucketProject.getUrl()),
                 projectEntity.getTeams().stream()
-                        .map(teamEntity -> new Team(
+                        .map(teamEntity -> new AtomistTeam(
                                 teamEntity.getTeamId(),
                                 teamEntity.getName(),
-                                new za.co.absa.subatomic.domain.team.SlackIdentity(
+                                teamEntity.getOpenShiftCloud(),
+                                new TeamSlackIdentity(
                                         teamEntity.getSlackDetails()
                                                 .getTeamChannel())))
                         .collect(Collectors.toList()),
@@ -177,19 +181,20 @@ public class ProjectAutomationHandler {
                 null,
                 projectEntity.getTeams().stream()
                         .map(teamEntity -> {
-                            Team team = new Team(
+                            AtomistTeam team = new AtomistTeam(
                                     teamEntity.getTeamId(),
                                     teamEntity.getName(),
-                                    new za.co.absa.subatomic.domain.team.SlackIdentity(
+                                    teamEntity.getOpenShiftCloud(),
+                                    new TeamSlackIdentity(
                                             teamEntity.getSlackDetails()
                                                     .getTeamChannel()));
                             team.getOwners().addAll(
                                     teamEntity.getOwners().stream()
-                                            .map(memberEntity -> new TeamMember(
-                                                    memberEntity
-                                                            .getDomainUsername(),
+                                            .map(memberEntity -> new AtomistMemberBase(
                                                     memberEntity
                                                             .getFirstName(),
+                                                    memberEntity
+                                                            .getDomainUsername(),
                                                     new TeamMemberSlackIdentity(
                                                             memberEntity
                                                                     .getSlackDetails()
@@ -200,10 +205,10 @@ public class ProjectAutomationHandler {
                                             .collect(Collectors.toList()));
                             team.getMembers().addAll(
                                     teamEntity.getMembers().stream()
-                                            .map(memberEntity -> new TeamMember(
+                                            .map(memberEntity -> new AtomistMemberBase(
                                                     memberEntity
-                                                            .getDomainUsername(),
-                                                    memberEntity.getFirstName(),
+                                                            .getFirstName(),
+                                                    memberEntity.getDomainUsername(),
                                                     new TeamMemberSlackIdentity(
                                                             memberEntity
                                                                     .getSlackDetails()
@@ -251,11 +256,12 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
-        List<Team> currentTeams = projectEntity.getTeams().stream()
-                .map(teamEntity -> new Team(
+        List<AtomistTeam> currentTeams = projectEntity.getTeams().stream()
+                .map(teamEntity -> new AtomistTeam(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
-                        new za.co.absa.subatomic.domain.team.SlackIdentity(
+                        teamEntity.getOpenShiftCloud(),
+                        new TeamSlackIdentity(
                                 teamEntity.getSlackDetails()
                                         .getTeamChannel())))
                 .collect(Collectors.toList());
@@ -291,7 +297,7 @@ public class ProjectAutomationHandler {
 
         private ProjectCreated project;
 
-        private Team team;
+        private AtomistTeam team;
 
         private Tenant tenant;
 
@@ -305,7 +311,7 @@ public class ProjectAutomationHandler {
 
         private BitbucketProjectRequest bitbucketProjectRequest;
 
-        private List<Team> teams;
+        private List<AtomistTeam> teams;
 
         private Tenant owningTenant;
 
@@ -319,7 +325,7 @@ public class ProjectAutomationHandler {
 
         private BitbucketProject bitbucketProject;
 
-        private List<Team> teams;
+        private List<AtomistTeam> teams;
 
         private CreatedBy createdBy;
     }
@@ -349,20 +355,6 @@ public class ProjectAutomationHandler {
     }
 
     @Value
-    private class Team {
-
-        private String teamId;
-
-        private String name;
-
-        private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
-
-        private final List<TeamMember> owners = new ArrayList<>();
-
-        private final List<TeamMember> members = new ArrayList<>();
-    }
-
-    @Value
     private class Tenant {
 
         private String tenantId;
@@ -387,19 +379,9 @@ public class ProjectAutomationHandler {
     }
 
     @Value
-    private class TeamMember {
-
-        private String domainUsername;
-
-        private String firstName;
-
-        private TeamMemberSlackIdentity slackIdentity;
-    }
-
-    @Value
     private class TeamAssociated {
 
-        private List<Team> team;
+        private List<AtomistTeam> team;
 
         private CreatedBy requestedBy;
     }

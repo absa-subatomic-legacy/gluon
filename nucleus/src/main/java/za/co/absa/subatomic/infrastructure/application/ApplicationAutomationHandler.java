@@ -15,6 +15,7 @@ import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepository;
@@ -77,23 +78,24 @@ public class ApplicationAutomationHandler {
 
         List<Team> teamList = new ArrayList<>();
         for (TeamEntity teamEntity : projectEntity.getTeams()) {
-            za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+            TeamSlackIdentity teamSlackIdentity = null;
             if (teamEntity.getSlackDetails() != null) {
-                teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+                teamSlackIdentity = new TeamSlackIdentity(
                         teamEntity.getSlackDetails().getTeamChannel());
             }
             teamList.add(new Team(
                     teamEntity.getTeamId(),
                     teamEntity.getName(),
+                    teamEntity.getOpenShiftCloud(),
                     teamSlackIdentity));
         }
 
         TeamEntity owningTeam = projectEntity.getOwningTeam();
 
-        za.co.absa.subatomic.domain.team.SlackIdentity owningTeamSlackIdentity = null;
+        TeamSlackIdentity owningTeamSlackIdentity = null;
 
         if (owningTeam.getSlackDetails() != null) {
-            owningTeamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            owningTeamSlackIdentity = new TeamSlackIdentity(
                     owningTeam.getSlackDetails().getTeamChannel());
         }
 
@@ -125,6 +127,7 @@ public class ApplicationAutomationHandler {
                         projectEntity.getBitbucketProject().getDescription(),
                         projectEntity.getBitbucketProject().getUrl()),
                 new Team(owningTeam.getTeamId(), owningTeam.getName(),
+                        owningTeam.getOpenShiftCloud(),
                         owningTeamSlackIdentity),
                 teamList,
                 new CreatedBy(
@@ -173,7 +176,9 @@ public class ApplicationAutomationHandler {
 
         private String name;
 
-        private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
+        private String openShiftCloud;
+
+        private TeamSlackIdentity slackIdentity;
     }
 
     @Value

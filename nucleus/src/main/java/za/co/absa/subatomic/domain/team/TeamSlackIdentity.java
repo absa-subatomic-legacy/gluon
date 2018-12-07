@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class SlackIdentity {
+public class TeamSlackIdentity implements TeamSlack {
 
     /**
      * The Slack channel name for this team. If no existing channel is chosen and a new Slack

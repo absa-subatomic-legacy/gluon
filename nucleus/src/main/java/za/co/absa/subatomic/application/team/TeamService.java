@@ -59,6 +59,7 @@ public class TeamService {
     }
 
     public TeamEntity newTeamFromSlack(String name, String description,
+            String openShiftCloud,
             String createdBy,
             String teamChannel) {
         TeamEntity existingTeam = this.findByName(name);
@@ -69,7 +70,7 @@ public class TeamService {
         }
 
         TeamEntity newTeam = this.persistenceHandler.createTeam(name,
-                description, teamChannel, createdBy);
+                description, openShiftCloud, teamChannel, createdBy);
 
         this.automationHandler.createNewTeam(newTeam);
 
@@ -314,7 +315,7 @@ public class TeamService {
             TeamEntity teamEntity) {
         if (teamEntity.getOwners().stream().map(TeamMemberEntity::getMemberId)
                 .noneMatch(memberEntity.getMemberId()::equals)) {
-            throw new InvalidRequestException(MessageFormat.format(
+            throw new ApplicationAuthorisationException(MessageFormat.format(
                     "TeamMember with id {0} is not an owner of the team with id {1}.",
                     memberEntity.getMemberId(),
                     teamEntity.getTeamId()));
