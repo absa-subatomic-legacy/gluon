@@ -56,7 +56,7 @@ public class ProjectProdRequestService {
     public ProjectProdRequestEntity createProjectProdRequest(String projectId,
             String actionedByMemberId) {
         ProjectEntity projectEntity = this.projectService
-                .findByProjectId(projectId);
+                .getProjectPersistenceHandler().findByProjectId(projectId);
         TeamMemberEntity actionedBy = this.teamMemberService
                 .findByTeamMemberId(actionedByMemberId);
 

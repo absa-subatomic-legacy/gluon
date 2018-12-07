@@ -59,7 +59,7 @@ public class GenericProdRequestService {
             List<OpenShiftResource> requestedResources) {
 
         ProjectEntity projectEntity = projectService
-                .findByProjectId(projectId);
+                .getProjectPersistenceHandler().findByProjectId(projectId);
         TeamMemberEntity actioningMember = this.teamMemberService
                 .findByTeamMemberId(actionedByMemberId);
         Set<TeamEntity> memberAssociatedTeams = this.teamService

@@ -1,121 +1,89 @@
 package za.co.absa.subatomic.application.project;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
-import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.adapter.project.rest.TeamResource;
+import za.co.absa.subatomic.application.member.TeamMemberService;
+import za.co.absa.subatomic.application.team.TeamService;
 import za.co.absa.subatomic.application.tenant.TenantService;
+import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
-import za.co.absa.subatomic.domain.project.*;
-import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.project.ProjectAutomationHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
-import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
 
 @Service
 public class ProjectService {
 
-    private CommandGateway commandGateway;
+    private TeamMemberService teamMemberService;
 
-    private ProjectRepository projectRepository;
-
-    private TeamRepository teamRepository;
+    private TeamService teamService;
 
     private TenantService tenantService;
 
-    public ProjectService(CommandGateway commandGateway,
-            ProjectRepository projectRepository,
-            TeamRepository teamRepository,
-            TenantService tenantService) {
-        this.commandGateway = commandGateway;
-        this.projectRepository = projectRepository;
-        this.teamRepository = teamRepository;
+    private ProjectPersistenceHandler projectPersistenceHandler;
+
+    private ProjectAutomationHandler projectAutomationHandler;
+
+    public ProjectService(
+            TeamMemberService teamMemberService,
+            TeamService teamService,
+            TenantService tenantService,
+            ProjectPersistenceHandler projectPersistenceHandler,
+            ProjectAutomationHandler projectAutomationHandler) {
+        this.teamMemberService = teamMemberService;
+        this.teamService = teamService;
         this.tenantService = tenantService;
+        this.projectPersistenceHandler = projectPersistenceHandler;
+        this.projectAutomationHandler = projectAutomationHandler;
     }
 
     public String newProject(String name, String description,
             String createdBy, String teamId, String tenantId) {
-        ProjectEntity existingProject = this.findByName(name);
+        ProjectEntity existingProject = this.projectPersistenceHandler
+                .findByName(name);
         if (existingProject != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested project name {0} is not available.",
                     name));
         }
 
-        TeamEntity team = findTeamById(teamId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
-                Collections.singletonList(team));
-
+        TeamEntity owningTeamEntity = this.teamService.findByTeamId(teamId);
+        TenantEntity owningTenantEntity;
         if (tenantId == null) {
-            TenantEntity tenantEntity = tenantService.findByName("Default");
-            tenantId = tenantEntity.getTenantId();
+            owningTenantEntity = tenantService.findByName("Default");
         }
         else {
-            TenantEntity tenantEntity = tenantService.findByTenantId(tenantId);
-            if (tenantEntity == null) {
+            owningTenantEntity = tenantService.findByTenantId(tenantId);
+            if (owningTenantEntity == null) {
                 throw new InvalidRequestException(MessageFormat.format(
                         "Supplied tenantId {0} does not exist.", tenantId));
             }
         }
+        TeamMemberEntity createdByEntity = this.teamMemberService
+                .findByTeamMemberId(createdBy);
 
-        return commandGateway.sendAndWait(
-                new NewProject(
-                        UUID.randomUUID().toString(),
-                        name,
-                        description,
-                        new TeamMemberId(createdBy),
-                        new TeamId(teamId),
-                        new TenantId(tenantId),
-                        allMemberAndOwnerIds),
-                1000,
-                TimeUnit.SECONDS);
-    }
+        this.teamService.assertMemberBelongsToTeam(createdByEntity,
+                owningTeamEntity);
 
-    public String requestBitbucketProject(String projectId, String name,
-            String projectKey, String description, String requestedBy) {
-        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
-                projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
-                projectAssociatedTeams);
-        return commandGateway.sendAndWait(
-                new RequestBitbucketProject(
-                        projectId,
-                        BitbucketProject.builder()
-                                .name(name)
-                                .description(description)
-                                .key(projectKey)
-                                .build(),
-                        new TeamMemberId(requestedBy),
-                        allMemberAndOwnerIds),
-                1000,
-                TimeUnit.SECONDS);
-    }
+        ProjectEntity newProject = this.projectPersistenceHandler.createProject(
+                name, description,
+                createdByEntity, owningTeamEntity, owningTenantEntity);
 
-    public String confirmBitbucketProjectCreated(String projectId,
-            String bitbucketProjectId, String url) {
-        return commandGateway.sendAndWait(
-                new AddBitbucketRepository(
-                        projectId,
-                        BitbucketProject.builder()
-                                .id(bitbucketProjectId)
-                                .url(url)
-                                .build()),
-                1000,
-                TimeUnit.SECONDS);
+        this.projectAutomationHandler.projectCreated(newProject,
+                owningTeamEntity, createdByEntity, owningTenantEntity);
+
+        return newProject.getProjectId();
     }
 
     public String linkExistingBitbucketProject(String projectId,
@@ -124,11 +92,8 @@ public class ProjectService {
             String projectKey,
             String description,
             String url,
-            String requestedBy) {
-        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
-                projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
-                projectAssociatedTeams);
+            String actionedBy) {
+        assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
 
         BitbucketProject bitbucketProject = new BitbucketProject(
                 bitbucketProjectId,
@@ -137,93 +102,82 @@ public class ProjectService {
                 description,
                 url);
 
-        return commandGateway.sendAndWait(new LinkBitbucketProject(
-                projectId,
-                bitbucketProject,
-                new TeamMemberId(requestedBy),
-                allMemberAndOwnerIds));
+        TeamMemberEntity actionedByEntity = teamMemberService
+                .findByTeamMemberId(actionedBy);
+
+        ProjectEntity projectEntity = this.projectPersistenceHandler
+                .linkBitbucketProject(projectId, bitbucketProject,
+                        actionedByEntity);
+
+        this.projectAutomationHandler.bitbucketProjectLinkedToProject(
+                projectEntity, bitbucketProject, actionedByEntity);
+
+        return projectEntity.getProjectId();
     }
 
-    public String newProjectEnvironment(String projectId, String requestedBy) {
-        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
-                projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
-                projectAssociatedTeams);
-        return commandGateway.sendAndWait(
-                new NewProjectEnvironment(projectId,
-                        new TeamMemberId(requestedBy),
-                        allMemberAndOwnerIds),
-                1,
-                TimeUnit.SECONDS);
+    public void newProjectEnvironment(String projectId, String requestedBy) {
+
+        assertMemberBelongsToAnAssociatedTeam(projectId, requestedBy);
+
+        ProjectEntity projectEntity = this.projectPersistenceHandler
+                .findByProjectId(projectId);
+
+        TeamMemberEntity teamMemberEntity = this.teamMemberService
+                .findByTeamMemberId(requestedBy);
+
+        this.projectAutomationHandler.requestProjectEnvironment(projectEntity,
+                teamMemberEntity);
     }
 
-    public String linkProjectToTeams(String projectId, String requestedBy,
+    public String linkProjectToTeams(String projectId, String actionedBy,
             List<TeamResource> teamsToLink) {
-        Set<TeamEntity> projectAssociatedTeams = findTeamsByProjectId(
-                projectId);
-        Set<String> allMemberAndOwnerIds = getAllMemberAndOwnerIds(
-                projectAssociatedTeams);
+        TeamMemberEntity actionedByEntity = teamMemberService
+                .findByTeamMemberId(actionedBy);
 
-        Set<TeamId> teamIdsToLink = new HashSet<>();
+        assertMemberBelongsToAnAssociatedTeam(projectId, actionedByEntity);
+
+        List<TeamEntity> teamEntitiesToLink = new ArrayList<>();
 
         for (TeamResource team : teamsToLink) {
-            teamIdsToLink.add(new TeamId(team.getTeamId()));
+            teamEntitiesToLink.add(teamService.findByTeamId(team.getTeamId()));
         }
 
-        return commandGateway.sendAndWait(
-                new LinkTeamsToProject(projectId,
-                        new TeamMemberId(requestedBy),
-                        teamIdsToLink,
-                        allMemberAndOwnerIds),
-                1,
-                TimeUnit.SECONDS);
+        ProjectEntity projectEntity = this.projectPersistenceHandler
+                .linkTeamsToProject(projectId,
+                        teamEntitiesToLink);
+
+        this.projectAutomationHandler.teamsLinkedToProject(projectEntity,
+                actionedByEntity);
+
+        return projectEntity.getProjectId();
     }
 
-    public String deleteProject(String projectId){
-        return commandGateway.sendAndWait(new DeleteProject(projectId));
+    public void deleteProject(String projectId) {
+        this.projectPersistenceHandler.deleteProject(projectId);
     }
 
-    @Transactional(readOnly = true)
-    public ProjectEntity findByProjectId(String projectId) {
-        return projectRepository.findByProjectId(projectId);
+    private void assertMemberBelongsToAnAssociatedTeam(String projectId,
+            String memberId) {
+        TeamMemberEntity memberEntity = teamMemberService
+                .findByTeamMemberId(memberId);
+        assertMemberBelongsToAnAssociatedTeam(projectId, memberEntity);
     }
 
-    @Transactional(readOnly = true)
-    public List<ProjectEntity> findAll() {
-        return projectRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
-    public ProjectEntity findByName(String name) {
-        return projectRepository.findByName(name);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ProjectEntity> findByTeamName(String teamName) {
-        return projectRepository.findByTeams_Name(teamName);
-    }
-
-    @Transactional(readOnly = true)
-    public TeamEntity findTeamById(String teamId) {
-        return teamRepository.findByTeamId(teamId);
-    }
-
-    @Transactional(readOnly = true)
-    public Set<TeamEntity> findTeamsByProjectId(String projectId) {
-        return projectRepository.findByProjectId(projectId).getTeams();
-    }
-
-    private Set<String> getAllMemberAndOwnerIds(Collection<TeamEntity> teams) {
-        Set<String> teamMemberIds = new HashSet<>();
-        for (TeamEntity team : teams) {
-            for (TeamMemberEntity member : team.getMembers()) {
-                teamMemberIds.add(member.getMemberId());
-            }
-            for (TeamMemberEntity owner : team.getOwners()) {
-                teamMemberIds.add(owner.getMemberId());
-            }
+    private void assertMemberBelongsToAnAssociatedTeam(String projectId,
+            TeamMemberEntity memberEntity) {
+        Collection<TeamEntity> projectAssociatedTeams = this.projectPersistenceHandler
+                .findTeamsAssociatedToProject(
+                        projectId);
+        if (!teamService.memberBelongsToAnyTeam(memberEntity,
+                projectAssociatedTeams)) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "TeamMember with id {0} is not a member of any team associated to project with id {1}.",
+                    memberEntity.getMemberId(),
+                    projectId));
         }
-        return teamMemberIds;
     }
 
+    public ProjectPersistenceHandler getProjectPersistenceHandler() {
+        return this.projectPersistenceHandler;
+    }
 }

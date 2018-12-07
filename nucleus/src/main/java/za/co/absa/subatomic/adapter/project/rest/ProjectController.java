@@ -79,20 +79,6 @@ public class ProjectController {
                         request.getBitbucketProject().getUrl(),
                         request.getCreatedBy());
             }
-            else if (StringUtils.isNotBlank(
-                    request.getBitbucketProject().getBitbucketProjectId())) {
-                projectService.confirmBitbucketProjectCreated(id,
-                        request.getBitbucketProject().getBitbucketProjectId(),
-                        request.getBitbucketProject().getUrl());
-            }
-            else if (StringUtils
-                    .isNotBlank(request.getBitbucketProject().getName())) {
-                projectService.requestBitbucketProject(id,
-                        request.getBitbucketProject().getName(),
-                        request.getBitbucketProject().getKey(),
-                        request.getBitbucketProject().getDescription(),
-                        request.getCreatedBy());
-            }
         }
         else if (!request.getTeams().isEmpty()) {
             projectService.linkProjectToTeams(id, request.getCreatedBy(),
@@ -104,12 +90,12 @@ public class ProjectController {
         }
 
         return ResponseEntity.accepted()
-                .body(assembler.toResource(projectService.findByProjectId(id)));
+                .body(assembler.toResource(projectService.getProjectPersistenceHandler().findByProjectId(id)));
     }
 
     @GetMapping("/{id}")
     ProjectResource get(@PathVariable String id) {
-        return assembler.toResource(projectService.findByProjectId(id));
+        return assembler.toResource(projectService.getProjectPersistenceHandler().findByProjectId(id));
     }
 
     @GetMapping
@@ -121,17 +107,17 @@ public class ProjectController {
         // TODO see if we can't use http://www.vavr.io/ for pattern matching?
         if (StringUtils.isNotBlank(name)) {
             projects.add(
-                    assembler.toResource(projectService.findByName(name)));
+                    assembler.toResource(projectService.getProjectPersistenceHandler().findByName(name)));
         }
 
         if (StringUtils.isNotBlank(teamName)) {
             projects.addAll(
                     assembler.toResources(
-                            projectService.findByTeamName(teamName)));
+                            projectService.getProjectPersistenceHandler().findByTeamName(teamName)));
         }
 
         if (StringUtils.isAllBlank(name, teamName)) {
-            projects.addAll(projectService.findAll().stream()
+            projects.addAll(projectService.getProjectPersistenceHandler().findAllProjects().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
