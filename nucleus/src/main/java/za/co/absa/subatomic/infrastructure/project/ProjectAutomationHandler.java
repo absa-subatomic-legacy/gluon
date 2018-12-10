@@ -10,7 +10,7 @@ import org.springframework.web.client.RestTemplate;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
-import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistProject;
 import za.co.absa.subatomic.domain.project.TeamId;
 import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
@@ -41,7 +41,7 @@ public class ProjectAutomationHandler {
             TeamEntity teamEntity,
             TeamMemberEntity teamMemberEntity, TenantEntity tenantEntity) {
 
-        ProjectCreated projectCreated = ProjectCreated.builder()
+        AtomistProject projectCreated = AtomistProject.builder()
                 .projectId(projectEntity.getProjectId())
                 .name(projectEntity.getName())
                 .description(projectEntity.getDescription())
@@ -111,7 +111,7 @@ public class ProjectAutomationHandler {
         }
 
         BitbucketProjectCreatedWithDetails bitbucketProjectLinked = new BitbucketProjectCreatedWithDetails(
-                ProjectCreated.builder()
+                AtomistProject.builder()
                         .projectId(projectEntity.getProjectId())
                         .name(projectEntity.getName())
                         .description(projectEntity.getDescription())
@@ -173,7 +173,7 @@ public class ProjectAutomationHandler {
         }
 
         BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
-                ProjectCreated.builder()
+                AtomistProject.builder()
                         .projectId(projectEntity.getProjectId())
                         .name(projectEntity.getName())
                         .description(projectEntity.getDescription())
@@ -208,7 +208,8 @@ public class ProjectAutomationHandler {
                                             .map(memberEntity -> new AtomistMemberBase(
                                                     memberEntity
                                                             .getFirstName(),
-                                                    memberEntity.getDomainUsername(),
+                                                    memberEntity
+                                                            .getDomainUsername(),
                                                     new TeamMemberSlackIdentity(
                                                             memberEntity
                                                                     .getSlackDetails()
@@ -245,7 +246,7 @@ public class ProjectAutomationHandler {
     }
 
     public void teamsLinkedToProject(ProjectEntity projectEntity,
-            TeamMemberEntity teamMemberEntity) {
+            TeamMemberEntity teamMemberEntity, List<TeamEntity> teamEntities) {
 
         TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
@@ -256,7 +257,7 @@ public class ProjectAutomationHandler {
                             .getUserId());
         }
 
-        List<AtomistTeam> currentTeams = projectEntity.getTeams().stream()
+        List<AtomistTeam> currentTeams = teamEntities.stream()
                 .map(teamEntity -> new AtomistTeam(
                         teamEntity.getTeamId(),
                         teamEntity.getName(),
@@ -267,6 +268,15 @@ public class ProjectAutomationHandler {
                 .collect(Collectors.toList());
 
         TeamAssociated teamAssociated = new TeamAssociated(
+                new AtomistProject(
+                        projectEntity.getProjectId(),
+                        projectEntity.getName(),
+                        projectEntity.getDescription(),
+                        new TeamMemberId(
+                                projectEntity.getCreatedBy().getMemberId()),
+                        new TeamId(projectEntity.getOwningTeam().getTeamId()),
+                        new TenantId(
+                                projectEntity.getOwningTenant().getTenantId())),
                 currentTeams,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
@@ -295,7 +305,7 @@ public class ProjectAutomationHandler {
     @Value
     private class ProjectCreatedWithDetails {
 
-        private ProjectCreated project;
+        private AtomistProject project;
 
         private AtomistTeam team;
 
@@ -307,7 +317,7 @@ public class ProjectAutomationHandler {
     @Value
     private class BitbucketProjectRequestedWithDetails {
 
-        private ProjectCreated project;
+        private AtomistProject project;
 
         private BitbucketProjectRequest bitbucketProjectRequest;
 
@@ -321,7 +331,7 @@ public class ProjectAutomationHandler {
     @Value
     private class BitbucketProjectCreatedWithDetails {
 
-        private ProjectCreated project;
+        private AtomistProject project;
 
         private BitbucketProject bitbucketProject;
 
@@ -381,7 +391,9 @@ public class ProjectAutomationHandler {
     @Value
     private class TeamAssociated {
 
-        private List<AtomistTeam> team;
+        private AtomistProject project;
+
+        private List<AtomistTeam> teams;
 
         private CreatedBy requestedBy;
     }

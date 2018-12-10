@@ -1,7 +1,9 @@
 package za.co.absa.subatomic.infrastructure.project.view.jpa;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -29,6 +31,10 @@ public class ProjectPersistenceHandler {
     public ProjectEntity createProject(String name, String description,
             TeamMemberEntity createdBy, TeamEntity owningTeam,
             TenantEntity owningTenant) {
+        Set<TeamEntity> associatedTeams = new HashSet<>();
+
+        associatedTeams.add(owningTeam);
+
         ProjectEntity project = ProjectEntity
                 .builder()
                 .projectId(UUID.randomUUID().toString())
@@ -37,6 +43,7 @@ public class ProjectPersistenceHandler {
                 .createdBy(createdBy)
                 .owningTeam(owningTeam)
                 .owningTenant(owningTenant)
+                .teams(associatedTeams)
                 .build();
 
         return this.projectRepository.save(project);

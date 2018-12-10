@@ -14,7 +14,7 @@ import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
-import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistProject;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
@@ -106,7 +106,7 @@ public class ApplicationAutomationHandler {
                         .description(applicationEntity.getDescription())
                         .applicationType(applicationEntity.getApplicationType())
                         .build(),
-                ProjectCreated.builder()
+                AtomistProject.builder()
                         .projectId(projectEntity.getProjectId())
                         .name(projectEntity.getName())
                         .description(projectEntity.getDescription())
@@ -154,7 +154,7 @@ public class ApplicationAutomationHandler {
 
         private ApplicationCreated application;
 
-        private ProjectCreated project;
+        private AtomistProject project;
 
         private BitbucketGitRepository bitbucketRepository;
 

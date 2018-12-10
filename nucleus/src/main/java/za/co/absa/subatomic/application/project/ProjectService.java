@@ -147,7 +147,7 @@ public class ProjectService {
                         teamEntitiesToLink);
 
         this.projectAutomationHandler.teamsLinkedToProject(projectEntity,
-                actionedByEntity);
+                actionedByEntity, teamEntitiesToLink);
 
         return projectEntity.getProjectId();
     }
