@@ -12,7 +12,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
-import za.co.absa.subatomic.domain.project.ProjectCreated;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistProject;
 import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
@@ -52,7 +52,7 @@ public class ApplicationProdRequestAutomationHandler {
 
         ProjectEntity projectEntity = applicationEntity.getProject();
 
-        ProjectCreated projectCreated = this
+        AtomistProject projectCreated = this
                 .projectEntityToProject(projectEntity);
 
         TeamEntity owningTeamEntity = projectEntity.getOwningTeam();
@@ -99,8 +99,8 @@ public class ApplicationProdRequestAutomationHandler {
                 .build();
     }
 
-    private ProjectCreated projectEntityToProject(ProjectEntity projectEntity) {
-        return ProjectCreated.builder()
+    private AtomistProject projectEntityToProject(ProjectEntity projectEntity) {
+        return AtomistProject.builder()
                 .projectId(projectEntity.getProjectId())
                 .name(projectEntity.getName())
                 .description(projectEntity.getDescription())
@@ -148,7 +148,7 @@ public class ApplicationProdRequestAutomationHandler {
 
         private ApplicationCreated application;
 
-        private ProjectCreated project;
+        private AtomistProject project;
 
         private AtomistTeamBase owningTeam;
 

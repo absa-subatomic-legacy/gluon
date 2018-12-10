@@ -1,13 +1,13 @@
 package za.co.absa.subatomic.application.team;
 
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +32,6 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 @Slf4j
 public class TeamService {
 
-    private CommandGateway commandGateway;
-
     private TeamRepository teamRepository;
 
     private ProjectRepository projectRepository;
@@ -46,14 +44,12 @@ public class TeamService {
 
     private MembershipRequestRepository membershipRequestRepository;
 
-    public TeamService(CommandGateway commandGateway,
-            TeamRepository teamRepository,
+    public TeamService(TeamRepository teamRepository,
             MembershipRequestRepository membershipRequestRepository,
             ProjectRepository projectRepository,
             TeamMemberService teamMemberService,
             TeamAutomationHandler automationHandler,
             TeamPersistenceHandler persistenceHandler) {
-        this.commandGateway = commandGateway;
         this.teamRepository = teamRepository;
         this.membershipRequestRepository = membershipRequestRepository;
         this.projectRepository = projectRepository;
@@ -280,7 +276,22 @@ public class TeamService {
         return teamRepository.findBySlackDetailsTeamChannel(slackTeamChannel);
     }
 
-    private void assertMemberBelongsToTeam(TeamMemberEntity memberEntity,
+    public boolean memberBelongsToAnyTeam(TeamMemberEntity memberEntity,
+            Collection<TeamEntity> teams) {
+
+        boolean memberBelongsToATeam = false;
+
+        for (TeamEntity team : teams) {
+            if (this.memberBelongsToTeam(memberEntity, team)) {
+                memberBelongsToATeam = true;
+                break;
+            }
+        }
+
+        return memberBelongsToATeam;
+    }
+
+    public void assertMemberBelongsToTeam(TeamMemberEntity memberEntity,
             TeamEntity teamEntity) {
         if (!this.memberBelongsToTeam(memberEntity, teamEntity)) {
             throw new ApplicationAuthorisationException(MessageFormat.format(
