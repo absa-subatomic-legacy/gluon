@@ -34,7 +34,7 @@ public class DevDeploymentPipelineEntity implements DeploymentPipeline {
 
     @Override
     public String getName() {
-        return "DEV";
+        return "";
     }
 
     @Override
