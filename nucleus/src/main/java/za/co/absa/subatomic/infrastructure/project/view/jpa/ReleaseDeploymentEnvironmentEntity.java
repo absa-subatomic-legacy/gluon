@@ -15,7 +15,7 @@ import lombok.Setter;
 import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
 
 @Entity
-@Table(name = "release_deployment_environment")
+@Table(name = "releaseDeploymentEnvironment")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
@@ -28,7 +28,7 @@ class ReleaseDeploymentEnvironmentEntity
     @GeneratedValue
     private Long id;
 
-    private int order;
+    private int positionInPipeline;
 
     private String displayName;
 

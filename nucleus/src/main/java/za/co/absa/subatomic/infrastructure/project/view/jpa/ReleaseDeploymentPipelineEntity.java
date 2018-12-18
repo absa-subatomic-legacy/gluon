@@ -17,20 +17,30 @@ import lombok.Setter;
 import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 
 @Entity
-@Table(name = "release_deployment_pipeline")
+@Table(name = "releaseDeploymentPipeline")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Setter(value = AccessLevel.PACKAGE)
-@Getter
 class ReleaseDeploymentPipelineEntity implements DeploymentPipeline {
 
     @Id
     @GeneratedValue
+    @Getter
     private Long id;
 
     private String name;
 
     @OneToMany
     private List<ReleaseDeploymentEnvironmentEntity> environments;
+
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    @Override
+    public List<ReleaseDeploymentEnvironmentEntity> getEnvironments() {
+        return this.environments;
+    }
 }

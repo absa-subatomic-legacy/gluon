@@ -7,7 +7,7 @@ import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
 class DeploymentEnvironmentResource
         implements DeploymentEnvironment {
 
-    private int order;
+    private int positionInPipeline;
 
     private String displayName;
 

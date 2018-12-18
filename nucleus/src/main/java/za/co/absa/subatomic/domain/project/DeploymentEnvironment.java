@@ -2,7 +2,7 @@ package za.co.absa.subatomic.domain.project;
 
 public interface DeploymentEnvironment {
 
-    int getOrder();
+    int getPositionInPipeline();
 
     String getDisplayName();
 

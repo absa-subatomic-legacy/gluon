@@ -164,14 +164,14 @@ public class ProjectPersistenceHandler {
     }
 
     private List<DevDeploymentEnvironmentEntity> environmentsToDevDeploymentEnvironmentEntity(
-            List<DeploymentEnvironment> deploymentEnvironments,
+            List<? extends DeploymentEnvironment> deploymentEnvironments,
             DevDeploymentPipelineEntity owningPipeline) {
         List<DevDeploymentEnvironmentEntity> environments = new ArrayList<>();
         if (deploymentEnvironments != null) {
             for (DeploymentEnvironment environment : deploymentEnvironments) {
                 DevDeploymentEnvironmentEntity environmentEntity = DevDeploymentEnvironmentEntity
                         .builder()
-                        .order(environment.getOrder())
+                        .positionInPipeline(environment.getPositionInPipeline())
                         .displayName(environment.getDisplayName())
                         .prefix(environment.getPrefix())
                         .pipeline(owningPipeline)
@@ -200,14 +200,14 @@ public class ProjectPersistenceHandler {
     }
 
     private List<ReleaseDeploymentEnvironmentEntity> environmentsToReleaseDeploymentEnvironmentEntity(
-            List<DeploymentEnvironment> deploymentEnvironments,
+            List<? extends DeploymentEnvironment> deploymentEnvironments,
             ReleaseDeploymentPipelineEntity owningPipeline) {
         List<ReleaseDeploymentEnvironmentEntity> environments = new ArrayList<>();
         if (deploymentEnvironments != null) {
             for (DeploymentEnvironment environment : deploymentEnvironments) {
                 ReleaseDeploymentEnvironmentEntity environmentEntity = ReleaseDeploymentEnvironmentEntity
                         .builder()
-                        .order(environment.getOrder())
+                        .positionInPipeline(environment.getPositionInPipeline())
                         .displayName(environment.getDisplayName())
                         .prefix(environment.getPrefix())
                         .pipeline(owningPipeline)

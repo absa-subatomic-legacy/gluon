@@ -213,7 +213,7 @@ public class ProjectController {
                                     environment));
                 }
                 deploymentPipeline.getEnvironments().sort(
-                        (a, b) -> a.getOrder() <= b.getOrder() ? -1 : 1);
+                        (a, b) -> a.getPositionInPipeline() <= b.getPositionInPipeline() ? -1 : 1);
             }
             return deploymentPipeline;
         }
@@ -226,7 +226,7 @@ public class ProjectController {
                 deploymentEnvironment.setDisplayName(
                         deploymentEnvironmentEntity.getDisplayName());
                 deploymentEnvironment
-                        .setOrder(deploymentEnvironmentEntity.getOrder());
+                        .setPositionInPipeline(deploymentEnvironmentEntity.getPositionInPipeline());
                 deploymentEnvironment
                         .setPrefix(deploymentEnvironmentEntity.getPrefix());
             }

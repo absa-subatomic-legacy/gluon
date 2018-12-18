@@ -15,7 +15,7 @@ import lombok.Setter;
 import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
 
 @Entity
-@Table(name = "dev_deployment_environment")
+@Table(name = "devDeploymentEnvironment")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
@@ -27,7 +27,7 @@ class DevDeploymentEnvironmentEntity implements DeploymentEnvironment {
     @GeneratedValue
     private Long id;
 
-    private int order;
+    private int positionInPipeline;
 
     private String displayName;
 
