@@ -22,23 +22,20 @@ import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Setter(value = AccessLevel.PACKAGE)
+@Getter
 public class DevDeploymentPipelineEntity implements DeploymentPipeline {
 
     @Id
     @GeneratedValue
-    @Getter
     private Long id;
+
+    private String name;
 
     @OneToMany
     private List<DevDeploymentEnvironmentEntity> environments;
 
     @Override
-    public String getName() {
+    public String getTag() {
         return "";
-    }
-
-    @Override
-    public List<DevDeploymentEnvironmentEntity> getEnvironments() {
-        return this.environments;
     }
 }

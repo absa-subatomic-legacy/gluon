@@ -6,6 +6,8 @@ public interface DeploymentPipeline {
 
     String getName();
 
+    String getTag();
+
     List<? extends DeploymentEnvironment> getEnvironments();
 
 }

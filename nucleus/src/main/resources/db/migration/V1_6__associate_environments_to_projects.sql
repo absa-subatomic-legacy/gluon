@@ -9,6 +9,7 @@ create table dev_deployment_environment (
 
 create table dev_deployment_pipeline (
   id int8 not null,
+  name varchar(255),
   primary key (id)
 );
 
@@ -34,6 +35,7 @@ create table release_deployment_environment (
 create table release_deployment_pipeline (
   id int8 not null,
   name varchar(255),
+  tag varchar(255),
   primary key (id)
 );
 

@@ -35,8 +35,8 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
         try (PreparedStatement create_new_dev_pipeline = context
                 .getConnection()
                 .prepareStatement(
-                        "INSERT INTO dev_deployment_pipeline(ID) VALUES("
-                                + devPipelineIdCounter + ")")) {
+                        "INSERT INTO dev_deployment_pipeline(ID, NAME) VALUES("
+                                + devPipelineIdCounter + ",'Default')")) {
             create_new_dev_pipeline.executeUpdate();
             int pipelineId = devPipelineIdCounter++;
 
@@ -84,8 +84,9 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
         try (PreparedStatement create_new_release_pipeline = context
                 .getConnection()
                 .prepareStatement(
-                        "INSERT INTO release_deployment_pipeline(ID, NAME) VALUES("
-                                + releasePipelineIdCounter + ",'')")) {
+                        "INSERT INTO release_deployment_pipeline(ID, NAME, TAG) VALUES("
+                                + releasePipelineIdCounter
+                                + ",'Default', '')")) {
             create_new_release_pipeline.executeUpdate();
             int pipelineId = releasePipelineIdCounter++;
 

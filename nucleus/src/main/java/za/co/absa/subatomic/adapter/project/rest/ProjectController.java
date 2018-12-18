@@ -205,6 +205,7 @@ public class ProjectController {
             if (deploymentPipelineEntity != null) {
                 deploymentPipeline = new DeploymentPipelineResource();
                 deploymentPipeline.setName(deploymentPipelineEntity.getName());
+                deploymentPipeline.setTag(deploymentPipeline.getTag());
                 deploymentPipeline.setEnvironments(new ArrayList<>());
                 for (DeploymentEnvironment environment : deploymentPipelineEntity
                         .getEnvironments()) {
@@ -213,7 +214,8 @@ public class ProjectController {
                                     environment));
                 }
                 deploymentPipeline.getEnvironments().sort(
-                        (a, b) -> a.getPositionInPipeline() <= b.getPositionInPipeline() ? -1 : 1);
+                        (a, b) -> a.getPositionInPipeline() <= b
+                                .getPositionInPipeline() ? -1 : 1);
             }
             return deploymentPipeline;
         }
@@ -226,7 +228,8 @@ public class ProjectController {
                 deploymentEnvironment.setDisplayName(
                         deploymentEnvironmentEntity.getDisplayName());
                 deploymentEnvironment
-                        .setPositionInPipeline(deploymentEnvironmentEntity.getPositionInPipeline());
+                        .setPositionInPipeline(deploymentEnvironmentEntity
+                                .getPositionInPipeline());
                 deploymentEnvironment
                         .setPrefix(deploymentEnvironmentEntity.getPrefix());
             }
