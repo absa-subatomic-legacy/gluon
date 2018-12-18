@@ -5,9 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import lombok.Data;
-
 import lombok.EqualsAndHashCode;
-import org.springframework.hateoas.ResourceSupport;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -24,4 +22,8 @@ public class ProjectResource extends ProjectResourceBase {
     private List<TeamResource> teams = new ArrayList<>();
 
     private ProjectEnvironment projectEnvironment;
+
+    private DeploymentPipelineResource devDeploymentPipeline;
+
+    private List<DeploymentPipelineResource> releaseDeploymentPipelines;
 }

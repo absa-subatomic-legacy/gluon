@@ -27,6 +27,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import za.co.absa.subatomic.adapter.team.rest.TeamController;
 import za.co.absa.subatomic.application.project.ProjectService;
+import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
+import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -49,10 +51,7 @@ public class ProjectController {
     ResponseEntity<ProjectResource> create(
             @RequestBody ProjectResource request) {
         // TODO do better error checking on the initial team
-        String aggregateId = projectService.newProject(request.getName(),
-                request.getDescription(), request.getCreatedBy(),
-                request.getTeams().get(0).getTeamId(),
-                request.getOwningTenant());
+        String aggregateId = projectService.newProject(request);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -90,12 +89,14 @@ public class ProjectController {
         }
 
         return ResponseEntity.accepted()
-                .body(assembler.toResource(projectService.getProjectPersistenceHandler().findByProjectId(id)));
+                .body(assembler.toResource(projectService
+                        .getProjectPersistenceHandler().findByProjectId(id)));
     }
 
     @GetMapping("/{id}")
     ProjectResource get(@PathVariable String id) {
-        return assembler.toResource(projectService.getProjectPersistenceHandler().findByProjectId(id));
+        return assembler.toResource(projectService
+                .getProjectPersistenceHandler().findByProjectId(id));
     }
 
     @GetMapping
@@ -107,17 +108,20 @@ public class ProjectController {
         // TODO see if we can't use http://www.vavr.io/ for pattern matching?
         if (StringUtils.isNotBlank(name)) {
             projects.add(
-                    assembler.toResource(projectService.getProjectPersistenceHandler().findByName(name)));
+                    assembler.toResource(projectService
+                            .getProjectPersistenceHandler().findByName(name)));
         }
 
         if (StringUtils.isNotBlank(teamName)) {
             projects.addAll(
                     assembler.toResources(
-                            projectService.getProjectPersistenceHandler().findByTeamName(teamName)));
+                            projectService.getProjectPersistenceHandler()
+                                    .findByTeamName(teamName)));
         }
 
         if (StringUtils.isAllBlank(name, teamName)) {
-            projects.addAll(projectService.getProjectPersistenceHandler().findAllProjects().stream()
+            projects.addAll(projectService.getProjectPersistenceHandler()
+                    .findAllProjects().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
@@ -173,11 +177,60 @@ public class ProjectController {
                             .build());
                 }
 
+                if (entity.getDevDeploymentPipeline() != null) {
+                    resource.setDevDeploymentPipeline(
+                            this.convertDeploymentPipelineResource(
+                                    entity.getDevDeploymentPipeline()));
+                }
+                resource.setReleaseDeploymentPipelines(new ArrayList<>());
+                if (entity.getReleaseDeploymentPipelines() != null) {
+                    for (DeploymentPipeline releasePipeline : entity
+                            .getReleaseDeploymentPipelines()) {
+                        resource.getReleaseDeploymentPipelines().add(
+                                this.convertDeploymentPipelineResource(
+                                        releasePipeline));
+                    }
+                }
+
                 return resource;
             }
             else {
                 return null;
             }
+        }
+
+        private DeploymentPipelineResource convertDeploymentPipelineResource(
+                DeploymentPipeline deploymentPipelineEntity) {
+            DeploymentPipelineResource deploymentPipeline = null;
+            if (deploymentPipelineEntity != null) {
+                deploymentPipeline = new DeploymentPipelineResource();
+                deploymentPipeline.setName(deploymentPipelineEntity.getName());
+                deploymentPipeline.setEnvironments(new ArrayList<>());
+                for (DeploymentEnvironment environment : deploymentPipelineEntity
+                        .getEnvironments()) {
+                    deploymentPipeline.getEnvironments().add(
+                            this.convertDeploymentEnvironmentResource(
+                                    environment));
+                }
+                deploymentPipeline.getEnvironments().sort(
+                        (a, b) -> a.getOrder() <= b.getOrder() ? -1 : 1);
+            }
+            return deploymentPipeline;
+        }
+
+        private DeploymentEnvironmentResource convertDeploymentEnvironmentResource(
+                DeploymentEnvironment deploymentEnvironmentEntity) {
+            DeploymentEnvironmentResource deploymentEnvironment = null;
+            if (deploymentEnvironmentEntity != null) {
+                deploymentEnvironment = new DeploymentEnvironmentResource();
+                deploymentEnvironment.setDisplayName(
+                        deploymentEnvironmentEntity.getDisplayName());
+                deploymentEnvironment
+                        .setOrder(deploymentEnvironmentEntity.getOrder());
+                deploymentEnvironment
+                        .setPrefix(deploymentEnvironmentEntity.getPrefix());
+            }
+            return deploymentEnvironment;
         }
     }
 

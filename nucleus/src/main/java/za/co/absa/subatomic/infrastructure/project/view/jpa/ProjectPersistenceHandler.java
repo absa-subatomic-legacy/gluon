@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.infrastructure.project.view.jpa;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.domain.project.BitbucketProject;
+import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
+import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
@@ -21,19 +24,43 @@ public class ProjectPersistenceHandler {
 
     private BitbucketProjectRepository bitbucketProjectRepository;
 
+    private DevDeploymentEnvironmentRepository devDeploymentEnvironmentRepository;
+
+    private DevDeploymentPipelineRepository devDeploymentPipelineRepository;
+
+    private ReleaseDeploymentEnvironmentRepository releaseDeploymentEnvironmentRepository;
+
+    private ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository;
+
     public ProjectPersistenceHandler(ProjectRepository projectRepository,
-            BitbucketProjectRepository bitbucketProjectRepository) {
+            BitbucketProjectRepository bitbucketProjectRepository,
+            DevDeploymentEnvironmentRepository devDeploymentEnvironmentRepository,
+            DevDeploymentPipelineRepository devDeploymentPipelineRepository,
+            ReleaseDeploymentEnvironmentRepository releaseDeploymentEnvironmentRepository,
+            ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository) {
         this.projectRepository = projectRepository;
         this.bitbucketProjectRepository = bitbucketProjectRepository;
+        this.devDeploymentEnvironmentRepository = devDeploymentEnvironmentRepository;
+        this.devDeploymentPipelineRepository = devDeploymentPipelineRepository;
+        this.releaseDeploymentEnvironmentRepository = releaseDeploymentEnvironmentRepository;
+        this.releaseDeploymentPipelineRepository = releaseDeploymentPipelineRepository;
     }
 
     @Transactional
     public ProjectEntity createProject(String name, String description,
             TeamMemberEntity createdBy, TeamEntity owningTeam,
-            TenantEntity owningTenant) {
+            TenantEntity owningTenant, DeploymentPipeline devDeploymentPipeline,
+            List<? extends DeploymentPipeline> releaseDeploymentPipelines) {
         Set<TeamEntity> associatedTeams = new HashSet<>();
 
         associatedTeams.add(owningTeam);
+
+        List<ReleaseDeploymentPipelineEntity> releaseDeploymentPipelineEntities = new ArrayList<>();
+
+        for (DeploymentPipeline pipeline : releaseDeploymentPipelines) {
+            releaseDeploymentPipelineEntities.add(
+                    this.pipelineToReleaseDeploymentPipelineEntity(pipeline));
+        }
 
         ProjectEntity project = ProjectEntity
                 .builder()
@@ -44,6 +71,10 @@ public class ProjectPersistenceHandler {
                 .owningTeam(owningTeam)
                 .owningTenant(owningTenant)
                 .teams(associatedTeams)
+                .devDeploymentPipeline(
+                        this.pipelineToDevDeploymentPipelineEntity(
+                                devDeploymentPipeline))
+                .releaseDeploymentPipelines(releaseDeploymentPipelineEntities)
                 .build();
 
         return this.projectRepository.save(project);
@@ -114,5 +145,78 @@ public class ProjectPersistenceHandler {
     public Collection<TeamEntity> findTeamsAssociatedToProject(
             String projectId) {
         return projectRepository.findByProjectId(projectId).getTeams();
+    }
+
+    private DevDeploymentPipelineEntity pipelineToDevDeploymentPipelineEntity(
+            DeploymentPipeline deploymentPipeline) {
+
+        DevDeploymentPipelineEntity devDeploymentPipelineEntity = DevDeploymentPipelineEntity
+                .builder().build();
+
+        devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+        devDeploymentPipelineEntity.setEnvironments(
+                this.environmentsToDevDeploymentEnvironmentEntity(
+                        deploymentPipeline.getEnvironments(),
+                        devDeploymentPipelineEntity));
+        devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+
+        return devDeploymentPipelineEntity;
+    }
+
+    private List<DevDeploymentEnvironmentEntity> environmentsToDevDeploymentEnvironmentEntity(
+            List<DeploymentEnvironment> deploymentEnvironments,
+            DevDeploymentPipelineEntity owningPipeline) {
+        List<DevDeploymentEnvironmentEntity> environments = new ArrayList<>();
+        if (deploymentEnvironments != null) {
+            for (DeploymentEnvironment environment : deploymentEnvironments) {
+                DevDeploymentEnvironmentEntity environmentEntity = DevDeploymentEnvironmentEntity
+                        .builder()
+                        .order(environment.getOrder())
+                        .displayName(environment.getDisplayName())
+                        .prefix(environment.getPrefix())
+                        .pipeline(owningPipeline)
+                        .build();
+                this.devDeploymentEnvironmentRepository.save(environmentEntity);
+                environments.add(environmentEntity);
+            }
+        }
+        return environments;
+    }
+
+    private ReleaseDeploymentPipelineEntity pipelineToReleaseDeploymentPipelineEntity(
+            DeploymentPipeline deploymentPipeline) {
+
+        ReleaseDeploymentPipelineEntity devDeploymentPipelineEntity = ReleaseDeploymentPipelineEntity
+                .builder().build();
+
+        releaseDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+        devDeploymentPipelineEntity.setEnvironments(
+                this.environmentsToReleaseDeploymentEnvironmentEntity(
+                        deploymentPipeline.getEnvironments(),
+                        devDeploymentPipelineEntity));
+        releaseDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+
+        return devDeploymentPipelineEntity;
+    }
+
+    private List<ReleaseDeploymentEnvironmentEntity> environmentsToReleaseDeploymentEnvironmentEntity(
+            List<DeploymentEnvironment> deploymentEnvironments,
+            ReleaseDeploymentPipelineEntity owningPipeline) {
+        List<ReleaseDeploymentEnvironmentEntity> environments = new ArrayList<>();
+        if (deploymentEnvironments != null) {
+            for (DeploymentEnvironment environment : deploymentEnvironments) {
+                ReleaseDeploymentEnvironmentEntity environmentEntity = ReleaseDeploymentEnvironmentEntity
+                        .builder()
+                        .order(environment.getOrder())
+                        .displayName(environment.getDisplayName())
+                        .prefix(environment.getPrefix())
+                        .pipeline(owningPipeline)
+                        .build();
+                this.releaseDeploymentEnvironmentRepository
+                        .save(environmentEntity);
+                environments.add(environmentEntity);
+            }
+        }
+        return environments;
     }
 }
