@@ -205,7 +205,7 @@ public class ProjectController {
             if (deploymentPipelineEntity != null) {
                 deploymentPipeline = new DeploymentPipelineResource();
                 deploymentPipeline.setName(deploymentPipelineEntity.getName());
-                deploymentPipeline.setTag(deploymentPipeline.getTag());
+                deploymentPipeline.setTag(deploymentPipelineEntity.getTag());
                 deploymentPipeline.setEnvironments(new ArrayList<>());
                 for (DeploymentEnvironment environment : deploymentPipelineEntity
                         .getEnvironments()) {
