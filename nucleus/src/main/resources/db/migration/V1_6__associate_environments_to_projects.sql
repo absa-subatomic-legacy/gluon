@@ -9,8 +9,8 @@ create table dev_deployment_environment (
 
 create table dev_deployment_pipeline (
   id int8 not null,
-  pipelineId varchar(255),
   name varchar(255),
+  pipeline_id varchar(255),
   primary key (id)
 );
 
@@ -35,8 +35,8 @@ create table release_deployment_environment (
 
 create table release_deployment_pipeline (
   id int8 not null,
-  pipelineId varchar(255),
   name varchar(255),
+  pipeline_id varchar(255),
   tag varchar(255),
   primary key (id)
 );
@@ -47,6 +47,27 @@ create table release_deployment_pipeline_environments (
 );
 
 alter table project add column dev_deployment_pipeline_id int8;
+
+alter table application_prod_request add column deployment_pipeline_id int8;
+
+alter table application_prod_request
+  add constraint FKe3g40wxdvh85vpbfgeerm60fo
+foreign key (deployment_pipeline_id)
+references release_deployment_pipeline;
+
+alter table generic_prod_request add column deployment_pipeline_id int8;
+
+alter table generic_prod_request
+  add constraint FKo47e32ackxjx09mp9hyefw1c7
+foreign key (deployment_pipeline_id)
+references release_deployment_pipeline;
+
+alter table project_prod_request add column deployment_pipeline_id int8;
+
+alter table project_prod_request
+  add constraint FKr1b3y468bdoqe1iyyr3id9ll
+foreign key (deployment_pipeline_id)
+references release_deployment_pipeline;
 
 alter table dev_deployment_pipeline_environments
   add constraint UK_j3vu971yw7kwavq3mwhdn000b unique (environments_id);
