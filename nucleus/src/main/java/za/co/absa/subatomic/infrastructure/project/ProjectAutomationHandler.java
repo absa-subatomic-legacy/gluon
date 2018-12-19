@@ -165,9 +165,9 @@ public class ProjectAutomationHandler {
                     tenantEntity.getName(), tenantEntity.getDescription());
         }
 
-        BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
+        ProjectEnvironmentsRequestedWithDetails bitbucketProjectRequested = new ProjectEnvironmentsRequestedWithDetails(
                 new AtomistProjectMapper()
-                        .createAtomistProjectBase(projectEntity),
+                        .createAtomistProject(projectEntity),
                 null,
                 projectEntity.getTeams().stream()
                         .map(teamEntity -> {
@@ -308,9 +308,9 @@ public class ProjectAutomationHandler {
     }
 
     @Value
-    private class BitbucketProjectRequestedWithDetails {
+    private class ProjectEnvironmentsRequestedWithDetails {
 
-        private AtomistProjectBase project;
+        private AtomistProject project;
 
         private BitbucketProjectRequest bitbucketProjectRequest;
 
