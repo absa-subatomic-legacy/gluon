@@ -12,11 +12,18 @@ public class AtomistDeploymentPipeline implements DeploymentPipeline {
 
     public static class Builder {
 
+        private String pipelineId;
+
         private String name;
 
         private String tag;
 
         private List<AtomistDeploymentEnvironment> environments;
+
+        public Builder pipelineId(final String pipelineId) {
+            this.pipelineId = pipelineId;
+            return this;
+        }
 
         public Builder name(final String name) {
             this.name = name;
@@ -36,6 +43,7 @@ public class AtomistDeploymentPipeline implements DeploymentPipeline {
 
         public AtomistDeploymentPipeline build() {
             AtomistDeploymentPipeline atomistDeploymentPipeline = new AtomistDeploymentPipeline();
+            atomistDeploymentPipeline.setPipelineId(this.pipelineId);
             atomistDeploymentPipeline.setName(this.name);
             atomistDeploymentPipeline.setTag(this.tag);
             atomistDeploymentPipeline.setEnvironments(this.environments);
@@ -43,6 +51,8 @@ public class AtomistDeploymentPipeline implements DeploymentPipeline {
         }
 
     }
+
+    private String pipelineId;
 
     private String name;
 

@@ -32,6 +32,7 @@ public class AtomistProjectMapper {
         }
 
         return new AtomistDeploymentPipeline.Builder()
+                .pipelineId(pipeline.getPipelineId())
                 .name(pipeline.getName())
                 .tag(pipeline.getTag())
                 .environments(environments)

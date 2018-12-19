@@ -11,6 +11,8 @@ import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 class DeploymentPipelineResource
         implements DeploymentPipeline {
 
+    private String pipelineId;
+
     private String name;
 
     private String tag;

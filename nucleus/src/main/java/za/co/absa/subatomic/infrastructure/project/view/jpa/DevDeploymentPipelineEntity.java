@@ -29,6 +29,8 @@ public class DevDeploymentPipelineEntity implements DeploymentPipeline {
     @GeneratedValue
     private Long id;
 
+    private String pipelineId;
+
     private String name;
 
     @OneToMany

@@ -29,6 +29,8 @@ class ReleaseDeploymentPipelineEntity implements DeploymentPipeline {
     @GeneratedValue
     private Long id;
 
+    private String pipelineId;
+
     private String name;
 
     private String tag;

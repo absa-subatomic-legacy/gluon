@@ -151,7 +151,7 @@ public class ProjectPersistenceHandler {
             DeploymentPipeline deploymentPipeline) {
 
         DevDeploymentPipelineEntity devDeploymentPipelineEntity = DevDeploymentPipelineEntity
-                .builder().name(deploymentPipeline.getName()).build();
+                .builder().pipelineId(UUID.randomUUID().toString()).name(deploymentPipeline.getName()).build();
 
         devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
         devDeploymentPipelineEntity.setEnvironments(
@@ -187,7 +187,7 @@ public class ProjectPersistenceHandler {
             DeploymentPipeline deploymentPipeline) {
 
         ReleaseDeploymentPipelineEntity devDeploymentPipelineEntity = ReleaseDeploymentPipelineEntity
-                .builder().name(deploymentPipeline.getName())
+                .builder().pipelineId(UUID.randomUUID().toString()).name(deploymentPipeline.getName())
                 .tag(deploymentPipeline.getTag()).build();
 
         releaseDeploymentPipelineRepository.save(devDeploymentPipelineEntity);

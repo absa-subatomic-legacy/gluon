@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.UUID;
 
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
@@ -35,8 +36,10 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
         try (PreparedStatement create_new_dev_pipeline = context
                 .getConnection()
                 .prepareStatement(
-                        "INSERT INTO dev_deployment_pipeline(ID, NAME) VALUES("
-                                + devPipelineIdCounter + ",'Default')")) {
+                        "INSERT INTO dev_deployment_pipeline(ID, PIPELINE_ID, NAME) VALUES("
+                                + devPipelineIdCounter
+                                + ",'" + UUID.randomUUID().toString() + "'"
+                                + ",'Default')")) {
             create_new_dev_pipeline.executeUpdate();
             int pipelineId = devPipelineIdCounter++;
 
@@ -84,8 +87,9 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
         try (PreparedStatement create_new_release_pipeline = context
                 .getConnection()
                 .prepareStatement(
-                        "INSERT INTO release_deployment_pipeline(ID, NAME, TAG) VALUES("
+                        "INSERT INTO release_deployment_pipeline(ID, PIPELINE_ID, NAME, TAG) VALUES("
                                 + releasePipelineIdCounter
+                                + ",'" + UUID.randomUUID().toString() + "'"
                                 + ",'Default', '')")) {
             create_new_release_pipeline.executeUpdate();
             int pipelineId = releasePipelineIdCounter++;
