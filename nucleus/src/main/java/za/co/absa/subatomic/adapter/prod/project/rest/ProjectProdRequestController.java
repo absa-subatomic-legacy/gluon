@@ -26,6 +26,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import za.co.absa.subatomic.adapter.application.rest.ApplicationController;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
+import za.co.absa.subatomic.adapter.project.rest.DeploymentPipelineResourceAssembler;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResourceBaseAssembler;
 import za.co.absa.subatomic.application.prod.project.ProjectProdRequestService;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
@@ -53,15 +54,16 @@ public class ProjectProdRequestController {
 
         String projectId = tryGetProjectId(request);
         String memberId = tryGetActionByMemberId(request);
+        String pipelineId = tryGetPipelineId(request);
 
-        if (StringUtils.isAnyBlank(projectId, memberId)) {
+        if (StringUtils.isAnyBlank(projectId, memberId, pipelineId)) {
             throw new InvalidRequestException(
                     "Failed to create prod request. Please make sure you have sent a correctly formatted request");
         }
 
         ProjectProdRequestEntity projectProdRequestEntity = this.projectProdRequestService
                 .createProjectProdRequest(projectId,
-                        memberId);
+                        memberId, pipelineId);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -110,10 +112,18 @@ public class ProjectProdRequestController {
 
     @GetMapping
     Resources<ProjectProdRequestResource> list(
-            @RequestParam(required = false) String projectId) {
+            @RequestParam(required = false) String projectId,
+            @RequestParam(required = false) String pipelineId) {
 
         List<ProjectProdRequestResource> projectProdRequests = new ArrayList<>();
-        if (StringUtils.isNotBlank(projectId)) {
+        if (StringUtils.isNotBlank(projectId)
+                && StringUtils.isNotBlank(pipelineId)) {
+            projectProdRequests.addAll(this.projectProdRequestService
+                    .findByProjectIdAndPipelineId(projectId, pipelineId)
+                    .stream()
+                    .map(assembler::toResource).collect(Collectors.toList()));
+        }
+        else if (StringUtils.isNotBlank(projectId)) {
             projectProdRequests.addAll(this.projectProdRequestService
                     .findByProjectId(projectId)
                     .stream()
@@ -128,7 +138,7 @@ public class ProjectProdRequestController {
         return new Resources<>(projectProdRequests,
                 linkTo(ApplicationController.class).withRel("self"),
                 linkTo(methodOn(ProjectProdRequestController.class)
-                        .list(projectId))
+                        .list(projectId, pipelineId))
                                 .withRel("self"));
     }
 
@@ -152,6 +162,17 @@ public class ProjectProdRequestController {
         return "";
     }
 
+    private String tryGetPipelineId(
+            ProjectProdRequestResource projectProdRequestResource) {
+        if (projectProdRequestResource.getDeploymentPipeline() != null
+                && StringUtils.isNotBlank(projectProdRequestResource
+                        .getDeploymentPipeline().getPipelineId())) {
+            return projectProdRequestResource.getDeploymentPipeline()
+                    .getPipelineId();
+        }
+        return "";
+    }
+
     private class ProjectProdRequestResourceAssembler extends
             ResourceAssemblerSupport<ProjectProdRequestEntity, ProjectProdRequestResource> {
 
@@ -170,6 +191,9 @@ public class ProjectProdRequestController {
                         entity.getProjectProdRequestId());
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setClosedAt(entity.getClosedAt());
+                resource.setDeploymentPipeline(
+                        new DeploymentPipelineResourceAssembler()
+                                .toResource(entity.getDeploymentPipeline()));
 
                 ProjectResourceBaseAssembler projectResourceBaseAssembler = new ProjectResourceBaseAssembler();
                 resource.setProject(projectResourceBaseAssembler.toResource(

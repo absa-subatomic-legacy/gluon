@@ -21,6 +21,8 @@ import za.co.absa.subatomic.infrastructure.prod.generic.GenericProdRequestAutoma
 import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.GenericProdRequestEntity;
 import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.GenericProdRequestRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Service
@@ -38,32 +40,54 @@ public class GenericProdRequestService {
 
     private GenericProdRequestAutomationHandler genericProdRequestAutomationHandler;
 
+    private ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository;
+
     public GenericProdRequestService(
             ProjectService projectService,
             TeamMemberService teamMemberService,
             TeamService teamService,
             OpenShiftResourceService openShiftResourceService,
             GenericProdRequestRepository genericProdRequestRepository,
-            GenericProdRequestAutomationHandler genericProdRequestAutomationHandler) {
+            GenericProdRequestAutomationHandler genericProdRequestAutomationHandler,
+            ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository) {
         this.projectService = projectService;
         this.teamMemberService = teamMemberService;
         this.teamService = teamService;
         this.openShiftResourceService = openShiftResourceService;
         this.genericProdRequestRepository = genericProdRequestRepository;
         this.genericProdRequestAutomationHandler = genericProdRequestAutomationHandler;
+        this.releaseDeploymentPipelineRepository = releaseDeploymentPipelineRepository;
     }
 
     public GenericProdRequestEntity newGenericProdRequest(
             String projectId,
             String actionedByMemberId,
+            String deploymentPipelineId,
             List<OpenShiftResource> requestedResources) {
 
         ProjectEntity projectEntity = projectService
                 .getProjectPersistenceHandler().findByProjectId(projectId);
         TeamMemberEntity actioningMember = this.teamMemberService
                 .findByTeamMemberId(actionedByMemberId);
+        ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
+                .findByPipelineId(deploymentPipelineId);
         Set<TeamEntity> memberAssociatedTeams = this.teamService
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
+
+        if (projectEntity.getTeams().stream()
+                .noneMatch(memberAssociatedTeams::contains)) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "TeamMember with id {0} is not a member of any team associated to the application {1}.",
+                    actionedByMemberId, projectId));
+        }
+
+        if (projectEntity.getReleaseDeploymentPipelines()
+                .stream()
+                .noneMatch(deploymentPipeline::equals)) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "DeploymentPipeline with id {0} is not a valid releaseDeploymentPipeline of the project with id {1}.",
+                    deploymentPipelineId, projectId));
+        }
 
         assertMemberIsAMemberOfOwningTeam(actionedByMemberId,
                 projectId, memberAssociatedTeams,

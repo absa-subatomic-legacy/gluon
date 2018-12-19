@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResource;
+import za.co.absa.subatomic.adapter.project.rest.DeploymentPipelineResource;
+import za.co.absa.subatomic.adapter.project.rest.DeploymentPipelineResourceAssembler;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResourceBase;
 
 @EqualsAndHashCode(callSuper = true)
@@ -18,6 +20,8 @@ public class GenericProdRequestResource extends ResourceSupport {
     private String genericProdRequestId;
 
     private ProjectResourceBase project;
+
+    private DeploymentPipelineResource deploymentPipeline;
 
     private Date createdAt;
 

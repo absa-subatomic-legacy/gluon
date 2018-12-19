@@ -20,6 +20,8 @@ import za.co.absa.subatomic.infrastructure.openshift.view.jpa.OpenShiftResourceE
 import za.co.absa.subatomic.infrastructure.prod.application.ApplicationProdRequestAutomationHandler;
 import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.ApplicationProdRequestEntity;
 import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.ApplicationProdRequestRepository;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Service
@@ -37,30 +39,37 @@ public class ApplicationProdRequestService {
 
     private ApplicationProdRequestAutomationHandler applicationProdRequestAutomationHandler;
 
+    private ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository;
+
     public ApplicationProdRequestService(
             ApplicationService applicationService,
             TeamMemberService teamMemberService,
             TeamService teamService,
             OpenShiftResourceService openShiftResourceService,
             ApplicationProdRequestRepository applicationProdRequestRepository,
-            ApplicationProdRequestAutomationHandler applicationProdRequestAutomationHandler) {
+            ApplicationProdRequestAutomationHandler applicationProdRequestAutomationHandler,
+            ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository) {
         this.applicationService = applicationService;
         this.teamMemberService = teamMemberService;
         this.teamService = teamService;
         this.openShiftResourceService = openShiftResourceService;
         this.applicationProdRequestRepository = applicationProdRequestRepository;
         this.applicationProdRequestAutomationHandler = applicationProdRequestAutomationHandler;
+        this.releaseDeploymentPipelineRepository = releaseDeploymentPipelineRepository;
     }
 
     @Transactional
     public ApplicationProdRequestEntity newApplicationProdRequest(
             String applicationId,
             String actionedByMemberId,
+            String deploymentPipelineId,
             List<OpenShiftResource> requestedResources) {
         ApplicationEntity applicationEntity = this.applicationService
                 .findByApplictionId(applicationId);
         TeamMemberEntity actionedBy = this.teamMemberService
                 .findByTeamMemberId(actionedByMemberId);
+        ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
+                .findByPipelineId(deploymentPipelineId);
         Set<TeamEntity> memberAssociatedTeams = this.teamService
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
@@ -71,6 +80,14 @@ public class ApplicationProdRequestService {
                     actionedByMemberId, applicationId));
         }
 
+        if (applicationEntity.getProject().getReleaseDeploymentPipelines()
+                .stream()
+                .noneMatch(deploymentPipeline::equals)) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "DeploymentPipeline with id {0} is not a valid releaseDeploymentPipeline of the project owning the the application {1}.",
+                    deploymentPipelineId, applicationId));
+        }
+
         List<OpenShiftResourceEntity> openShiftResourceEntities = this.openShiftResourceService
                 .createAllOpenShiftEntities(requestedResources);
 
@@ -79,6 +96,7 @@ public class ApplicationProdRequestService {
                 .applicationProdRequestId(UUID.randomUUID().toString())
                 .application(applicationEntity)
                 .applicationName(applicationEntity.getName())
+                .deploymentPipeline(deploymentPipeline)
                 .projectName(applicationEntity.getProject().getName())
                 .actionedBy(actionedBy)
                 .openShiftResources(openShiftResourceEntities)

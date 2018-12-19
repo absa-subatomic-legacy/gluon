@@ -23,7 +23,7 @@ import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Setter(value = AccessLevel.PACKAGE)
 @Getter
-class ReleaseDeploymentPipelineEntity implements DeploymentPipeline {
+public class ReleaseDeploymentPipelineEntity implements DeploymentPipeline {
 
     @Id
     @GeneratedValue

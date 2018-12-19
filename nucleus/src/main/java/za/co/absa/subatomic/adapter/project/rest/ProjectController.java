@@ -27,7 +27,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import za.co.absa.subatomic.adapter.team.rest.TeamController;
 import za.co.absa.subatomic.application.project.ProjectService;
-import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
 import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -177,9 +176,11 @@ public class ProjectController {
                             .build());
                 }
 
+                DeploymentPipelineResourceAssembler deploymentPipelineResourceAssembler = new DeploymentPipelineResourceAssembler();
+
                 if (entity.getDevDeploymentPipeline() != null) {
                     resource.setDevDeploymentPipeline(
-                            this.convertDeploymentPipelineResource(
+                            deploymentPipelineResourceAssembler.toResource(
                                     entity.getDevDeploymentPipeline()));
                 }
                 resource.setReleaseDeploymentPipelines(new ArrayList<>());
@@ -187,7 +188,7 @@ public class ProjectController {
                     for (DeploymentPipeline releasePipeline : entity
                             .getReleaseDeploymentPipelines()) {
                         resource.getReleaseDeploymentPipelines().add(
-                                this.convertDeploymentPipelineResource(
+                                deploymentPipelineResourceAssembler.toResource(
                                         releasePipeline));
                     }
                 }
@@ -197,45 +198,6 @@ public class ProjectController {
             else {
                 return null;
             }
-        }
-
-        private DeploymentPipelineResource convertDeploymentPipelineResource(
-                DeploymentPipeline deploymentPipelineEntity) {
-            DeploymentPipelineResource deploymentPipeline = null;
-            if (deploymentPipelineEntity != null) {
-                deploymentPipeline = new DeploymentPipelineResource();
-                deploymentPipeline
-                        .setPipelineId(deploymentPipeline.getPipelineId());
-                deploymentPipeline.setName(deploymentPipelineEntity.getName());
-                deploymentPipeline.setTag(deploymentPipelineEntity.getTag());
-                deploymentPipeline.setEnvironments(new ArrayList<>());
-                for (DeploymentEnvironment environment : deploymentPipelineEntity
-                        .getEnvironments()) {
-                    deploymentPipeline.getEnvironments().add(
-                            this.convertDeploymentEnvironmentResource(
-                                    environment));
-                }
-                deploymentPipeline.getEnvironments().sort(
-                        (a, b) -> a.getPositionInPipeline() <= b
-                                .getPositionInPipeline() ? -1 : 1);
-            }
-            return deploymentPipeline;
-        }
-
-        private DeploymentEnvironmentResource convertDeploymentEnvironmentResource(
-                DeploymentEnvironment deploymentEnvironmentEntity) {
-            DeploymentEnvironmentResource deploymentEnvironment = null;
-            if (deploymentEnvironmentEntity != null) {
-                deploymentEnvironment = new DeploymentEnvironmentResource();
-                deploymentEnvironment.setDisplayName(
-                        deploymentEnvironmentEntity.getDisplayName());
-                deploymentEnvironment
-                        .setPositionInPipeline(deploymentEnvironmentEntity
-                                .getPositionInPipeline());
-                deploymentEnvironment
-                        .setPrefix(deploymentEnvironmentEntity.getPrefix());
-            }
-            return deploymentEnvironment;
         }
     }
 

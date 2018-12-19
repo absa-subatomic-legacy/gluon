@@ -4,5 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ReleaseDeploymentPipelineRepository
         extends JpaRepository<ReleaseDeploymentPipelineEntity, Long> {
-
+    ReleaseDeploymentPipelineEntity findByPipelineId(String pipelineId);
 }

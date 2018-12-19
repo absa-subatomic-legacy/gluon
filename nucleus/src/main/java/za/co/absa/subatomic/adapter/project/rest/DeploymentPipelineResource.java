@@ -8,7 +8,7 @@ import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 
 @Setter
 @Getter
-class DeploymentPipelineResource
+public class DeploymentPipelineResource
         implements DeploymentPipeline {
 
     private String pipelineId;

@@ -16,6 +16,7 @@ import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistTeamBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistDeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
@@ -55,6 +56,10 @@ public class ApplicationProdRequestAutomationHandler {
         AtomistProjectBase projectCreated = new AtomistProjectMapper()
                 .createAtomistProjectBase(projectEntity);
 
+        AtomistDeploymentPipeline deploymentPipeline = new AtomistProjectMapper()
+                .createAtomistDeploymentPipeline(
+                        applicationProdRequestEntity.getDeploymentPipeline());
+
         TeamEntity owningTeamEntity = projectEntity.getOwningTeam();
 
         AtomistTeamBase owningTeam = this.teamEntityToTeam(owningTeamEntity);
@@ -73,6 +78,7 @@ public class ApplicationProdRequestAutomationHandler {
                 applicationProdRequest,
                 applicationCreated,
                 projectCreated,
+                deploymentPipeline,
                 owningTeam,
                 associatedTeams,
                 actionedBy);
@@ -139,6 +145,8 @@ public class ApplicationProdRequestAutomationHandler {
         private ApplicationCreated application;
 
         private AtomistProjectBase project;
+
+        private AtomistDeploymentPipeline deploymentPipeline;
 
         private AtomistTeamBase owningTeam;
 
