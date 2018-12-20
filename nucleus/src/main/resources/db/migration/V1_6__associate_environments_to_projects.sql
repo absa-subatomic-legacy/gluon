@@ -1,7 +1,7 @@
 create table dev_deployment_environment (
   id int8 not null,
   display_name varchar(255),
-  position_in_pipeline int4 not null,
+  position_in_pipeline int4,
   postfix varchar(255),
   pipeline_id int8,
   primary key (id)
@@ -27,7 +27,7 @@ create table project_release_deployment_pipelines (
 create table release_deployment_environment (
   id int8 not null,
   display_name varchar(255),
-  position_in_pipeline int4 not null,
+  position_in_pipeline int4,
   postfix varchar(255),
   pipeline_id int8,
   primary key (id)
@@ -122,3 +122,21 @@ alter table release_deployment_pipeline_environments
   add constraint FKq3v5vuw2rf6dndyjns8f2witr
 foreign key (release_deployment_pipeline_entity_id)
 references release_deployment_pipeline;
+
+alter table dev_deployment_environment
+  add constraint UKs9lucxdkmnkmhph34g3twryat unique (id, position_in_pipeline);
+
+alter table dev_deployment_environment
+  add constraint UKdovi304xcghmq72opxp69wv0w unique (id, display_name);
+
+alter table dev_deployment_environment
+  add constraint UKalcibthupwbijbjex4umggw9m unique (id, postfix);
+
+alter table release_deployment_environment
+  add constraint UKfkhr5r6h5qdic09sgff9k7qym unique (id, position_in_pipeline);
+
+alter table release_deployment_environment
+  add constraint UKljdq6926scxlmvfh21rru6rf9 unique (id, display_name);
+
+alter table release_deployment_environment
+  add constraint UKaby3260caqr20qr87b4vq06se unique (id, postfix);
