@@ -11,5 +11,5 @@ class DeploymentEnvironmentResource
 
     private String displayName;
 
-    private String prefix;
+    private String postfix;
 }

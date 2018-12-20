@@ -173,7 +173,7 @@ public class ProjectPersistenceHandler {
                         .builder()
                         .positionInPipeline(environment.getPositionInPipeline())
                         .displayName(environment.getDisplayName())
-                        .prefix(environment.getPrefix())
+                        .postfix(environment.getPostfix())
                         .pipeline(owningPipeline)
                         .build();
                 this.devDeploymentEnvironmentRepository.save(environmentEntity);
@@ -210,7 +210,7 @@ public class ProjectPersistenceHandler {
                         .builder()
                         .positionInPipeline(environment.getPositionInPipeline())
                         .displayName(environment.getDisplayName())
-                        .prefix(environment.getPrefix())
+                        .postfix(environment.getPostfix())
                         .pipeline(owningPipeline)
                         .build();
                 this.releaseDeploymentEnvironmentRepository

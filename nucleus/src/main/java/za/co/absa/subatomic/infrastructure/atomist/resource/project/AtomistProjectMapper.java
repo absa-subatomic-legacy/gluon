@@ -17,7 +17,7 @@ public class AtomistProjectMapper {
         return new AtomistDeploymentEnvironment.Builder()
                 .positionInPipeline(environment.getPositionInPipeline())
                 .displayName(environment.getDisplayName())
-                .prefix(environment.getPrefix())
+                .postfix(environment.getPostfix())
                 .build();
     }
 

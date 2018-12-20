@@ -31,7 +31,7 @@ class DevDeploymentEnvironmentEntity implements DeploymentEnvironment {
 
     private String displayName;
 
-    private String prefix;
+    private String postfix;
 
     @ManyToOne
     private DevDeploymentPipelineEntity pipeline;

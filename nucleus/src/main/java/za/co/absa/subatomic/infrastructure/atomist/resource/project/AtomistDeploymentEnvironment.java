@@ -13,7 +13,7 @@ public class AtomistDeploymentEnvironment implements DeploymentEnvironment {
 
         private String displayName;
 
-        private String prefix;
+        private String postfix;
 
         public Builder positionInPipeline(final int positionInPipeline) {
             this.positionInPipeline = positionInPipeline;
@@ -25,8 +25,8 @@ public class AtomistDeploymentEnvironment implements DeploymentEnvironment {
             return this;
         }
 
-        public Builder prefix(final String prefix) {
-            this.prefix = prefix;
+        public Builder postfix(final String postfix) {
+            this.postfix = postfix;
             return this;
         }
 
@@ -35,7 +35,7 @@ public class AtomistDeploymentEnvironment implements DeploymentEnvironment {
             atomistDeploymentEnvironment
                     .setPositionInPipeline(this.positionInPipeline);
             atomistDeploymentEnvironment.setDisplayName(this.displayName);
-            atomistDeploymentEnvironment.setPrefix(this.prefix);
+            atomistDeploymentEnvironment.setPostfix(this.postfix);
             return atomistDeploymentEnvironment;
         }
 
@@ -45,6 +45,6 @@ public class AtomistDeploymentEnvironment implements DeploymentEnvironment {
 
     private String displayName;
 
-    private String prefix;
+    private String postfix;
 
 }

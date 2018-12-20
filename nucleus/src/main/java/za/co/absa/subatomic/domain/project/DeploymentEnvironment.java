@@ -6,6 +6,6 @@ public interface DeploymentEnvironment {
 
     String getDisplayName();
 
-    String getPrefix();
+    String getPostfix();
 
 }

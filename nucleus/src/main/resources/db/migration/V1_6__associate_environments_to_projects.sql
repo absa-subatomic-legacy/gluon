@@ -2,7 +2,7 @@ create table dev_deployment_environment (
   id int8 not null,
   display_name varchar(255),
   position_in_pipeline int4 not null,
-  prefix varchar(255),
+  postfix varchar(255),
   pipeline_id int8,
   primary key (id)
 );
@@ -28,7 +28,7 @@ create table release_deployment_environment (
   id int8 not null,
   display_name varchar(255),
   position_in_pipeline int4 not null,
-  prefix varchar(255),
+  postfix varchar(255),
   pipeline_id int8,
   primary key (id)
 );

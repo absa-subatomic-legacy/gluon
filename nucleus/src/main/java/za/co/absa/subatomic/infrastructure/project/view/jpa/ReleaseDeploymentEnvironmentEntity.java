@@ -32,7 +32,7 @@ class ReleaseDeploymentEnvironmentEntity
 
     private String displayName;
 
-    private String prefix;
+    private String postfix;
 
     @ManyToOne
     private ReleaseDeploymentPipelineEntity pipeline;

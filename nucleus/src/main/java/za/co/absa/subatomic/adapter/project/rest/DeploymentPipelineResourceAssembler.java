@@ -32,7 +32,7 @@ public class DeploymentPipelineResourceAssembler {
                 .setPositionInPipeline(environment.getPositionInPipeline());
         deploymentEnvironmentResource
                 .setDisplayName(environment.getDisplayName());
-        deploymentEnvironmentResource.setPrefix(environment.getPrefix());
+        deploymentEnvironmentResource.setPostfix(environment.getPostfix());
         return deploymentEnvironmentResource;
     }
 }

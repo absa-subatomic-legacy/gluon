@@ -63,7 +63,7 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
             try (PreparedStatement create_new_dev_environment = context
                     .getConnection()
                     .prepareStatement(
-                            "INSERT INTO dev_deployment_environment(ID, DISPLAY_NAME, POSITION_IN_PIPELINE, PREFIX, PIPELINE_ID) VALUES("
+                            "INSERT INTO dev_deployment_environment(ID, DISPLAY_NAME, POSITION_IN_PIPELINE, POSTFIX, PIPELINE_ID) VALUES("
                                     + devEnvironmentIdCounter + ",'"
                                     + environment.toUpperCase() + "'," + i
                                     + ",'"
@@ -114,7 +114,7 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
             try (PreparedStatement create_new_release_environment = context
                     .getConnection()
                     .prepareStatement(
-                            "INSERT INTO release_deployment_environment(ID, DISPLAY_NAME, POSITION_IN_PIPELINE, PREFIX, PIPELINE_ID) VALUES("
+                            "INSERT INTO release_deployment_environment(ID, DISPLAY_NAME, POSITION_IN_PIPELINE, POSTFIX, PIPELINE_ID) VALUES("
                                     + releaseEnvironmentIdCounter + ",'"
                                     + environment.toUpperCase() + "'," + i
                                     + ",'"
