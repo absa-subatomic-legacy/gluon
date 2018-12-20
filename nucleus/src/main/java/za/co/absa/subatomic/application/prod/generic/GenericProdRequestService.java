@@ -103,6 +103,7 @@ public class GenericProdRequestService {
                 .openShiftResources(openShiftResourceEntities)
                 .project(projectEntity)
                 .projectName(projectEntity.getName())
+                .deploymentPipeline(deploymentPipeline)
                 .build();
 
         GenericProdRequestEntity savedGenericProdRequestEntity = this
