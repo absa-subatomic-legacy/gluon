@@ -21,11 +21,13 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
     public void migrate(Context context) throws Exception {
         try (Statement select = context.getConnection().createStatement()) {
             try (ResultSet rows = select
-                    .executeQuery("SELECT id FROM project")) {
+                    .executeQuery("SELECT ID, NAME FROM project")) {
                 while (rows.next()) {
                     int projectId = rows.getInt(1);
+                    String projectName = rows.getString(2);
                     createDevPipelinesForProject(context, projectId);
-                    createReleasePipelinesForProject(context, projectId);
+                    createReleasePipelinesForProject(context, projectId,
+                            projectName);
                 }
             }
         }
@@ -82,7 +84,8 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
     }
 
     private void createReleasePipelinesForProject(Context context,
-            int projectId)
+            int projectId,
+            String projectName)
             throws SQLException {
         try (PreparedStatement create_new_release_pipeline = context
                 .getConnection()
@@ -94,6 +97,7 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
             create_new_release_pipeline.executeUpdate();
             int pipelineId = releasePipelineIdCounter++;
 
+            // Associate pipeline to project and create default environments
             try (PreparedStatement associate_pipeline_to_project = context
                     .getConnection().prepareStatement(
                             "INSERT INTO project_release_deployment_pipelines(PROJECT_ENTITY_ID, RELEASE_DEPLOYMENT_PIPELINES_ID) VALUES ("
@@ -102,6 +106,36 @@ public class V1_7__default_pipelines extends BaseJavaMigration {
                 associate_pipeline_to_project.executeUpdate();
                 this.createDefaultEnvironmentsForReleasePipeline(context,
                         pipelineId);
+            }
+
+            // Update Project Prod Requests
+            try (PreparedStatement update_project_prod_requests = context
+                    .getConnection().prepareStatement(
+                            "UPDATE project_prod_request SET DEPLOYMENT_PIPELINE_ID = "
+                                    + pipelineId
+                                    + " WHERE PROJECT_ID = "
+                                    + projectId)) {
+                update_project_prod_requests.executeUpdate();
+            }
+
+            // Update Generic Prod Requests
+            try (PreparedStatement update_generic_prod_requests = context
+                    .getConnection().prepareStatement(
+                            "UPDATE generic_prod_request SET DEPLOYMENT_PIPELINE_ID = "
+                                    + pipelineId
+                                    + " WHERE PROJECT_ID = "
+                                    + projectId)) {
+                update_generic_prod_requests.executeUpdate();
+            }
+
+            // Update Application Prod Requests
+            try (PreparedStatement update_application_prod_requests = context
+                    .getConnection().prepareStatement(
+                            "UPDATE application_prod_request SET DEPLOYMENT_PIPELINE_ID = "
+                                    + pipelineId
+                                    + " WHERE PROJECT_NAME = '"
+                                    + projectName + "'")) {
+                update_application_prod_requests.executeUpdate();
             }
         }
     }
