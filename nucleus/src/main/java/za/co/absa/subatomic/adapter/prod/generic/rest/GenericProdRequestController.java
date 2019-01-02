@@ -19,6 +19,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResource;
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResourceAssembler;
+import za.co.absa.subatomic.adapter.project.rest.DeploymentPipelineResourceAssembler;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResourceBaseAssembler;
 import za.co.absa.subatomic.application.prod.generic.GenericProdRequestService;
 import za.co.absa.subatomic.infrastructure.prod.generic.view.jpa.GenericProdRequestEntity;
@@ -46,6 +47,7 @@ public class GenericProdRequestController {
                 .newGenericProdRequest(
                         request.getProject().getProjectId(),
                         request.getActionedBy().getMemberId(),
+                        request.getDeploymentPipeline().getPipelineId(),
                         request.getOpenShiftResources());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -79,6 +81,10 @@ public class GenericProdRequestController {
                         entity.getGenericProdRequestId(), entity);
                 resource.setGenericProdRequestId(
                         entity.getGenericProdRequestId());
+
+                resource.setDeploymentPipeline(
+                        new DeploymentPipelineResourceAssembler()
+                                .toResource(entity.getDeploymentPipeline()));
 
                 ProjectResourceBaseAssembler projectResourceBaseAssembler = new ProjectResourceBaseAssembler();
                 resource.setProject(

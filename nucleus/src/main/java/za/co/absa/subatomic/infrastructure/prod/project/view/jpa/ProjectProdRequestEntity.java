@@ -24,6 +24,7 @@ import lombok.Setter;
 import za.co.absa.subatomic.domain.prod.project.ProjectProductionRequestStatus;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineEntity;
 
 @Entity
 @Table(name = "projectProdRequest")
@@ -42,6 +43,9 @@ public class ProjectProdRequestEntity {
 
     @ManyToOne
     private ProjectEntity project;
+
+    @OneToOne
+    private ReleaseDeploymentPipelineEntity deploymentPipeline;
 
     @OneToOne
     private TeamMemberEntity actionedBy;

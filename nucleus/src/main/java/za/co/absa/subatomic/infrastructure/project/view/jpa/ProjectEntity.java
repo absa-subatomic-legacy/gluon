@@ -2,6 +2,7 @@ package za.co.absa.subatomic.infrastructure.project.view.jpa;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -67,4 +68,10 @@ public class ProjectEntity {
 
     @OneToOne(cascade = CascadeType.REMOVE)
     private BitbucketProjectEntity bitbucketProject;
+
+    @OneToOne
+    private DevDeploymentPipelineEntity devDeploymentPipeline;
+
+    @OneToMany
+    private List<ReleaseDeploymentPipelineEntity> releaseDeploymentPipelines;
 }

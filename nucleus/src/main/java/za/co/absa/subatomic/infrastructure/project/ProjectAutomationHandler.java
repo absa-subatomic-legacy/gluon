@@ -10,7 +10,6 @@ import org.springframework.web.client.RestTemplate;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
-import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistProject;
 import za.co.absa.subatomic.domain.project.TeamId;
 import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
@@ -18,6 +17,9 @@ import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistTeam;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProject;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -41,14 +43,8 @@ public class ProjectAutomationHandler {
             TeamEntity teamEntity,
             TeamMemberEntity teamMemberEntity, TenantEntity tenantEntity) {
 
-        AtomistProject projectCreated = AtomistProject.builder()
-                .projectId(projectEntity.getProjectId())
-                .name(projectEntity.getName())
-                .description(projectEntity.getDescription())
-                .createdBy(new TeamMemberId(teamMemberEntity.getMemberId()))
-                .tenant(new TenantId(tenantEntity.getTenantId()))
-                .team(new TeamId(teamEntity.getTeamId()))
-                .build();
+        AtomistProject projectCreated = new AtomistProjectMapper()
+                .createAtomistProject(projectEntity);
 
         TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
@@ -111,11 +107,8 @@ public class ProjectAutomationHandler {
         }
 
         BitbucketProjectCreatedWithDetails bitbucketProjectLinked = new BitbucketProjectCreatedWithDetails(
-                AtomistProject.builder()
-                        .projectId(projectEntity.getProjectId())
-                        .name(projectEntity.getName())
-                        .description(projectEntity.getDescription())
-                        .build(),
+                new AtomistProjectMapper()
+                        .createAtomistProjectBase(projectEntity),
                 new BitbucketProject(
                         bitbucketProject.getId(),
                         bitbucketProject.getKey(),
@@ -172,12 +165,9 @@ public class ProjectAutomationHandler {
                     tenantEntity.getName(), tenantEntity.getDescription());
         }
 
-        BitbucketProjectRequestedWithDetails bitbucketProjectRequested = new BitbucketProjectRequestedWithDetails(
-                AtomistProject.builder()
-                        .projectId(projectEntity.getProjectId())
-                        .name(projectEntity.getName())
-                        .description(projectEntity.getDescription())
-                        .build(),
+        ProjectEnvironmentsRequestedWithDetails bitbucketProjectRequested = new ProjectEnvironmentsRequestedWithDetails(
+                new AtomistProjectMapper()
+                        .createAtomistProject(projectEntity),
                 null,
                 projectEntity.getTeams().stream()
                         .map(teamEntity -> {
@@ -267,16 +257,19 @@ public class ProjectAutomationHandler {
                                         .getTeamChannel())))
                 .collect(Collectors.toList());
 
+        AtomistProjectBase project = new AtomistProjectBase.Builder()
+                .projectId(projectEntity.getProjectId())
+                .name(projectEntity.getName())
+                .description(projectEntity.getDescription())
+                .createdBy(new TeamMemberId(
+                        projectEntity.getCreatedBy().getMemberId()))
+                .team(new TeamId(projectEntity.getOwningTeam().getTeamId()))
+                .tenant(new TenantId(
+                        projectEntity.getOwningTenant().getTenantId()))
+                .build();
+
         TeamAssociated teamAssociated = new TeamAssociated(
-                new AtomistProject(
-                        projectEntity.getProjectId(),
-                        projectEntity.getName(),
-                        projectEntity.getDescription(),
-                        new TeamMemberId(
-                                projectEntity.getCreatedBy().getMemberId()),
-                        new TeamId(projectEntity.getOwningTeam().getTeamId()),
-                        new TenantId(
-                                projectEntity.getOwningTenant().getTenantId())),
+                project,
                 currentTeams,
                 new CreatedBy(
                         teamMemberEntity.getMemberId(),
@@ -305,7 +298,7 @@ public class ProjectAutomationHandler {
     @Value
     private class ProjectCreatedWithDetails {
 
-        private AtomistProject project;
+        private AtomistProjectBase project;
 
         private AtomistTeam team;
 
@@ -315,7 +308,7 @@ public class ProjectAutomationHandler {
     }
 
     @Value
-    private class BitbucketProjectRequestedWithDetails {
+    private class ProjectEnvironmentsRequestedWithDetails {
 
         private AtomistProject project;
 
@@ -331,7 +324,7 @@ public class ProjectAutomationHandler {
     @Value
     private class BitbucketProjectCreatedWithDetails {
 
-        private AtomistProject project;
+        private AtomistProjectBase project;
 
         private BitbucketProject bitbucketProject;
 
@@ -391,7 +384,7 @@ public class ProjectAutomationHandler {
     @Value
     private class TeamAssociated {
 
-        private AtomistProject project;
+        private AtomistProjectBase project;
 
         private List<AtomistTeam> teams;
 

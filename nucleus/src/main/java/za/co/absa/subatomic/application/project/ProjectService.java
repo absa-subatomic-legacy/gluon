@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import za.co.absa.subatomic.adapter.project.rest.ProjectResource;
 import za.co.absa.subatomic.adapter.project.rest.TeamResource;
 import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.application.team.TeamService;
@@ -48,8 +49,14 @@ public class ProjectService {
         this.projectAutomationHandler = projectAutomationHandler;
     }
 
-    public String newProject(String name, String description,
-            String createdBy, String teamId, String tenantId) {
+    public String newProject(ProjectResource project) {
+
+        String name = project.getName();
+        String teamId = project.getTeams().get(0).getTeamId();
+        String tenantId = project.getOwningTenant();
+        String createdBy = project.getCreatedBy();
+        String description = project.getDescription();
+
         ProjectEntity existingProject = this.projectPersistenceHandler
                 .findByName(name);
         if (existingProject != null) {
@@ -78,7 +85,9 @@ public class ProjectService {
 
         ProjectEntity newProject = this.projectPersistenceHandler.createProject(
                 name, description,
-                createdByEntity, owningTeamEntity, owningTenantEntity);
+                createdByEntity, owningTeamEntity, owningTenantEntity,
+                project.getDevDeploymentPipeline(),
+                project.getReleaseDeploymentPipelines());
 
         this.projectAutomationHandler.projectCreated(newProject,
                 owningTeamEntity, createdByEntity, owningTenantEntity);

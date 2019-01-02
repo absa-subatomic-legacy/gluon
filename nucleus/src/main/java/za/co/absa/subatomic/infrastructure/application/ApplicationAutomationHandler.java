@@ -14,11 +14,12 @@ import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
-import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistProject;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepository;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProject;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -106,11 +107,7 @@ public class ApplicationAutomationHandler {
                         .description(applicationEntity.getDescription())
                         .applicationType(applicationEntity.getApplicationType())
                         .build(),
-                AtomistProject.builder()
-                        .projectId(projectEntity.getProjectId())
-                        .name(projectEntity.getName())
-                        .description(projectEntity.getDescription())
-                        .build(),
+                new AtomistProjectMapper().createAtomistProject(projectEntity),
                 BitbucketGitRepository.builder()
                         .bitbucketId(event.getBitbucketRepository()
                                 .getBitbucketId())
