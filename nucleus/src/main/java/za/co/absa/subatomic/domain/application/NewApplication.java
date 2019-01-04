@@ -5,7 +5,7 @@ import java.util.Set;
 import org.axonframework.commandhandling.TargetAggregateIdentifier;
 
 import lombok.Value;
-import za.co.absa.subatomic.domain.pkg.ProjectId;
+import za.co.absa.subatomic.domain.project.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 
 @Value

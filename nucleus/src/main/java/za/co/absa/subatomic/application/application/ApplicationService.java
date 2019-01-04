@@ -16,7 +16,7 @@ import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.domain.application.BitbucketGitRepository;
 import za.co.absa.subatomic.domain.application.NewApplication;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
-import za.co.absa.subatomic.domain.pkg.ProjectId;
+import za.co.absa.subatomic.domain.project.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationRepository;
