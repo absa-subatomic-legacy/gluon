@@ -65,12 +65,15 @@ public class ApplicationProdRequestService {
             String deploymentPipelineId,
             List<OpenShiftResource> requestedResources) {
         ApplicationEntity applicationEntity = this.applicationService
+                .getApplicationPersistenceHandler()
                 .findByApplictionId(applicationId);
         TeamMemberEntity actionedBy = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedByMemberId);
         ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
                 .findByPipelineId(deploymentPipelineId);
         Set<TeamEntity> memberAssociatedTeams = this.teamService
+                .getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
         if (applicationEntity.getProject().getTeams().stream()

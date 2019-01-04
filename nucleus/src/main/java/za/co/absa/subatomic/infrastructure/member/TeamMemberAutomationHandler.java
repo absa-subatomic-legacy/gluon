@@ -1,6 +1,5 @@
 package za.co.absa.subatomic.infrastructure.member;
 
-import org.axonframework.eventhandling.EventHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -25,7 +24,6 @@ public class TeamMemberAutomationHandler {
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
-    @EventHandler
     public void teamMemberCreated(TeamMemberEntity memberEntity) {
         log.info("A team member was created, sending event to Atomist: {}",
                 memberEntity);

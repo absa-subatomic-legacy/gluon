@@ -67,11 +67,11 @@ public class GenericProdRequestService {
 
         ProjectEntity projectEntity = projectService
                 .getProjectPersistenceHandler().findByProjectId(projectId);
-        TeamMemberEntity actioningMember = this.teamMemberService
+        TeamMemberEntity actioningMember = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedByMemberId);
         ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
                 .findByPipelineId(deploymentPipelineId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
         if (projectEntity.getTeams().stream()

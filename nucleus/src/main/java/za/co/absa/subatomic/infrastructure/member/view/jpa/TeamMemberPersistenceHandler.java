@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.infrastructure.member.view.jpa;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -48,4 +49,41 @@ public class TeamMemberPersistenceHandler {
         return teamMemberRepository.save(teamMember);
     }
 
+    @Transactional(readOnly = true)
+    public List<TeamMemberEntity> findAllTeamMembersById(
+            List<String> teamMemberIdList) {
+        return this.teamMemberRepository.findByMemberIdIn(teamMemberIdList);
+    }
+
+    @Transactional(readOnly = true)
+    public TeamMemberEntity findByTeamMemberId(String teamMemberId) {
+        return teamMemberRepository.findByMemberId(teamMemberId);
+    }
+
+    @Transactional(readOnly = true)
+    public TeamMemberEntity findByEmail(String email) {
+        return teamMemberRepository.findByEmail(email);
+    }
+
+    @Transactional(readOnly = true)
+    public TeamMemberEntity findByDomainUsername(String domainUsername) {
+        return teamMemberRepository.findByDomainUsername(domainUsername);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamMemberEntity> findAll() {
+        return teamMemberRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public TeamMemberEntity findBySlackScreenName(String slackScreenName) {
+        return teamMemberRepository
+                .findBySlackDetailsScreenName(slackScreenName);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamMemberEntity> findMembersAssociatedToTeam(String teamId) {
+        return teamMemberRepository
+                .findByTeams_TeamId(teamId);
+    }
 }

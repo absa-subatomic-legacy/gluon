@@ -1,7 +1,6 @@
 package za.co.absa.subatomic.application.team;
 
 import java.text.MessageFormat;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.application.member.TeamMemberService;
-import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
@@ -44,6 +42,8 @@ public class TeamService {
 
     private MembershipRequestRepository membershipRequestRepository;
 
+    private TeamAssertions teamAssertions = new TeamAssertions();
+
     public TeamService(TeamRepository teamRepository,
             MembershipRequestRepository membershipRequestRepository,
             ProjectRepository projectRepository,
@@ -62,7 +62,7 @@ public class TeamService {
             String openShiftCloud,
             String createdBy,
             String teamChannel) {
-        TeamEntity existingTeam = this.findByName(name);
+        TeamEntity existingTeam = this.persistenceHandler.findByName(name);
         if (existingTeam != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested team name {0} is not available.",
@@ -84,9 +84,10 @@ public class TeamService {
         TeamEntity team = this.teamRepository.findByTeamId(teamId);
 
         TeamMemberEntity actionedByEntity = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedBy);
 
-        assertMemberIsOwnerOfTeam(actionedByEntity, team);
+        teamAssertions.assertMemberIsOwnerOfTeam(actionedByEntity, team);
 
         Optional<TeamMemberEntity> existingMember = team.getMembers().stream()
                 .filter(memberEntity -> teamMemberIds
@@ -95,10 +96,6 @@ public class TeamService {
         Optional<TeamMemberEntity> existingOwner = team.getOwners().stream()
                 .filter(memberEntity -> teamOwnerIds
                         .contains(memberEntity.getMemberId()))
-                .findFirst();
-        Optional<TeamMemberEntity> actionedByIsOwner = team.getOwners().stream()
-                .filter(memberEntity -> memberEntity.getMemberId()
-                        .equals(actionedBy))
                 .findFirst();
 
         existingMember.ifPresent(teamMemberEntity -> {
@@ -117,8 +114,10 @@ public class TeamService {
                 teamMemberIds);
 
         List<TeamMemberEntity> newTeamMembers = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findAllTeamMembersById(teamMemberIds);
         List<TeamMemberEntity> newOwners = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findAllTeamMembersById(teamOwnerIds);
 
         this.automationHandler.teamMembersAdded(team, newOwners,
@@ -129,13 +128,15 @@ public class TeamService {
     public void removeTeamMember(String teamId, String memberId,
             String requestedById) {
 
-        TeamEntity team = this.findByTeamId(teamId);
+        TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
         TeamMemberEntity actionedByEntity = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(requestedById);
         TeamMemberEntity member = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(memberId);
 
-        assertMemberIsOwnerOfTeam(actionedByEntity, team);
+        teamAssertions.assertMemberIsOwnerOfTeam(actionedByEntity, team);
 
         this.persistenceHandler.removeTeamMember(teamId, memberId);
 
@@ -149,21 +150,23 @@ public class TeamService {
     }
 
     public void newDevOpsEnvironment(String teamId, String requestedById) {
-        TeamEntity team = this.findByTeamId(teamId);
+        TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
         TeamMemberEntity requestedBy = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(requestedById);
 
-        assertMemberBelongsToTeam(requestedBy, team);
+        teamAssertions.assertMemberBelongsToTeam(requestedBy, team);
 
         this.automationHandler.devOpsEnvironmentRequested(team, requestedBy);
     }
 
     public void updateMembershipRequest(String teamId,
             MembershipRequestResource membershipRequest) {
-        TeamMemberEntity approver = this.teamMemberService.findByTeamMemberId(
-                membershipRequest.getApprovedBy().getMemberId());
-        TeamEntity team = this.findByTeamId(teamId);
-        assertMemberIsOwnerOfTeam(approver, team);
+        TeamMemberEntity approver = this.teamMemberService
+                .getTeamMemberPersistenceHandler().findByTeamMemberId(
+                        membershipRequest.getApprovedBy().getMemberId());
+        TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
+        teamAssertions.assertMemberIsOwnerOfTeam(approver, team);
 
         MembershipRequestEntity membershipRequestEntity = this.membershipRequestRepository
                 .findByMembershipRequestId(
@@ -185,6 +188,7 @@ public class TeamService {
         if (membershipRequestEntity
                 .getRequestStatus() == MembershipRequestStatus.APPROVED) {
             TeamMemberEntity newMemberEntity = this.teamMemberService
+                    .getTeamMemberPersistenceHandler()
                     .findByTeamMemberId(membershipRequestEntity.getRequestedBy()
                             .getMemberId());
             this.addTeamMembers(teamId,
@@ -196,11 +200,12 @@ public class TeamService {
 
     public void newMembershipRequest(String teamId,
             String requestByMemberId) {
-        TeamEntity teamEntity = this.findByTeamId(teamId);
+        TeamEntity teamEntity = this.persistenceHandler.findByTeamId(teamId);
         TeamMemberEntity requestedBy = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(requestByMemberId);
 
-        this.assertMemberDoesNotBelongToTeam(requestedBy, teamEntity);
+        teamAssertions.assertMemberDoesNotBelongToTeam(requestedBy, teamEntity);
 
         for (MembershipRequestEntity request : teamEntity
                 .getMembershipRequests()) {
@@ -230,105 +235,7 @@ public class TeamService {
         return associatedTeams;
     }
 
-    @Transactional(readOnly = true)
-    public TeamEntity findByTeamId(String teamId) {
-        return teamRepository.findByTeamId(teamId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<TeamEntity> findAll() {
-        return teamRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
-    public TeamEntity findByName(String name) {
-        return teamRepository.findByName(name);
-    }
-
-    @Transactional(readOnly = true)
-    public MembershipRequestEntity findMembershipRequestById(String id) {
-        return membershipRequestRepository.findByMembershipRequestId(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Set<TeamEntity> findByMemberOrOwnerMemberId(String teamMemberId) {
-        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByMembers_MemberId(teamMemberId));
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByOwners_MemberId(teamMemberId));
-        return teamsWithMemberOrOwner;
-    }
-
-    @Transactional(readOnly = true)
-    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(
-            String slackScreenName) {
-        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByMembers_SlackDetailsScreenName(slackScreenName));
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByOwners_SlackDetailsScreenName(slackScreenName));
-        return teamsWithMemberOrOwner;
-    }
-
-    @Transactional(readOnly = true)
-    public List<TeamEntity> findBySlackTeamChannel(String slackTeamChannel) {
-        return teamRepository.findBySlackDetailsTeamChannel(slackTeamChannel);
-    }
-
-    public boolean memberBelongsToAnyTeam(TeamMemberEntity memberEntity,
-            Collection<TeamEntity> teams) {
-
-        boolean memberBelongsToATeam = false;
-
-        for (TeamEntity team : teams) {
-            if (this.memberBelongsToTeam(memberEntity, team)) {
-                memberBelongsToATeam = true;
-                break;
-            }
-        }
-
-        return memberBelongsToATeam;
-    }
-
-    public void assertMemberBelongsToTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        if (!this.memberBelongsToTeam(memberEntity, teamEntity)) {
-            throw new ApplicationAuthorisationException(MessageFormat.format(
-                    "TeamMember with id {0} is not a member of the team with id {1}.",
-                    memberEntity.getMemberId(),
-                    teamEntity.getTeamId()));
-        }
-    }
-
-    private void assertMemberDoesNotBelongToTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        if (this.memberBelongsToTeam(memberEntity, teamEntity)) {
-            throw new InvalidRequestException(MessageFormat.format(
-                    "TeamMember with id {0} is already a member of the team with id {1}.",
-                    memberEntity.getMemberId(),
-                    teamEntity.getTeamId()));
-        }
-    }
-
-    private void assertMemberIsOwnerOfTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        if (teamEntity.getOwners().stream().map(TeamMemberEntity::getMemberId)
-                .noneMatch(memberEntity.getMemberId()::equals)) {
-            throw new ApplicationAuthorisationException(MessageFormat.format(
-                    "TeamMember with id {0} is not an owner of the team with id {1}.",
-                    memberEntity.getMemberId(),
-                    teamEntity.getTeamId()));
-        }
-    }
-
-    private boolean memberBelongsToTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        Set<TeamMemberEntity> allMembers = new HashSet<>();
-        allMembers.addAll(teamEntity.getMembers());
-        allMembers.addAll(teamEntity.getOwners());
-
-        return allMembers.stream().map(TeamMemberEntity::getMemberId)
-                .anyMatch(memberEntity.getMemberId()::equals);
+    public TeamPersistenceHandler getPersistenceHandler() {
+        return persistenceHandler;
     }
 }

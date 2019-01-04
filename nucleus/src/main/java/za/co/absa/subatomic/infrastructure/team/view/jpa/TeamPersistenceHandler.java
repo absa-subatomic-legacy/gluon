@@ -2,8 +2,10 @@ package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
 import java.text.MessageFormat;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -228,4 +230,50 @@ public class TeamPersistenceHandler {
         return membershipRequestEntity;
     }
 
+
+    @Transactional(readOnly = true)
+    public TeamEntity findByTeamId(String teamId) {
+        return teamRepository.findByTeamId(teamId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamEntity> findAll() {
+        return teamRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public TeamEntity findByName(String name) {
+        return teamRepository.findByName(name);
+    }
+
+    @Transactional(readOnly = true)
+    public MembershipRequestEntity findMembershipRequestById(String id) {
+        return membershipRequestRepository.findByMembershipRequestId(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findByMemberOrOwnerMemberId(String teamMemberId) {
+        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByMembers_MemberId(teamMemberId));
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByOwners_MemberId(teamMemberId));
+        return teamsWithMemberOrOwner;
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(
+            String slackScreenName) {
+        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByMembers_SlackDetailsScreenName(slackScreenName));
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByOwners_SlackDetailsScreenName(slackScreenName));
+        return teamsWithMemberOrOwner;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamEntity> findBySlackTeamChannel(String slackTeamChannel) {
+        return teamRepository.findBySlackDetailsTeamChannel(slackTeamChannel);
+    }
 }

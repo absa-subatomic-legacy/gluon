@@ -15,7 +15,6 @@
 
     <properties>
         <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
-        <axon.version>3.3.5</axon.version>
     </properties>
 
     <dependencyManagement>
@@ -56,17 +55,6 @@
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-rest-hal-browser</artifactId>
-        </dependency>
-        <!-- see https://github.com/AxonFramework/AxonFramework/issues/282 -->
-        <!--<dependency>-->
-        <!--<groupId>org.springframework.boot</groupId>-->
-        <!--<artifactId>spring-boot-devtools</artifactId>-->
-        <!--<optional>true</optional>-->
-        <!--</dependency>-->
-        <dependency>
-            <groupId>org.axonframework</groupId>
-            <artifactId>axon-spring-boot-starter</artifactId>
-            <version>${axon.version}</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>
@@ -118,12 +106,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.axonframework</groupId>
-            <artifactId>axon-test</artifactId>
-            <version>${axon.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

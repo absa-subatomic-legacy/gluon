@@ -72,12 +72,15 @@ public class TeamMemberController {
 
         return ResponseEntity.accepted()
                 .body(assembler
-                        .toResource(teamMemberService.findByTeamMemberId(id)));
+                        .toResource(teamMemberService
+                                .getTeamMemberPersistenceHandler()
+                                .findByTeamMemberId(id)));
     }
 
     @GetMapping("/{id}")
     TeamMemberResource get(@PathVariable String id) {
-        return assembler.toResource(teamMemberService.findByTeamMemberId(id));
+        return assembler.toResource(teamMemberService
+                .getTeamMemberPersistenceHandler().findByTeamMemberId(id));
     }
 
     @GetMapping
@@ -90,22 +93,27 @@ public class TeamMemberController {
         // TODO see if we can't use that functional library for Java that has pattern matching?
         if (StringUtils.isNotBlank(email)) {
             members.add(
-                    assembler.toResource(teamMemberService.findByEmail(email)));
+                    assembler.toResource(
+                            teamMemberService.getTeamMemberPersistenceHandler()
+                                    .findByEmail(email)));
         }
         else if (StringUtils.isNotBlank(slackScreenName)) {
             members.add(
-                    assembler.toResource(teamMemberService
-                            .findBySlackScreenName(slackScreenName)));
+                    assembler.toResource(
+                            teamMemberService.getTeamMemberPersistenceHandler()
+                                    .findBySlackScreenName(slackScreenName)));
         }
         else if (StringUtils.isNotBlank(teamId)) {
             members.addAll(
-                    teamMemberService.findMembersAssociatedToTeam(teamId)
+                    teamMemberService.getTeamMemberPersistenceHandler()
+                            .findMembersAssociatedToTeam(teamId)
                             .stream()
                             .map(assembler::toResource)
                             .collect(Collectors.toList()));
         }
         else if (StringUtils.isAllBlank(email, slackScreenName)) {
-            members.addAll(teamMemberService.findAll().stream()
+            members.addAll(teamMemberService.getTeamMemberPersistenceHandler()
+                    .findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
