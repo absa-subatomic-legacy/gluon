@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResource;
 import za.co.absa.subatomic.adapter.project.rest.TeamResource;
 import za.co.absa.subatomic.application.member.TeamMemberService;
-import za.co.absa.subatomic.application.team.TeamService;
+import za.co.absa.subatomic.application.team.TeamAssertions;
 import za.co.absa.subatomic.application.tenant.TenantService;
 import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
@@ -21,6 +21,7 @@ import za.co.absa.subatomic.infrastructure.project.ProjectAutomationHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
 
 @Service
@@ -28,25 +29,27 @@ public class ProjectService {
 
     private TeamMemberService teamMemberService;
 
-    private TeamService teamService;
-
     private TenantService tenantService;
 
     private ProjectPersistenceHandler projectPersistenceHandler;
 
     private ProjectAutomationHandler projectAutomationHandler;
 
+    private TeamPersistenceHandler teamPersistenceHandler;
+
+    private TeamAssertions teamAssertions = new TeamAssertions();
+
     public ProjectService(
             TeamMemberService teamMemberService,
-            TeamService teamService,
             TenantService tenantService,
             ProjectPersistenceHandler projectPersistenceHandler,
-            ProjectAutomationHandler projectAutomationHandler) {
+            ProjectAutomationHandler projectAutomationHandler,
+            TeamPersistenceHandler teamPersistenceHandler) {
         this.teamMemberService = teamMemberService;
-        this.teamService = teamService;
         this.tenantService = tenantService;
         this.projectPersistenceHandler = projectPersistenceHandler;
         this.projectAutomationHandler = projectAutomationHandler;
+        this.teamPersistenceHandler = teamPersistenceHandler;
     }
 
     public String newProject(ProjectResource project) {
@@ -65,7 +68,8 @@ public class ProjectService {
                     name));
         }
 
-        TeamEntity owningTeamEntity = this.teamService.findByTeamId(teamId);
+        TeamEntity owningTeamEntity = this.teamPersistenceHandler
+                .findByTeamId(teamId);
         TenantEntity owningTenantEntity;
         if (tenantId == null) {
             owningTenantEntity = tenantService.findByName("Default");
@@ -78,9 +82,10 @@ public class ProjectService {
             }
         }
         TeamMemberEntity createdByEntity = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(createdBy);
 
-        this.teamService.assertMemberBelongsToTeam(createdByEntity,
+        this.teamAssertions.assertMemberBelongsToTeam(createdByEntity,
                 owningTeamEntity);
 
         ProjectEntity newProject = this.projectPersistenceHandler.createProject(
@@ -112,6 +117,7 @@ public class ProjectService {
                 url);
 
         TeamMemberEntity actionedByEntity = teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedBy);
 
         ProjectEntity projectEntity = this.projectPersistenceHandler
@@ -132,6 +138,7 @@ public class ProjectService {
                 .findByProjectId(projectId);
 
         TeamMemberEntity teamMemberEntity = this.teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(requestedBy);
 
         this.projectAutomationHandler.requestProjectEnvironment(projectEntity,
@@ -141,6 +148,7 @@ public class ProjectService {
     public String linkProjectToTeams(String projectId, String actionedBy,
             List<TeamResource> teamsToLink) {
         TeamMemberEntity actionedByEntity = teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedBy);
 
         assertMemberBelongsToAnAssociatedTeam(projectId, actionedByEntity);
@@ -148,7 +156,8 @@ public class ProjectService {
         List<TeamEntity> teamEntitiesToLink = new ArrayList<>();
 
         for (TeamResource team : teamsToLink) {
-            teamEntitiesToLink.add(teamService.findByTeamId(team.getTeamId()));
+            teamEntitiesToLink
+                    .add(teamPersistenceHandler.findByTeamId(team.getTeamId()));
         }
 
         ProjectEntity projectEntity = this.projectPersistenceHandler
@@ -168,6 +177,7 @@ public class ProjectService {
     private void assertMemberBelongsToAnAssociatedTeam(String projectId,
             String memberId) {
         TeamMemberEntity memberEntity = teamMemberService
+                .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(memberId);
         assertMemberBelongsToAnAssociatedTeam(projectId, memberEntity);
     }
@@ -177,7 +187,7 @@ public class ProjectService {
         Collection<TeamEntity> projectAssociatedTeams = this.projectPersistenceHandler
                 .findTeamsAssociatedToProject(
                         projectId);
-        if (!teamService.memberBelongsToAnyTeam(memberEntity,
+        if (!this.teamAssertions.memberBelongsToAnyTeam(memberEntity,
                 projectAssociatedTeams)) {
             throw new ApplicationAuthorisationException(MessageFormat.format(
                     "TeamMember with id {0} is not a member of any team associated to project with id {1}.",

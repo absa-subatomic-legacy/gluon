@@ -1,13 +1,15 @@
-package za.co.absa.subatomic.domain.application;
+package za.co.absa.subatomic.infrastructure.atomist.resource;
 
 import lombok.Builder;
 import lombok.Value;
-import za.co.absa.subatomic.domain.pkg.ProjectId;
+import za.co.absa.subatomic.adapter.application.rest.BitbucketRepository;
+import za.co.absa.subatomic.domain.application.ApplicationType;
+import za.co.absa.subatomic.domain.project.ProjectId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 
 @Value
 @Builder
-public class ApplicationCreated {
+public class AtomistApplication {
 
     private String applicationId;
 
@@ -23,5 +25,5 @@ public class ApplicationCreated {
 
     private Boolean requestConfiguration;
 
-    private BitbucketGitRepository bitbucketRepository;
+    private BitbucketRepository bitbucketRepository;
 }

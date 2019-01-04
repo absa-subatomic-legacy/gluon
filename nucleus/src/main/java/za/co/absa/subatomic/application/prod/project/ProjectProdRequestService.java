@@ -63,12 +63,12 @@ public class ProjectProdRequestService {
             String actionedByMemberId, String pipelineId) {
         ProjectEntity projectEntity = this.projectService
                 .getProjectPersistenceHandler().findByProjectId(projectId);
-        TeamMemberEntity actionedBy = this.teamMemberService
+        TeamMemberEntity actionedBy = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedByMemberId);
         ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
                 .findByPipelineId(pipelineId);
 
-        Set<TeamEntity> memberAssociatedTeams = this.teamService
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
         assertMemberIsAMemberOfOwningTeam(actionedByMemberId,
@@ -127,9 +127,9 @@ public class ProjectProdRequestService {
             String projectProdRequestId, String approvingMemberId) {
         ProjectProdRequestEntity projectProdRequest = projectProdRequestRepository
                 .findByProjectProdRequestId(projectProdRequestId);
-        TeamMemberEntity approvingMember = this.teamMemberService
+        TeamMemberEntity approvingMember = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(approvingMemberId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(approvingMemberId);
 
         assertMemberIsAMemberOfOwningTeam(approvingMemberId,
@@ -177,9 +177,9 @@ public class ProjectProdRequestService {
             String projectProdRequestId, String rejectingMemberId) {
         ProjectProdRequestEntity projectProdRequest = projectProdRequestRepository
                 .findByProjectProdRequestId(projectProdRequestId);
-        TeamMemberEntity rejectingMember = this.teamMemberService
+        TeamMemberEntity rejectingMember = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(rejectingMemberId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(rejectingMemberId);
 
         assertMemberIsAMemberOfOwningTeam(rejectingMemberId,

@@ -10,11 +10,11 @@ import org.springframework.web.client.RestTemplate;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistApplication;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistTeamBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistDeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectBase;
@@ -48,7 +48,7 @@ public class ApplicationProdRequestAutomationHandler {
         ApplicationEntity applicationEntity = applicationProdRequestEntity
                 .getApplication();
 
-        ApplicationCreated applicationCreated = this
+        AtomistApplication application = this
                 .applicationEntityToApplication(applicationEntity);
 
         ProjectEntity projectEntity = applicationEntity.getProject();
@@ -76,7 +76,7 @@ public class ApplicationProdRequestAutomationHandler {
 
         ApplicationProdRequestCreatedWithDetails applicationProdRequestEvent = new ApplicationProdRequestCreatedWithDetails(
                 applicationProdRequest,
-                applicationCreated,
+                application,
                 projectCreated,
                 deploymentPipeline,
                 owningTeam,
@@ -95,9 +95,9 @@ public class ApplicationProdRequestAutomationHandler {
         }
     }
 
-    private ApplicationCreated applicationEntityToApplication(
+    private AtomistApplication applicationEntityToApplication(
             ApplicationEntity applicationEntity) {
-        return ApplicationCreated.builder()
+        return AtomistApplication.builder()
                 .applicationId(applicationEntity.getApplicationId())
                 .applicationType(applicationEntity.getApplicationType())
                 .description(applicationEntity.getDescription())
@@ -142,7 +142,7 @@ public class ApplicationProdRequestAutomationHandler {
     private class ApplicationProdRequestCreatedWithDetails {
         private ApplicationProdRequest applicationProdRequest;
 
-        private ApplicationCreated application;
+        private AtomistApplication application;
 
         private AtomistProjectBase project;
 
