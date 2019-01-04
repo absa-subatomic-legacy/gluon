@@ -2,12 +2,13 @@ package za.co.absa.subatomic.infrastructure.application.view.jpa;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.adapter.application.rest.BitbucketRepository;
-import za.co.absa.subatomic.domain.application.ApplicationInterface;
+import za.co.absa.subatomic.domain.application.Application;
 import za.co.absa.subatomic.domain.application.ApplicationType;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
@@ -33,21 +34,21 @@ public class ApplicationPersistenceHandler {
     }
 
     @Transactional
-    public ApplicationEntity createApplication(ApplicationInterface event) {
+    public ApplicationEntity createApplication(Application application) {
         ProjectEntity projectEntity = projectRepository
-                .findByProjectId(event.getProjectId());
+                .findByProjectId(application.getProjectId());
 
         TeamMemberEntity createdBy = teamMemberRepository
-                .findByMemberId(event.getCreatedBy().getMemberId());
+                .findByMemberId(application.getCreatedBy().getMemberId());
 
-        BitbucketRepository bitbucketRepository = event
+        BitbucketRepository bitbucketRepository = application
                 .getBitbucketRepository();
 
         ApplicationEntity applicationEntity = ApplicationEntity.builder()
-                .applicationId(event.getApplicationId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .applicationType(event.getApplicationType())
+                .applicationId(UUID.randomUUID().toString())
+                .name(application.getName())
+                .description(application.getDescription())
+                .applicationType(application.getApplicationType())
                 .project(projectEntity)
                 .createdBy(createdBy)
                 .bitbucketRepository(new BitbucketRepositoryEmbedded(

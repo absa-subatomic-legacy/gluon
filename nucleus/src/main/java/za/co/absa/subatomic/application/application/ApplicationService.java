@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import za.co.absa.subatomic.application.team.TeamAssertions;
-import za.co.absa.subatomic.domain.application.ApplicationInterface;
+import za.co.absa.subatomic.domain.application.Application;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.infrastructure.application.ApplicationAutomationHandler;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
@@ -53,7 +53,7 @@ public class ApplicationService {
     }
 
     public ApplicationEntity newApplication(
-            ApplicationInterface newApplication,
+            Application newApplication,
             boolean configurationRequested) {
         ApplicationEntity existingApplication = this.applicationPersistenceHandler
                 .findByNameAndProjectProjectId(newApplication.getName(),

@@ -7,13 +7,13 @@ import org.springframework.hateoas.ResourceSupport;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
-import za.co.absa.subatomic.domain.application.ApplicationInterface;
+import za.co.absa.subatomic.domain.application.Application;
 import za.co.absa.subatomic.domain.application.ApplicationType;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class ApplicationResource extends ResourceSupport
-        implements ApplicationInterface {
+        implements Application {
 
     private String applicationId;
 
