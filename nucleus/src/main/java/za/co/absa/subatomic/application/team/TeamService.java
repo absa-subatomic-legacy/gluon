@@ -222,12 +222,13 @@ public class TeamService {
         TeamEntity teamEntity = this.persistenceHandler.findByTeamId(teamId);
         TeamMemberEntity requestedByMemberEntity = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(requestedByMemberId);
-        // this.teamMember
         this.teamAssertions.assertMemberIsOwnerOfTeam(requestedByMemberEntity,
                 teamEntity);
 
         this.persistenceHandler.updateOpenShiftCloud(teamEntity,
                 openShiftCloud);
+        this.automationHandler.teamOpenShiftCloudUpdated(teamEntity,
+                requestedByMemberEntity);
     }
 
     @Transactional(readOnly = true)

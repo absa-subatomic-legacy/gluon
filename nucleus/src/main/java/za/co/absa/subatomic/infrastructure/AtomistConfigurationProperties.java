@@ -43,4 +43,6 @@ public class AtomistConfigurationProperties {
     private String applicationProdRequestedEventUrl;
 
     private String genericProdRequestedEventUrl;
+
+    private String teamOpenShiftCloudMigratedEventUrl;
 }
