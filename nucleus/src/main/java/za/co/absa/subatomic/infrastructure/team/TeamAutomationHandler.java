@@ -113,7 +113,7 @@ public class TeamAutomationHandler {
     }
 
     public void teamOpenShiftCloudUpdated(TeamEntity teamEntity,
-            TeamMemberEntity teamMemberEntity) {
+            TeamMemberEntity teamMemberEntity, String previousCloud) {
         log.info(
                 "A team OpenShift cloud has been updated, sending event to Atomist...");
 
@@ -126,7 +126,8 @@ public class TeamAutomationHandler {
                                 teamMemberEntity.getSlackDetails()
                                         .getScreenName(),
                                 teamMemberEntity.getSlackDetails()
-                                        .getUserId())));
+                                        .getUserId())),
+                previousCloud);
 
         log.info("Sending payload to atomist: {}",
                 teamOpenShiftCloudMigrationEvent);
@@ -352,6 +353,8 @@ public class TeamAutomationHandler {
         private AtomistTeam team;
 
         private AtomistMemberBase requestedBy;
+
+        private String previousCloud;
     }
 
     @Value

@@ -225,10 +225,12 @@ public class TeamService {
         this.teamAssertions.assertMemberIsOwnerOfTeam(requestedByMemberEntity,
                 teamEntity);
 
+        String previousCloud = teamEntity.getOpenShiftCloud();
+
         this.persistenceHandler.updateOpenShiftCloud(teamEntity,
                 openShiftCloud);
         this.automationHandler.teamOpenShiftCloudUpdated(teamEntity,
-                requestedByMemberEntity);
+                requestedByMemberEntity, previousCloud);
     }
 
     @Transactional(readOnly = true)
