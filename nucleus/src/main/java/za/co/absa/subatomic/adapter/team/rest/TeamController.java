@@ -115,6 +115,12 @@ public class TeamController {
             }
         }
 
+        if (StringUtils.isNoneBlank(request.getOpenShiftCloud(),
+                request.getCreatedBy())) {
+            teamService.updateTeamOpenShiftCloud(id,
+                    request.getOpenShiftCloud(), request.getCreatedBy());
+        }
+
         return ResponseEntity.accepted()
                 .body(assembler.toResource(
                         teamService.getPersistenceHandler().findByTeamId(id)));

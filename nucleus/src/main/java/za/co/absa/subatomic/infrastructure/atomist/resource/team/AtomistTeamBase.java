@@ -1,4 +1,4 @@
-package za.co.absa.subatomic.infrastructure.atomist.resource;
+package za.co.absa.subatomic.infrastructure.atomist.resource.team;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

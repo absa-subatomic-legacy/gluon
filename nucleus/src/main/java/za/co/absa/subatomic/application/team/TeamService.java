@@ -12,11 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
-import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.TeamAutomationHandler;
@@ -34,7 +34,7 @@ public class TeamService {
 
     private ProjectRepository projectRepository;
 
-    private TeamMemberService teamMemberService;
+    private TeamMemberPersistenceHandler teamMemberPersistenceHandler;
 
     private TeamAutomationHandler automationHandler;
 
@@ -47,13 +47,13 @@ public class TeamService {
     public TeamService(TeamRepository teamRepository,
             MembershipRequestRepository membershipRequestRepository,
             ProjectRepository projectRepository,
-            TeamMemberService teamMemberService,
+            TeamMemberPersistenceHandler teamMemberPersistenceHandler,
             TeamAutomationHandler automationHandler,
             TeamPersistenceHandler persistenceHandler) {
         this.teamRepository = teamRepository;
         this.membershipRequestRepository = membershipRequestRepository;
         this.projectRepository = projectRepository;
-        this.teamMemberService = teamMemberService;
+        this.teamMemberPersistenceHandler = teamMemberPersistenceHandler;
         this.automationHandler = automationHandler;
         this.persistenceHandler = persistenceHandler;
     }
@@ -83,8 +83,7 @@ public class TeamService {
 
         TeamEntity team = this.teamRepository.findByTeamId(teamId);
 
-        TeamMemberEntity actionedByEntity = this.teamMemberService
-                .getTeamMemberPersistenceHandler()
+        TeamMemberEntity actionedByEntity = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(actionedBy);
 
         teamAssertions.assertMemberIsOwnerOfTeam(actionedByEntity, team);
@@ -113,11 +112,9 @@ public class TeamService {
         this.persistenceHandler.addTeamMembers(teamId, teamOwnerIds,
                 teamMemberIds);
 
-        List<TeamMemberEntity> newTeamMembers = this.teamMemberService
-                .getTeamMemberPersistenceHandler()
+        List<TeamMemberEntity> newTeamMembers = this.teamMemberPersistenceHandler
                 .findAllTeamMembersById(teamMemberIds);
-        List<TeamMemberEntity> newOwners = this.teamMemberService
-                .getTeamMemberPersistenceHandler()
+        List<TeamMemberEntity> newOwners = this.teamMemberPersistenceHandler
                 .findAllTeamMembersById(teamOwnerIds);
 
         this.automationHandler.teamMembersAdded(team, newOwners,
@@ -129,11 +126,9 @@ public class TeamService {
             String requestedById) {
 
         TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
-        TeamMemberEntity actionedByEntity = this.teamMemberService
-                .getTeamMemberPersistenceHandler()
+        TeamMemberEntity actionedByEntity = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(requestedById);
-        TeamMemberEntity member = this.teamMemberService
-                .getTeamMemberPersistenceHandler()
+        TeamMemberEntity member = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(memberId);
 
         teamAssertions.assertMemberIsOwnerOfTeam(actionedByEntity, team);
@@ -151,8 +146,7 @@ public class TeamService {
 
     public void newDevOpsEnvironment(String teamId, String requestedById) {
         TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
-        TeamMemberEntity requestedBy = this.teamMemberService
-                .getTeamMemberPersistenceHandler()
+        TeamMemberEntity requestedBy = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(requestedById);
 
         teamAssertions.assertMemberBelongsToTeam(requestedBy, team);
@@ -162,8 +156,8 @@ public class TeamService {
 
     public void updateMembershipRequest(String teamId,
             MembershipRequestResource membershipRequest) {
-        TeamMemberEntity approver = this.teamMemberService
-                .getTeamMemberPersistenceHandler().findByTeamMemberId(
+        TeamMemberEntity approver = this.teamMemberPersistenceHandler
+                .findByTeamMemberId(
                         membershipRequest.getApprovedBy().getMemberId());
         TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
         teamAssertions.assertMemberIsOwnerOfTeam(approver, team);
@@ -187,8 +181,7 @@ public class TeamService {
 
         if (membershipRequestEntity
                 .getRequestStatus() == MembershipRequestStatus.APPROVED) {
-            TeamMemberEntity newMemberEntity = this.teamMemberService
-                    .getTeamMemberPersistenceHandler()
+            TeamMemberEntity newMemberEntity = teamMemberPersistenceHandler
                     .findByTeamMemberId(membershipRequestEntity.getRequestedBy()
                             .getMemberId());
             this.addTeamMembers(teamId,
@@ -201,8 +194,7 @@ public class TeamService {
     public void newMembershipRequest(String teamId,
             String requestByMemberId) {
         TeamEntity teamEntity = this.persistenceHandler.findByTeamId(teamId);
-        TeamMemberEntity requestedBy = this.teamMemberService
-                .getTeamMemberPersistenceHandler()
+        TeamMemberEntity requestedBy = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(requestByMemberId);
 
         teamAssertions.assertMemberDoesNotBelongToTeam(requestedBy, teamEntity);
@@ -223,6 +215,22 @@ public class TeamService {
 
         this.automationHandler.membershipRequestCreated(teamEntity,
                 membershipRequest);
+    }
+
+    public void updateTeamOpenShiftCloud(String teamId, String openShiftCloud,
+            String requestedByMemberId) {
+        TeamEntity teamEntity = this.persistenceHandler.findByTeamId(teamId);
+        TeamMemberEntity requestedByMemberEntity = this.teamMemberPersistenceHandler
+                .findByTeamMemberId(requestedByMemberId);
+        this.teamAssertions.assertMemberIsOwnerOfTeam(requestedByMemberEntity,
+                teamEntity);
+
+        String previousCloud = teamEntity.getOpenShiftCloud();
+
+        this.persistenceHandler.updateOpenShiftCloud(teamEntity,
+                openShiftCloud);
+        this.automationHandler.teamOpenShiftCloudUpdated(teamEntity,
+                requestedByMemberEntity, previousCloud);
     }
 
     @Transactional(readOnly = true)

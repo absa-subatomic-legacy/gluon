@@ -16,7 +16,7 @@ import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
-import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistTeam;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProject;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectMapper;
