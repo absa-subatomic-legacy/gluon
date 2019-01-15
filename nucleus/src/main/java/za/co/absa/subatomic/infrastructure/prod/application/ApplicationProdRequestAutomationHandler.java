@@ -10,12 +10,15 @@ import org.springframework.web.client.RestTemplate;
 
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import za.co.absa.subatomic.domain.application.ApplicationCreated;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
-import za.co.absa.subatomic.domain.project.ProjectCreated;
-import za.co.absa.subatomic.domain.project.TenantId;
+import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistApplication;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeamBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistDeploymentPipeline;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.ApplicationProdRequestEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -45,19 +48,23 @@ public class ApplicationProdRequestAutomationHandler {
         ApplicationEntity applicationEntity = applicationProdRequestEntity
                 .getApplication();
 
-        ApplicationCreated applicationCreated = this
+        AtomistApplication application = this
                 .applicationEntityToApplication(applicationEntity);
 
         ProjectEntity projectEntity = applicationEntity.getProject();
 
-        ProjectCreated projectCreated = this
-                .projectEntityToProject(projectEntity);
+        AtomistProjectBase projectCreated = new AtomistProjectMapper()
+                .createAtomistProjectBase(projectEntity);
+
+        AtomistDeploymentPipeline deploymentPipeline = new AtomistProjectMapper()
+                .createAtomistDeploymentPipeline(
+                        applicationProdRequestEntity.getDeploymentPipeline());
 
         TeamEntity owningTeamEntity = projectEntity.getOwningTeam();
 
-        Team owningTeam = this.teamEntityToTeam(owningTeamEntity);
+        AtomistTeamBase owningTeam = this.teamEntityToTeam(owningTeamEntity);
 
-        List<Team> associatedTeams = new ArrayList<>();
+        List<AtomistTeamBase> associatedTeams = new ArrayList<>();
         for (TeamEntity team : projectEntity.getTeams()) {
             associatedTeams.add(this.teamEntityToTeam(team));
         }
@@ -69,8 +76,9 @@ public class ApplicationProdRequestAutomationHandler {
 
         ApplicationProdRequestCreatedWithDetails applicationProdRequestEvent = new ApplicationProdRequestCreatedWithDetails(
                 applicationProdRequest,
-                applicationCreated,
+                application,
                 projectCreated,
+                deploymentPipeline,
                 owningTeam,
                 associatedTeams,
                 actionedBy);
@@ -87,9 +95,9 @@ public class ApplicationProdRequestAutomationHandler {
         }
     }
 
-    private ApplicationCreated applicationEntityToApplication(
+    private AtomistApplication applicationEntityToApplication(
             ApplicationEntity applicationEntity) {
-        return ApplicationCreated.builder()
+        return AtomistApplication.builder()
                 .applicationId(applicationEntity.getApplicationId())
                 .applicationType(applicationEntity.getApplicationType())
                 .description(applicationEntity.getDescription())
@@ -97,26 +105,17 @@ public class ApplicationProdRequestAutomationHandler {
                 .build();
     }
 
-    private ProjectCreated projectEntityToProject(ProjectEntity projectEntity) {
-        return ProjectCreated.builder()
-                .projectId(projectEntity.getProjectId())
-                .name(projectEntity.getName())
-                .description(projectEntity.getDescription())
-                .tenant(new TenantId(
-                        projectEntity.getOwningTenant().getTenantId()))
-                .build();
-    }
-
-    private Team teamEntityToTeam(TeamEntity teamEntity) {
-        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+    private AtomistTeamBase teamEntityToTeam(TeamEntity teamEntity) {
+        TeamSlackIdentity teamSlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
-            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            teamSlackIdentity = new TeamSlackIdentity(
                     teamEntity.getSlackDetails().getTeamChannel());
         }
 
-        return new Team(
+        return new AtomistTeamBase(
                 teamEntity.getTeamId(),
                 teamEntity.getName(),
+                teamEntity.getOpenShiftCloud(),
                 teamSlackIdentity);
     }
 
@@ -143,13 +142,15 @@ public class ApplicationProdRequestAutomationHandler {
     private class ApplicationProdRequestCreatedWithDetails {
         private ApplicationProdRequest applicationProdRequest;
 
-        private ApplicationCreated application;
+        private AtomistApplication application;
 
-        private ProjectCreated project;
+        private AtomistProjectBase project;
 
-        private Team owningTeam;
+        private AtomistDeploymentPipeline deploymentPipeline;
 
-        private List<Team> teams;
+        private AtomistTeamBase owningTeam;
+
+        private List<AtomistTeamBase> teams;
 
         private ActionedBy actionedBy;
     }
@@ -159,16 +160,6 @@ public class ApplicationProdRequestAutomationHandler {
         private String applicationProdRequestId;
 
         private Date createdAt;
-    }
-
-    @Value
-    private class Team {
-
-        private String teamId;
-
-        private String name;
-
-        private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
     }
 
     @Value

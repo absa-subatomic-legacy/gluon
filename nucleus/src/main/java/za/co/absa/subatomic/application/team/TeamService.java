@@ -7,18 +7,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
-import za.co.absa.subatomic.application.member.TeamMemberService;
-import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.TeamAutomationHandler;
@@ -32,13 +30,11 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamRepository;
 @Slf4j
 public class TeamService {
 
-    private CommandGateway commandGateway;
-
     private TeamRepository teamRepository;
 
     private ProjectRepository projectRepository;
 
-    private TeamMemberService teamMemberService;
+    private TeamMemberPersistenceHandler teamMemberPersistenceHandler;
 
     private TeamAutomationHandler automationHandler;
 
@@ -46,26 +42,27 @@ public class TeamService {
 
     private MembershipRequestRepository membershipRequestRepository;
 
-    public TeamService(CommandGateway commandGateway,
-            TeamRepository teamRepository,
+    private TeamAssertions teamAssertions = new TeamAssertions();
+
+    public TeamService(TeamRepository teamRepository,
             MembershipRequestRepository membershipRequestRepository,
             ProjectRepository projectRepository,
-            TeamMemberService teamMemberService,
+            TeamMemberPersistenceHandler teamMemberPersistenceHandler,
             TeamAutomationHandler automationHandler,
             TeamPersistenceHandler persistenceHandler) {
-        this.commandGateway = commandGateway;
         this.teamRepository = teamRepository;
         this.membershipRequestRepository = membershipRequestRepository;
         this.projectRepository = projectRepository;
-        this.teamMemberService = teamMemberService;
+        this.teamMemberPersistenceHandler = teamMemberPersistenceHandler;
         this.automationHandler = automationHandler;
         this.persistenceHandler = persistenceHandler;
     }
 
     public TeamEntity newTeamFromSlack(String name, String description,
+            String openShiftCloud,
             String createdBy,
             String teamChannel) {
-        TeamEntity existingTeam = this.findByName(name);
+        TeamEntity existingTeam = this.persistenceHandler.findByName(name);
         if (existingTeam != null) {
             throw new DuplicateRequestException(MessageFormat.format(
                     "Requested team name {0} is not available.",
@@ -73,7 +70,7 @@ public class TeamService {
         }
 
         TeamEntity newTeam = this.persistenceHandler.createTeam(name,
-                description, teamChannel, createdBy);
+                description, openShiftCloud, teamChannel, createdBy);
 
         this.automationHandler.createNewTeam(newTeam);
 
@@ -86,10 +83,10 @@ public class TeamService {
 
         TeamEntity team = this.teamRepository.findByTeamId(teamId);
 
-        TeamMemberEntity actionedByEntity = this.teamMemberService
+        TeamMemberEntity actionedByEntity = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(actionedBy);
 
-        assertMemberIsOwnerOfTeam(actionedByEntity, team);
+        teamAssertions.assertMemberIsOwnerOfTeam(actionedByEntity, team);
 
         Optional<TeamMemberEntity> existingMember = team.getMembers().stream()
                 .filter(memberEntity -> teamMemberIds
@@ -98,10 +95,6 @@ public class TeamService {
         Optional<TeamMemberEntity> existingOwner = team.getOwners().stream()
                 .filter(memberEntity -> teamOwnerIds
                         .contains(memberEntity.getMemberId()))
-                .findFirst();
-        Optional<TeamMemberEntity> actionedByIsOwner = team.getOwners().stream()
-                .filter(memberEntity -> memberEntity.getMemberId()
-                        .equals(actionedBy))
                 .findFirst();
 
         existingMember.ifPresent(teamMemberEntity -> {
@@ -119,9 +112,9 @@ public class TeamService {
         this.persistenceHandler.addTeamMembers(teamId, teamOwnerIds,
                 teamMemberIds);
 
-        List<TeamMemberEntity> newTeamMembers = this.teamMemberService
+        List<TeamMemberEntity> newTeamMembers = this.teamMemberPersistenceHandler
                 .findAllTeamMembersById(teamMemberIds);
-        List<TeamMemberEntity> newOwners = this.teamMemberService
+        List<TeamMemberEntity> newOwners = this.teamMemberPersistenceHandler
                 .findAllTeamMembersById(teamOwnerIds);
 
         this.automationHandler.teamMembersAdded(team, newOwners,
@@ -129,18 +122,21 @@ public class TeamService {
 
     }
 
-    public void removeTeamMembers(String teamId, String actionedBy,
-            List<String> teamOwnerIds,
-            List<String> teamMemberIds) {
-        TeamMemberEntity actionedByEntity = this.teamMemberService
-                .findByTeamMemberId(
-                        actionedBy);
-        TeamEntity team = this.findByTeamId(teamId);
+    public void removeTeamMember(String teamId, String memberId,
+            String requestedById) {
 
-        assertMemberIsOwnerOfTeam(actionedByEntity, team);
+        TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
+        TeamMemberEntity actionedByEntity = this.teamMemberPersistenceHandler
+                .findByTeamMemberId(requestedById);
+        TeamMemberEntity member = this.teamMemberPersistenceHandler
+                .findByTeamMemberId(memberId);
 
-        this.persistenceHandler.removeTeamMembers(teamId, teamOwnerIds,
-                teamMemberIds);
+        teamAssertions.assertMemberIsOwnerOfTeam(actionedByEntity, team);
+
+        this.persistenceHandler.removeTeamMember(teamId, memberId);
+
+        this.automationHandler.teamMemberRemoved(team, member,
+                actionedByEntity);
     }
 
     public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
@@ -149,21 +145,22 @@ public class TeamService {
     }
 
     public void newDevOpsEnvironment(String teamId, String requestedById) {
-        TeamEntity team = this.findByTeamId(teamId);
-        TeamMemberEntity requestedBy = this.teamMemberService
+        TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
+        TeamMemberEntity requestedBy = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(requestedById);
 
-        assertMemberBelongsToTeam(requestedBy, team);
+        teamAssertions.assertMemberBelongsToTeam(requestedBy, team);
 
         this.automationHandler.devOpsEnvironmentRequested(team, requestedBy);
     }
 
     public void updateMembershipRequest(String teamId,
             MembershipRequestResource membershipRequest) {
-        TeamMemberEntity approver = this.teamMemberService.findByTeamMemberId(
-                membershipRequest.getApprovedBy().getMemberId());
-        TeamEntity team = this.findByTeamId(teamId);
-        assertMemberIsOwnerOfTeam(approver, team);
+        TeamMemberEntity approver = this.teamMemberPersistenceHandler
+                .findByTeamMemberId(
+                        membershipRequest.getApprovedBy().getMemberId());
+        TeamEntity team = this.persistenceHandler.findByTeamId(teamId);
+        teamAssertions.assertMemberIsOwnerOfTeam(approver, team);
 
         MembershipRequestEntity membershipRequestEntity = this.membershipRequestRepository
                 .findByMembershipRequestId(
@@ -184,7 +181,7 @@ public class TeamService {
 
         if (membershipRequestEntity
                 .getRequestStatus() == MembershipRequestStatus.APPROVED) {
-            TeamMemberEntity newMemberEntity = this.teamMemberService
+            TeamMemberEntity newMemberEntity = teamMemberPersistenceHandler
                     .findByTeamMemberId(membershipRequestEntity.getRequestedBy()
                             .getMemberId());
             this.addTeamMembers(teamId,
@@ -192,16 +189,15 @@ public class TeamService {
                     Collections.emptyList(),
                     Collections.singletonList(newMemberEntity.getMemberId()));
         }
-
     }
 
     public void newMembershipRequest(String teamId,
             String requestByMemberId) {
-        TeamEntity teamEntity = this.findByTeamId(teamId);
-        TeamMemberEntity requestedBy = this.teamMemberService
+        TeamEntity teamEntity = this.persistenceHandler.findByTeamId(teamId);
+        TeamMemberEntity requestedBy = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(requestByMemberId);
 
-        this.assertMemberDoesNotBelongToTeam(requestedBy, teamEntity);
+        teamAssertions.assertMemberDoesNotBelongToTeam(requestedBy, teamEntity);
 
         for (MembershipRequestEntity request : teamEntity
                 .getMembershipRequests()) {
@@ -221,6 +217,22 @@ public class TeamService {
                 membershipRequest);
     }
 
+    public void updateTeamOpenShiftCloud(String teamId, String openShiftCloud,
+            String requestedByMemberId) {
+        TeamEntity teamEntity = this.persistenceHandler.findByTeamId(teamId);
+        TeamMemberEntity requestedByMemberEntity = this.teamMemberPersistenceHandler
+                .findByTeamMemberId(requestedByMemberId);
+        this.teamAssertions.assertMemberIsOwnerOfTeam(requestedByMemberEntity,
+                teamEntity);
+
+        String previousCloud = teamEntity.getOpenShiftCloud();
+
+        this.persistenceHandler.updateOpenShiftCloud(teamEntity,
+                openShiftCloud);
+        this.automationHandler.teamOpenShiftCloudUpdated(teamEntity,
+                requestedByMemberEntity, previousCloud);
+    }
+
     @Transactional(readOnly = true)
     public Set<TeamEntity> findTeamsAssociatedToProject(String projectId) {
         ProjectEntity projectEntity = projectRepository
@@ -231,90 +243,7 @@ public class TeamService {
         return associatedTeams;
     }
 
-    @Transactional(readOnly = true)
-    public TeamEntity findByTeamId(String teamId) {
-        return teamRepository.findByTeamId(teamId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<TeamEntity> findAll() {
-        return teamRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
-    public TeamEntity findByName(String name) {
-        return teamRepository.findByName(name);
-    }
-
-    @Transactional(readOnly = true)
-    public MembershipRequestEntity findMembershipRequestById(String id) {
-        return membershipRequestRepository.findByMembershipRequestId(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Set<TeamEntity> findByMemberOrOwnerMemberId(String teamMemberId) {
-        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByMembers_MemberId(teamMemberId));
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByOwners_MemberId(teamMemberId));
-        return teamsWithMemberOrOwner;
-    }
-
-    @Transactional(readOnly = true)
-    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(
-            String slackScreenName) {
-        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByMembers_SlackDetailsScreenName(slackScreenName));
-        teamsWithMemberOrOwner.addAll(teamRepository
-                .findByOwners_SlackDetailsScreenName(slackScreenName));
-        return teamsWithMemberOrOwner;
-    }
-
-    @Transactional(readOnly = true)
-    public List<TeamEntity> findBySlackTeamChannel(String slackTeamChannel) {
-        return teamRepository.findBySlackDetailsTeamChannel(slackTeamChannel);
-    }
-
-    private void assertMemberBelongsToTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        if (!this.memberBelongsToTeam(memberEntity, teamEntity)) {
-            throw new ApplicationAuthorisationException(MessageFormat.format(
-                    "TeamMember with id {0} is not a member of the team with id {1}.",
-                    memberEntity.getMemberId(),
-                    teamEntity.getTeamId()));
-        }
-    }
-
-    private void assertMemberDoesNotBelongToTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        if (this.memberBelongsToTeam(memberEntity, teamEntity)) {
-            throw new InvalidRequestException(MessageFormat.format(
-                    "TeamMember with id {0} is already a member of the team with id {1}.",
-                    memberEntity.getMemberId(),
-                    teamEntity.getTeamId()));
-        }
-    }
-
-    private void assertMemberIsOwnerOfTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        if (teamEntity.getOwners().stream().map(TeamMemberEntity::getMemberId)
-                .noneMatch(memberEntity.getMemberId()::equals)) {
-            throw new InvalidRequestException(MessageFormat.format(
-                    "TeamMember with id {0} is not an owner of the team with id {1}.",
-                    memberEntity.getMemberId(),
-                    teamEntity.getTeamId()));
-        }
-    }
-
-    private boolean memberBelongsToTeam(TeamMemberEntity memberEntity,
-            TeamEntity teamEntity) {
-        Set<TeamMemberEntity> allMembers = new HashSet<>();
-        allMembers.addAll(teamEntity.getMembers());
-        allMembers.addAll(teamEntity.getOwners());
-
-        return allMembers.stream().map(TeamMemberEntity::getMemberId)
-                .anyMatch(memberEntity.getMemberId()::equals);
+    public TeamPersistenceHandler getPersistenceHandler() {
+        return persistenceHandler;
     }
 }

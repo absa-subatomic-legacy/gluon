@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
 import za.co.absa.subatomic.application.application.ApplicationService;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.BitbucketRepositoryEmbedded;
@@ -49,22 +50,12 @@ public class ApplicationController {
             request.setRequestConfiguration(false);
         }
 
-        String aggregateId = applicationService.newApplication(
-                request.getName(),
-                request.getDescription(),
-                request.getApplicationType(),
-                request.getProjectId(),
-                request.getCreatedBy(),
-                request.getRequestConfiguration(),
-                request.getBitbucketRepository().getBitbucketId(),
-                request.getBitbucketRepository().getSlug(),
-                request.getBitbucketRepository().getName(),
-                request.getBitbucketRepository().getRepoUrl(),
-                request.getBitbucketRepository().getRemoteUrl());
+        ApplicationEntity applicationEntity = applicationService
+                .newApplication(request, request.getRequestConfiguration());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(aggregateId)
+                .buildAndExpand(applicationEntity.getApplicationId())
                 .toUri();
 
         return ResponseEntity.created(location).build();
@@ -72,7 +63,8 @@ public class ApplicationController {
 
     @GetMapping("/{id}")
     ApplicationResource get(@PathVariable String id) {
-        return assembler.toResource(applicationService.findByApplictionId(id));
+        return assembler.toResource(applicationService
+                .getApplicationPersistenceHandler().findByApplictionId(id));
     }
 
     @GetMapping
@@ -86,33 +78,41 @@ public class ApplicationController {
         if (StringUtils.isNoneBlank(name, projectId)) {
             applications.add(
                     assembler.toResource(applicationService
+                            .getApplicationPersistenceHandler()
                             .findByNameAndProjectProjectId(name, projectId)));
         }
         else if (StringUtils.isNotBlank(projectId)) {
             applications.addAll(
                     assembler.toResources(
-                            applicationService.findByProjectId(projectId)));
+                            applicationService
+                                    .getApplicationPersistenceHandler()
+                                    .findByProjectId(projectId)));
         }
         else if (StringUtils.isNoneBlank(name, projectName)) {
             applications.add(
                     assembler.toResource(applicationService
+                            .getApplicationPersistenceHandler()
                             .findByNameAndProjectName(name, projectName)));
         }
         else if (StringUtils.isNotBlank(projectName)) {
             applications.addAll(
                     assembler.toResources(
-                            applicationService.findByProjectName(projectName)));
+                            applicationService
+                                    .getApplicationPersistenceHandler()
+                                    .findByProjectName(projectName)));
         }
 
         if (StringUtils.isNotBlank(applicationType)) {
             applications.addAll(
                     assembler.toResources(applicationService
+                            .getApplicationPersistenceHandler()
                             .findByApplicationType(applicationType)));
         }
 
         if (StringUtils.isAllBlank(name, applicationType, projectName,
                 projectId)) {
-            applications.addAll(applicationService.findAll().stream()
+            applications.addAll(applicationService
+                    .getApplicationPersistenceHandler().findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
@@ -146,10 +146,11 @@ public class ApplicationController {
                 resource.setApplicationId(entity.getApplicationId());
                 resource.setName(entity.getName());
                 resource.setDescription(entity.getDescription());
-                resource.setApplicationType(entity.getApplicationType().name());
+                resource.setApplicationType(entity.getApplicationType());
                 resource.setProjectId(entity.getProject().getProjectId());
                 resource.setCreatedAt(entity.getCreatedAt());
-                resource.setCreatedBy(entity.getCreatedBy().getMemberId());
+                resource.setCreatedBy(new TeamMemberResourceBaseAssembler()
+                        .toResource(entity.getCreatedBy()));
 
                 if (entity.getBitbucketRepository() != null) {
                     BitbucketRepositoryEmbedded bitbucketRepository = entity

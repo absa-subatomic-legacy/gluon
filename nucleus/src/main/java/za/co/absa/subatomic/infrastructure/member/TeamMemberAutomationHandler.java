@@ -1,6 +1,5 @@
 package za.co.absa.subatomic.infrastructure.member;
 
-import org.axonframework.eventhandling.EventHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -8,6 +7,7 @@ import org.springframework.web.client.RestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.DomainCredentials;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberCreated;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 
 @Component
@@ -24,12 +24,11 @@ public class TeamMemberAutomationHandler {
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
-    @EventHandler
     public void teamMemberCreated(TeamMemberEntity memberEntity) {
         log.info("A team member was created, sending event to Atomist: {}",
                 memberEntity);
 
-        AtomistTeamMemberRepresentation atomistTeamMember = AtomistTeamMemberRepresentation
+        AtomistMemberCreated atomistTeamMember = AtomistMemberCreated
                 .builder()
                 .memberId(memberEntity.getMemberId())
                 .domainCredentials(

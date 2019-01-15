@@ -22,6 +22,7 @@ import lombok.Setter;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.openshift.view.jpa.OpenShiftResourceEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineEntity;
 
 @Entity
 @Table(name = "genericProdRequest")
@@ -41,6 +42,9 @@ public class GenericProdRequestEntity {
 
     @ManyToOne
     private ProjectEntity project;
+
+    @OneToOne
+    private ReleaseDeploymentPipelineEntity deploymentPipeline;
 
     @OneToOne
     private TeamMemberEntity actionedBy;

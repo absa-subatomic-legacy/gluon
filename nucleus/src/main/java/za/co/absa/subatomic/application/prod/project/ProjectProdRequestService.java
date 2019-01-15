@@ -21,6 +21,8 @@ import za.co.absa.subatomic.infrastructure.prod.project.ProjectProdRequestAutoma
 import za.co.absa.subatomic.infrastructure.prod.project.view.jpa.ProjectProdRequestEntity;
 import za.co.absa.subatomic.infrastructure.prod.project.view.jpa.ProjectProdRequestRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @Service
@@ -38,38 +40,48 @@ public class ProjectProdRequestService {
 
     private GluonProperties gluonProperties;
 
+    private ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository;
+
     public ProjectProdRequestService(
             ProjectService projectService,
             TeamMemberService teamMemberService,
             TeamService teamService,
             ProjectProdRequestRepository projectProdRequestRepository,
             ProjectProdRequestAutomationHandler automationHandler,
-            GluonProperties gluonProperties) {
+            GluonProperties gluonProperties,
+            ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository) {
         this.projectService = projectService;
         this.teamMemberService = teamMemberService;
         this.teamService = teamService;
         this.projectProdRequestRepository = projectProdRequestRepository;
         this.automationHandler = automationHandler;
         this.gluonProperties = gluonProperties;
+        this.releaseDeploymentPipelineRepository = releaseDeploymentPipelineRepository;
     }
 
     public ProjectProdRequestEntity createProjectProdRequest(String projectId,
-            String actionedByMemberId) {
+            String actionedByMemberId, String pipelineId) {
         ProjectEntity projectEntity = this.projectService
-                .findByProjectId(projectId);
-        TeamMemberEntity actionedBy = this.teamMemberService
+                .getProjectPersistenceHandler().findByProjectId(projectId);
+        TeamMemberEntity actionedBy = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedByMemberId);
+        ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
+                .findByPipelineId(pipelineId);
 
-        Set<TeamEntity> memberAssociatedTeams = this.teamService
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
         assertMemberIsAMemberOfOwningTeam(actionedByMemberId,
                 projectId, memberAssociatedTeams,
                 projectEntity.getOwningTeam());
 
+        assertPipelineBelongsToProject(projectEntity, deploymentPipeline);
+
         // Close and mark any open requests as rejected
-        for (ProjectProdRequestEntity openProdRequest : this.projectProdRequestRepository
-                .findByApprovalStatus(ProjectProductionRequestStatus.PENDING)) {
+        for (ProjectProdRequestEntity openProdRequest : this
+                .findByProjectIdAndPipelineIdAndApprovalStatus(
+                        projectId, pipelineId,
+                        ProjectProductionRequestStatus.PENDING)) {
             openProdRequest.setRejectingMember(actionedBy);
             openProdRequest
                     .setApprovalStatus(ProjectProductionRequestStatus.REJECTED);
@@ -83,7 +95,8 @@ public class ProjectProdRequestService {
         }
 
         ProjectProdRequestEntity projectProdRequestEntity = this
-                .createProdProjectRequestEntity(projectEntity, actionedBy);
+                .createProdProjectRequestEntity(projectEntity, actionedBy,
+                        deploymentPipeline);
 
         if (projectProdRequestEntity != null) {
             this.automationHandler
@@ -95,11 +108,13 @@ public class ProjectProdRequestService {
 
     @Transactional
     protected ProjectProdRequestEntity createProdProjectRequestEntity(
-            ProjectEntity projectEntity, TeamMemberEntity actionedBy) {
+            ProjectEntity projectEntity, TeamMemberEntity actionedBy,
+            ReleaseDeploymentPipelineEntity releaseDeploymentPipeline) {
         ProjectProdRequestEntity projectProdRequestEntityInitial = ProjectProdRequestEntity
                 .builder()
                 .projectProdRequestId(UUID.randomUUID().toString())
                 .project(projectEntity)
+                .deploymentPipeline(releaseDeploymentPipeline)
                 .projectName(projectEntity.getName())
                 .actionedBy(actionedBy)
                 .approvalStatus(ProjectProductionRequestStatus.PENDING)
@@ -112,9 +127,9 @@ public class ProjectProdRequestService {
             String projectProdRequestId, String approvingMemberId) {
         ProjectProdRequestEntity projectProdRequest = projectProdRequestRepository
                 .findByProjectProdRequestId(projectProdRequestId);
-        TeamMemberEntity approvingMember = this.teamMemberService
+        TeamMemberEntity approvingMember = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(approvingMemberId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(approvingMemberId);
 
         assertMemberIsAMemberOfOwningTeam(approvingMemberId,
@@ -162,9 +177,9 @@ public class ProjectProdRequestService {
             String projectProdRequestId, String rejectingMemberId) {
         ProjectProdRequestEntity projectProdRequest = projectProdRequestRepository
                 .findByProjectProdRequestId(projectProdRequestId);
-        TeamMemberEntity rejectingMember = this.teamMemberService
+        TeamMemberEntity rejectingMember = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(rejectingMemberId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
                 .findByMemberOrOwnerMemberId(rejectingMemberId);
 
         assertMemberIsAMemberOfOwningTeam(rejectingMemberId,
@@ -210,6 +225,39 @@ public class ProjectProdRequestService {
     @Transactional(readOnly = true)
     public List<ProjectProdRequestEntity> findAll() {
         return this.projectProdRequestRepository.findAll();
+    }
+
+    public List<ProjectProdRequestEntity> findByProjectId(String projectId) {
+        return this.projectProdRequestRepository
+                .findByProjectProjectId(projectId);
+    }
+
+    public List<ProjectProdRequestEntity> findByProjectIdAndPipelineId(
+            String projectId, String pipelineId) {
+        return this.projectProdRequestRepository
+                .findByProjectProjectIdAndDeploymentPipelinePipelineId(
+                        projectId, pipelineId);
+    }
+
+    public List<ProjectProdRequestEntity> findByProjectIdAndPipelineIdAndApprovalStatus(
+            String projectId, String pipelineId,
+            ProjectProductionRequestStatus status) {
+        return this.projectProdRequestRepository
+                .findByProjectProjectIdAndDeploymentPipelinePipelineIdAndApprovalStatus(
+                        projectId, pipelineId, status);
+    }
+
+    private void assertPipelineBelongsToProject(ProjectEntity projectEntity,
+            ReleaseDeploymentPipelineEntity deploymentPipelineEntity) {
+        if (projectEntity.getReleaseDeploymentPipelines()
+                .stream()
+                .noneMatch(deploymentPipelineEntity::equals)) {
+            throw new ApplicationAuthorisationException(MessageFormat.format(
+                    "DeploymentPipeline with id {0} is not a valid releaseDeploymentPipeline of the project with id {1}.",
+                    deploymentPipelineEntity.getPipelineId(),
+                    projectEntity.getProjectId()));
+        }
+
     }
 
     private void assertMemberIsAMemberOfOwningTeam(String memberId,

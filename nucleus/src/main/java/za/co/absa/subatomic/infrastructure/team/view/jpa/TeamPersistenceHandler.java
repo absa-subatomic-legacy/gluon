@@ -2,8 +2,10 @@ package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
 import java.text.MessageFormat;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -34,6 +36,7 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public TeamEntity createTeam(String name, String description,
+            String openShiftCloud,
             String slackTeamChannel,
             String createdById) {
 
@@ -44,6 +47,7 @@ public class TeamPersistenceHandler {
                 .teamId(UUID.randomUUID().toString())
                 .description(description)
                 .name(name)
+                .openShiftCloud(openShiftCloud)
                 .createdBy(createdBy)
                 .owners(Collections.singleton(createdBy))
                 .build();
@@ -60,7 +64,6 @@ public class TeamPersistenceHandler {
         this.teamMemberRepository.save(createdBy);
 
         return teamEntity;
-
     }
 
     @Transactional
@@ -81,9 +84,13 @@ public class TeamPersistenceHandler {
             List<String> teamMemberIdsRequested) {
         TeamEntity team = teamRepository.findByTeamId(teamId);
 
-        List<String> existingMemberIds = team.getMembers().stream().map(TeamMemberEntity::getMemberId).collect(Collectors.toList());
+        List<String> existingMemberIds = team.getMembers().stream()
+                .map(TeamMemberEntity::getMemberId)
+                .collect(Collectors.toList());
 
-        List<String> existingOwnerIds = team.getOwners().stream().map(TeamMemberEntity::getMemberId).collect(Collectors.toList());
+        List<String> existingOwnerIds = team.getOwners().stream()
+                .map(TeamMemberEntity::getMemberId)
+                .collect(Collectors.toList());
 
         // Filter existing members
         List<String> teamMemberIds = teamMemberIdsRequested.stream()
@@ -168,6 +175,22 @@ public class TeamPersistenceHandler {
     }
 
     @Transactional
+    public void removeTeamMember(String teamId,
+            String memberId) {
+
+        TeamEntity team = teamRepository.findByTeamId(teamId);
+
+        TeamMemberEntity member = this.teamMemberRepository
+                .findByMemberId(memberId);
+
+        member.getTeams().remove(team);
+        teamMemberRepository.save(member);
+
+        team.getMembers().remove(member);
+        teamRepository.save(team);
+    }
+
+    @Transactional
     public MembershipRequestEntity closeMembershipRequest(
             String membershipRequestId, MembershipRequestStatus status,
             String closedById) {
@@ -207,4 +230,56 @@ public class TeamPersistenceHandler {
         return membershipRequestEntity;
     }
 
+    @Transactional(readOnly = true)
+    public TeamEntity updateOpenShiftCloud(TeamEntity team,
+            String openShiftCloud) {
+        team.setOpenShiftCloud(openShiftCloud);
+        return this.teamRepository.save(team);
+    }
+
+    @Transactional(readOnly = true)
+    public TeamEntity findByTeamId(String teamId) {
+        return teamRepository.findByTeamId(teamId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamEntity> findAll() {
+        return teamRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public TeamEntity findByName(String name) {
+        return teamRepository.findByName(name);
+    }
+
+    @Transactional(readOnly = true)
+    public MembershipRequestEntity findMembershipRequestById(String id) {
+        return membershipRequestRepository.findByMembershipRequestId(id);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findByMemberOrOwnerMemberId(String teamMemberId) {
+        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByMembers_MemberId(teamMemberId));
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByOwners_MemberId(teamMemberId));
+        return teamsWithMemberOrOwner;
+    }
+
+    @Transactional(readOnly = true)
+    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(
+            String slackScreenName) {
+        Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByMembers_SlackDetailsScreenName(slackScreenName));
+        teamsWithMemberOrOwner.addAll(teamRepository
+                .findByOwners_SlackDetailsScreenName(slackScreenName));
+        return teamsWithMemberOrOwner;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TeamEntity> findBySlackTeamChannel(String slackTeamChannel) {
+        return teamRepository.findBySlackDetailsTeamChannel(slackTeamChannel);
+    }
 }

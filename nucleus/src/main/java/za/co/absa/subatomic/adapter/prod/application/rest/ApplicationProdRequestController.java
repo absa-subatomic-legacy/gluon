@@ -18,6 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResource;
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResourceAssembler;
+import za.co.absa.subatomic.adapter.project.rest.DeploymentPipelineResourceAssembler;
 import za.co.absa.subatomic.application.prod.application.ApplicationProdRequestService;
 import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.ApplicationProdRequestEntity;
 
@@ -44,6 +45,7 @@ public class ApplicationProdRequestController {
                 .newApplicationProdRequest(
                         request.getApplicationId(),
                         request.getActionedBy(),
+                        request.getDeploymentPipeline().getPipelineId(),
                         request.getOpenShiftResources());
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -81,6 +83,9 @@ public class ApplicationProdRequestController {
                         entity.getApplication().getApplicationId());
                 resource.setActionedBy(entity.getActionedBy().getMemberId());
                 resource.setCreatedAt(entity.getCreatedAt());
+                resource.setDeploymentPipeline(
+                        new DeploymentPipelineResourceAssembler()
+                                .toResource(entity.getDeploymentPipeline()));
 
                 List<OpenShiftResource> openShiftResources = new ArrayList<>();
                 OpenShiftResourceAssembler openShiftResourceAssembler = new OpenShiftResourceAssembler();

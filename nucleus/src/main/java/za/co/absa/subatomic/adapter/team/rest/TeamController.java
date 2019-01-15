@@ -55,7 +55,8 @@ public class TeamController {
         }
 
         TeamEntity newTeam = teamService.newTeamFromSlack(request.getName(),
-                request.getDescription(), request.getCreatedBy(),
+                request.getDescription(), request.getOpenShiftCloud(),
+                request.getCreatedBy(),
                 teamSlackChannel);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -71,6 +72,7 @@ public class TeamController {
             @RequestBody TeamResource request) {
         log.info("Trying to update Team with: {}", request);
         if (!request.getOwners().isEmpty() || !request.getMembers().isEmpty()) {
+
             teamService.addTeamMembers(id,
                     request.getCreatedBy(),
                     request.getOwners().stream()
@@ -113,13 +115,21 @@ public class TeamController {
             }
         }
 
+        if (StringUtils.isNoneBlank(request.getOpenShiftCloud(),
+                request.getCreatedBy())) {
+            teamService.updateTeamOpenShiftCloud(id,
+                    request.getOpenShiftCloud(), request.getCreatedBy());
+        }
+
         return ResponseEntity.accepted()
-                .body(assembler.toResource(teamService.findByTeamId(id)));
+                .body(assembler.toResource(
+                        teamService.getPersistenceHandler().findByTeamId(id)));
     }
 
     @GetMapping("/{id}")
     TeamResource get(@PathVariable String id) {
-        return assembler.toResource(teamService.findByTeamId(id));
+        return assembler.toResource(
+                teamService.getPersistenceHandler().findByTeamId(id));
     }
 
     @GetMapping
@@ -133,16 +143,21 @@ public class TeamController {
         // TODO see if we can't use that functional library for Java that has pattern matching?
         if (StringUtils.isNotBlank(name)) {
             teams.add(
-                    assembler.toResource(teamService.findByName(name)));
+                    assembler.toResource(teamService.getPersistenceHandler()
+                            .findByName(name)));
         }
         else if (StringUtils.isNotBlank(slackScreenName)) {
-            teams.addAll(teamService.findByMemberOrOwnerSlackScreenName(
-                    slackScreenName).stream()
+            teams.addAll(teamService.getPersistenceHandler()
+                    .findByMemberOrOwnerSlackScreenName(
+                            slackScreenName)
+                    .stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
         else if (StringUtils.isNotBlank(slackTeamChannel)) {
-            teams.addAll(teamService.findBySlackTeamChannel(
-                    slackTeamChannel).stream()
+            teams.addAll(teamService.getPersistenceHandler()
+                    .findBySlackTeamChannel(
+                            slackTeamChannel)
+                    .stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
         else if (StringUtils.isNotBlank(projectId)) {
@@ -152,7 +167,7 @@ public class TeamController {
         }
         else if (StringUtils.isAllBlank(name, slackScreenName, slackTeamChannel,
                 projectId)) {
-            teams.addAll(teamService.findAll().stream()
+            teams.addAll(teamService.getPersistenceHandler().findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
@@ -163,19 +178,22 @@ public class TeamController {
                                 .withRel("self"));
     }
 
-    @DeleteMapping("/{id}")
-    ResponseEntity delete(@PathVariable String id,
-            @RequestBody TeamResource request) {
-        if (!request.getMembers().isEmpty() || !request.getOwners().isEmpty()) {
-            teamService.removeTeamMembers(id, request.getCreatedBy(),
-                    request.getOwners().stream()
-                            .map(TeamMemberResourceBase::getMemberId)
-                            .collect(toList()),
-                    request.getMembers().stream()
-                            .map(TeamMemberResourceBase::getMemberId)
-                            .collect(toList()));
+    @DeleteMapping("/{teamId}/members/{memberId}")
+    ResponseEntity delete(@PathVariable String teamId,
+            @PathVariable String memberId,
+            @RequestParam("requestedById") String requestedById) {
+
+        log.info("Trying to delete member " + memberId + " from team " + teamId
+                + " by requestor " + requestedById);
+
+        if (!teamId.isEmpty() && !memberId.isEmpty()
+                && !requestedById.isEmpty()) {
+            teamService.removeTeamMember(teamId, memberId, requestedById);
+            return ResponseEntity.accepted().build();
         }
-        return ResponseEntity.accepted().build();
+        else {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     private class TeamResourceAssembler
@@ -193,6 +211,7 @@ public class TeamController {
                 resource.setTeamId(entity.getTeamId());
                 resource.setName(entity.getName());
                 resource.setDescription(entity.getDescription());
+                resource.setOpenShiftCloud(entity.getOpenShiftCloud());
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
 

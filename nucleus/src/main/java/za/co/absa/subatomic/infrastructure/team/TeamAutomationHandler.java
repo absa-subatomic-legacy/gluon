@@ -3,7 +3,6 @@ package za.co.absa.subatomic.infrastructure.team;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -15,7 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
+import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeamMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -27,6 +30,8 @@ public class TeamAutomationHandler {
     private RestTemplate restTemplate;
 
     private AtomistConfigurationProperties atomistConfigurationProperties;
+
+    private AtomistTeamMapper atomistTeamMapper = new AtomistTeamMapper();
 
     public TeamAutomationHandler(RestTemplate restTemplate,
             AtomistConfigurationProperties atomistConfigurationProperties) {
@@ -49,9 +54,9 @@ public class TeamAutomationHandler {
                             .getUserId());
         }
 
-        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
+        TeamSlackIdentity teamSlackIdentity = null;
         if (newTeamEntity.getSlackDetails() != null) {
-            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            teamSlackIdentity = new TeamSlackIdentity(
                     newTeamEntity.getSlackDetails().getTeamChannel());
         }
         TeamCreated teamCreated = new TeamCreated(newTeamEntity.getTeamId(),
@@ -60,12 +65,9 @@ public class TeamAutomationHandler {
                 teamSlackIdentity);
 
         TeamCreatedWithDetails newTeam = new TeamCreatedWithDetails(teamCreated,
-                new TeamMember(
-                        teamMemberEntity.getMemberId(),
-                        teamMemberEntity.getDomainUsername(),
+                new AtomistMemberBase(
                         teamMemberEntity.getFirstName(),
-                        teamMemberEntity.getLastName(),
-                        teamMemberEntity.getEmail(),
+                        teamMemberEntity.getDomainUsername(),
                         teamMemberSlackIdentity));
 
         ResponseEntity<String> response = restTemplate.postForEntity(
@@ -84,18 +86,9 @@ public class TeamAutomationHandler {
         log.info(
                 "A team DevOps environment was requested, sending event to Atomist...");
 
-        za.co.absa.subatomic.domain.team.SlackIdentity teamSlackIdentity = null;
-        if (teamEntity.getSlackDetails() != null) {
-            teamSlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
-                    teamEntity.getSlackDetails().getTeamChannel());
-        }
-
         DevOpsEnvironmentRequestedWithDetails newDevOpsEnvironmentRequested = new DevOpsEnvironmentRequestedWithDetails(
-                new Team(
-                        teamEntity.getTeamId(),
-                        teamEntity.getName(),
-                        teamSlackIdentity),
-                new DevOpsTeamMember(
+                atomistTeamMapper.createAtomistTeam(teamEntity),
+                new AtomistMemberBase(
                         null,
                         teamMemberEntity.getFirstName(),
                         new TeamMemberSlackIdentity(
@@ -103,28 +96,6 @@ public class TeamAutomationHandler {
                                         .getScreenName(),
                                 teamMemberEntity.getSlackDetails()
                                         .getUserId())));
-        newDevOpsEnvironmentRequested.getTeam().getOwners().addAll(
-                teamEntity.getOwners().stream()
-                        .map(memberEntity -> new DevOpsTeamMember(
-                                memberEntity.getDomainUsername(),
-                                memberEntity.getFirstName(),
-                                new TeamMemberSlackIdentity(
-                                        memberEntity.getSlackDetails()
-                                                .getScreenName(),
-                                        memberEntity.getSlackDetails()
-                                                .getUserId())))
-                        .collect(Collectors.toList()));
-        newDevOpsEnvironmentRequested.getTeam().getMembers().addAll(
-                teamEntity.getMembers().stream()
-                        .map(memberEntity -> new DevOpsTeamMember(
-                                memberEntity.getDomainUsername(),
-                                memberEntity.getFirstName(),
-                                new TeamMemberSlackIdentity(
-                                        memberEntity.getSlackDetails()
-                                                .getScreenName(),
-                                        memberEntity.getSlackDetails()
-                                                .getUserId())))
-                        .collect(Collectors.toList()));
 
         log.info("Sending payload to atomist: {}",
                 newDevOpsEnvironmentRequested);
@@ -133,6 +104,38 @@ public class TeamAutomationHandler {
                 atomistConfigurationProperties
                         .getDevOpsEnvironmentRequestedEventUrl(),
                 newDevOpsEnvironmentRequested,
+                String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("Atomist has ingested event successfully: {} -> {}",
+                    response.getHeaders(), response.getBody());
+        }
+    }
+
+    public void teamOpenShiftCloudUpdated(TeamEntity teamEntity,
+            TeamMemberEntity teamMemberEntity, String previousCloud) {
+        log.info(
+                "A team OpenShift cloud has been updated, sending event to Atomist...");
+
+        TeamOpenShiftCloudMigrationEvent teamOpenShiftCloudMigrationEvent = new TeamOpenShiftCloudMigrationEvent(
+                atomistTeamMapper.createAtomistTeam(teamEntity),
+                new AtomistMemberBase(
+                        null,
+                        teamMemberEntity.getFirstName(),
+                        new TeamMemberSlackIdentity(
+                                teamMemberEntity.getSlackDetails()
+                                        .getScreenName(),
+                                teamMemberEntity.getSlackDetails()
+                                        .getUserId())),
+                previousCloud);
+
+        log.info("Sending payload to atomist: {}",
+                teamOpenShiftCloudMigrationEvent);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getTeamOpenShiftCloudMigratedEventUrl(),
+                teamOpenShiftCloudMigrationEvent,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
@@ -155,18 +158,20 @@ public class TeamAutomationHandler {
                             .getUserId());
         }
 
-        za.co.absa.subatomic.domain.team.SlackIdentity teamEntitySlackIdentity = null;
+        TeamSlackIdentity teamEntitySlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
-            teamEntitySlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            teamEntitySlackIdentity = new TeamSlackIdentity(
                     teamEntity.getSlackDetails()
                             .getTeamChannel());
         }
 
-        Team team = new Team(teamEntity.getTeamId(), teamEntity.getName(),
+        AtomistTeam team = new AtomistTeam(teamEntity.getTeamId(),
+                teamEntity.getName(),
+                teamEntity.getOpenShiftCloud(),
                 teamEntitySlackIdentity);
-        TeamMember member = new TeamMember(requestedBy.getMemberId(),
-                requestedBy.getDomainUsername(), requestedBy.getFirstName(),
-                requestedBy.getLastName(), requestedBy.getEmail(),
+        AtomistMemberBase member = new AtomistMemberBase(
+                requestedBy.getFirstName(),
+                requestedBy.getDomainUsername(),
                 requestedBySlackIdentity);
 
         MembershipRequestCreatedWithDetails newRequest = new MembershipRequestCreatedWithDetails(
@@ -193,19 +198,21 @@ public class TeamAutomationHandler {
     public void teamMembersAdded(TeamEntity teamEntity,
             List<TeamMemberEntity> teamOwnersRequested,
             List<TeamMemberEntity> teamMembersRequested) {
-        za.co.absa.subatomic.domain.team.SlackIdentity teamEntitySlackIdentity = null;
+        TeamSlackIdentity teamEntitySlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
-            teamEntitySlackIdentity = new za.co.absa.subatomic.domain.team.SlackIdentity(
+            teamEntitySlackIdentity = new TeamSlackIdentity(
                     teamEntity.getSlackDetails()
                             .getTeamChannel());
         }
 
-        Team team = new Team(teamEntity.getTeamId(), teamEntity.getName(),
+        AtomistTeam team = new AtomistTeam(teamEntity.getTeamId(),
+                teamEntity.getName(),
+                teamEntity.getOpenShiftCloud(),
                 teamEntitySlackIdentity);
 
-        List<TeamMember> owners = teamMemberEntityCollectionToTeamMemberList(
+        List<AtomistMemberBase> owners = teamMemberEntityCollectionToTeamMemberList(
                 teamOwnersRequested);
-        List<TeamMember> members = teamMemberEntityCollectionToTeamMemberList(
+        List<AtomistMemberBase> members = teamMemberEntityCollectionToTeamMemberList(
                 teamMembersRequested);
 
         MembersAddedToTeamWithDetails membersAddedEvent = new MembersAddedToTeamWithDetails(
@@ -227,23 +234,80 @@ public class TeamAutomationHandler {
         }
     }
 
-    private List<TeamMember> teamMemberEntityCollectionToTeamMemberList(
+    public void teamMemberRemoved(TeamEntity teamEntity,
+            TeamMemberEntity memberEntity,
+            TeamMemberEntity requesterEntity) {
+
+        TeamSlackIdentity teamEntitySlackIdentity = null;
+
+        if (teamEntity.getSlackDetails() != null) {
+            teamEntitySlackIdentity = new TeamSlackIdentity(
+                    teamEntity.getSlackDetails()
+                            .getTeamChannel());
+        }
+
+        AtomistTeam team = new AtomistTeam(teamEntity.getTeamId(),
+                teamEntity.getName(),
+                teamEntity.getOpenShiftCloud(),
+                teamEntitySlackIdentity);
+
+        AtomistMemberBase memberRemoved = new AtomistMemberBase(
+                memberEntity.getFirstName(),
+                memberEntity.getDomainUsername(),
+                getTeamMemberSlackIdentity(memberEntity));
+
+        AtomistMemberBase memberRequested = new AtomistMemberBase(
+                requesterEntity.getFirstName(),
+                requesterEntity.getDomainUsername(),
+                getTeamMemberSlackIdentity(requesterEntity));
+
+        // Build the ingestable object
+        MemberRemovedFromTeam ingestableObject = new MemberRemovedFromTeam(
+                team, memberRemoved, memberRequested);
+
+        log.info(
+                "A member has been removed from a team, sending event to Atomist for ingestion",
+                ingestableObject);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getMembersRemovedFromTeamEventUrl(),
+                ingestableObject,
+                String.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info(
+                    "Atomist has ingested event memberRemovedEvent successfully: {} -> {}",
+                    response.getHeaders(), response.getBody());
+        }
+    }
+
+    private TeamMemberSlackIdentity getTeamMemberSlackIdentity(
+            TeamMemberEntity memberEntity) {
+        TeamMemberSlackIdentity memberSlackIdentity = null;
+
+        if (memberEntity.getSlackDetails() != null) {
+            memberSlackIdentity = new TeamMemberSlackIdentity(
+                    memberEntity.getSlackDetails()
+                            .getScreenName(),
+                    memberEntity.getSlackDetails()
+                            .getUserId());
+        }
+
+        return memberSlackIdentity;
+    }
+
+    private List<AtomistMemberBase> teamMemberEntityCollectionToTeamMemberList(
             Collection<TeamMemberEntity> teamMemberEntities) {
-        List<TeamMember> members = new ArrayList<>();
+        List<AtomistMemberBase> members = new ArrayList<>();
         for (TeamMemberEntity memberEntity : teamMemberEntities) {
-            TeamMemberSlackIdentity memberSlackIdentity = null;
-            if (memberEntity.getSlackDetails() != null) {
-                memberSlackIdentity = new TeamMemberSlackIdentity(
-                        memberEntity.getSlackDetails()
-                                .getScreenName(),
-                        memberEntity.getSlackDetails()
-                                .getUserId());
-            }
-            members.add(new TeamMember(memberEntity.getMemberId(),
-                    memberEntity.getDomainUsername(),
+
+            TeamMemberSlackIdentity memberSlackIdentity = getTeamMemberSlackIdentity(
+                    memberEntity);
+
+            members.add(new AtomistMemberBase(
                     memberEntity.getFirstName(),
-                    memberEntity.getLastName(),
-                    memberEntity.getEmail(),
+                    memberEntity.getDomainUsername(),
                     memberSlackIdentity));
         }
         return members;
@@ -251,11 +315,20 @@ public class TeamAutomationHandler {
 
     @Value
     private class MembersAddedToTeamWithDetails {
-        private Team team;
+        private AtomistTeam team;
 
-        private List<TeamMember> owners;
+        private List<AtomistMemberBase> owners;
 
-        private List<TeamMember> members;
+        private List<AtomistMemberBase> members;
+    }
+
+    @Value
+    private class MemberRemovedFromTeam {
+        private AtomistTeam team;
+
+        private AtomistMemberBase memberRemoved;
+
+        private AtomistMemberBase memberRequester;
     }
 
     @Value
@@ -263,55 +336,25 @@ public class TeamAutomationHandler {
 
         private TeamCreated team;
 
-        private TeamMember createdBy;
+        private AtomistMemberBase createdBy;
     }
 
     @Value
     private class DevOpsEnvironmentRequestedWithDetails {
 
-        private Team team;
+        private AtomistTeam team;
 
-        private DevOpsTeamMember requestedBy;
+        private AtomistMemberBase requestedBy;
     }
 
     @Value
-    private class Team {
+    private class TeamOpenShiftCloudMigrationEvent {
 
-        private String teamId;
+        private AtomistTeam team;
 
-        private String name;
+        private AtomistMemberBase requestedBy;
 
-        private za.co.absa.subatomic.domain.team.SlackIdentity slackIdentity;
-
-        private final List<DevOpsTeamMember> owners = new ArrayList<>();
-
-        private final List<DevOpsTeamMember> members = new ArrayList<>();
-    }
-
-    @Value
-    private class TeamMember {
-
-        private String memberId;
-
-        private String domainUsername;
-
-        private String firstName;
-
-        private String lastName;
-
-        private String email;
-
-        private TeamMemberSlackIdentity slackIdentity;
-    }
-
-    @Value
-    private class DevOpsTeamMember {
-
-        private String domainUsername;
-
-        private String firstName;
-
-        private TeamMemberSlackIdentity slackIdentity;
+        private String previousCloud;
     }
 
     @Value
@@ -319,9 +362,9 @@ public class TeamAutomationHandler {
 
         String membershipRequestId;
 
-        Team team;
+        AtomistTeam team;
 
-        TeamMember requestedBy;
+        AtomistMemberBase requestedBy;
     }
 
 }

@@ -27,6 +27,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import za.co.absa.subatomic.adapter.team.rest.TeamController;
 import za.co.absa.subatomic.application.project.ProjectService;
+import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
@@ -49,10 +50,7 @@ public class ProjectController {
     ResponseEntity<ProjectResource> create(
             @RequestBody ProjectResource request) {
         // TODO do better error checking on the initial team
-        String aggregateId = projectService.newProject(request.getName(),
-                request.getDescription(), request.getCreatedBy(),
-                request.getTeams().get(0).getTeamId(),
-                request.getOwningTenant());
+        String aggregateId = projectService.newProject(request);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -79,20 +77,6 @@ public class ProjectController {
                         request.getBitbucketProject().getUrl(),
                         request.getCreatedBy());
             }
-            else if (StringUtils.isNotBlank(
-                    request.getBitbucketProject().getBitbucketProjectId())) {
-                projectService.confirmBitbucketProjectCreated(id,
-                        request.getBitbucketProject().getBitbucketProjectId(),
-                        request.getBitbucketProject().getUrl());
-            }
-            else if (StringUtils
-                    .isNotBlank(request.getBitbucketProject().getName())) {
-                projectService.requestBitbucketProject(id,
-                        request.getBitbucketProject().getName(),
-                        request.getBitbucketProject().getKey(),
-                        request.getBitbucketProject().getDescription(),
-                        request.getCreatedBy());
-            }
         }
         else if (!request.getTeams().isEmpty()) {
             projectService.linkProjectToTeams(id, request.getCreatedBy(),
@@ -104,12 +88,14 @@ public class ProjectController {
         }
 
         return ResponseEntity.accepted()
-                .body(assembler.toResource(projectService.findByProjectId(id)));
+                .body(assembler.toResource(projectService
+                        .getProjectPersistenceHandler().findByProjectId(id)));
     }
 
     @GetMapping("/{id}")
     ProjectResource get(@PathVariable String id) {
-        return assembler.toResource(projectService.findByProjectId(id));
+        return assembler.toResource(projectService
+                .getProjectPersistenceHandler().findByProjectId(id));
     }
 
     @GetMapping
@@ -121,17 +107,20 @@ public class ProjectController {
         // TODO see if we can't use http://www.vavr.io/ for pattern matching?
         if (StringUtils.isNotBlank(name)) {
             projects.add(
-                    assembler.toResource(projectService.findByName(name)));
+                    assembler.toResource(projectService
+                            .getProjectPersistenceHandler().findByName(name)));
         }
 
         if (StringUtils.isNotBlank(teamName)) {
             projects.addAll(
                     assembler.toResources(
-                            projectService.findByTeamName(teamName)));
+                            projectService.getProjectPersistenceHandler()
+                                    .findByTeamName(teamName)));
         }
 
         if (StringUtils.isAllBlank(name, teamName)) {
-            projects.addAll(projectService.findAll().stream()
+            projects.addAll(projectService.getProjectPersistenceHandler()
+                    .findAllProjects().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
@@ -185,6 +174,23 @@ public class ProjectController {
                             .description(bitbucketProject.getDescription())
                             .url(bitbucketProject.getUrl())
                             .build());
+                }
+
+                DeploymentPipelineResourceAssembler deploymentPipelineResourceAssembler = new DeploymentPipelineResourceAssembler();
+
+                if (entity.getDevDeploymentPipeline() != null) {
+                    resource.setDevDeploymentPipeline(
+                            deploymentPipelineResourceAssembler.toResource(
+                                    entity.getDevDeploymentPipeline()));
+                }
+                resource.setReleaseDeploymentPipelines(new ArrayList<>());
+                if (entity.getReleaseDeploymentPipelines() != null) {
+                    for (DeploymentPipeline releasePipeline : entity
+                            .getReleaseDeploymentPipelines()) {
+                        resource.getReleaseDeploymentPipelines().add(
+                                deploymentPipelineResourceAssembler.toResource(
+                                        releasePipeline));
+                    }
                 }
 
                 return resource;

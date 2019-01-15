@@ -23,7 +23,7 @@ public class TeamCreated {
     private Set<TeamMemberId> members = new HashSet<>();
 
     @NonFinal
-    private SlackIdentity slackIdentity;
+    private TeamSlackIdentity slackIdentity;
 
     public TeamCreated(String teamId,
             String name,
@@ -39,12 +39,12 @@ public class TeamCreated {
             String name,
             String description,
             TeamMemberId createdBy,
-            SlackIdentity slackIdentity) {
+            TeamSlackIdentity slackIdentity) {
         this(teamId, name, description, createdBy);
         this.slackIdentity = slackIdentity;
     }
 
-    public Optional<SlackIdentity> getSlackIdentity() {
+    public Optional<TeamSlackIdentity> getSlackIdentity() {
         return Optional.ofNullable(this.slackIdentity);
     }
 }
