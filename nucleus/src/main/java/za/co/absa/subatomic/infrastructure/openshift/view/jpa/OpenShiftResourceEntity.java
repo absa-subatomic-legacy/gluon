@@ -5,7 +5,6 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import lombok.AccessLevel;
@@ -35,6 +34,6 @@ public class OpenShiftResourceEntity {
     private String name;
 
     @Convert(converter = EncryptedAttributeConverter.class)
-    @Lob
+    @Column(columnDefinition = "varchar")
     private String resourceDetails;
 }
