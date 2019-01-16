@@ -37,7 +37,7 @@ public class OpenShiftResourceService {
                             .build());
         }
 
-        return this.openShiftResourceRepository.save(openShiftResourceEntities);
+        return this.openShiftResourceRepository.saveAll(openShiftResourceEntities);
     }
 
     @Transactional(readOnly = true)
