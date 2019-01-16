@@ -36,6 +36,5 @@ public class OpenShiftResourceEntity {
 
     @Convert(converter = EncryptedAttributeConverter.class)
     @Lob
-    @Column(columnDefinition="CLOB")
     private String resourceDetails;
 }
