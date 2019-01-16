@@ -17,6 +17,7 @@ spring:
   data.rest.detection-strategy: visibility
   flyway:
     enabled: true
+server.port: 8081
 gluon:
   encryption:
     encryptionKey: "REPLACE_THIS"
