@@ -16,6 +16,7 @@ import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
+import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.ProjectAutomationHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -168,6 +169,26 @@ public class ProjectService {
                 actionedByEntity, teamEntitiesToLink);
 
         return projectEntity.getProjectId();
+    }
+
+    public void updateDevDeploymentPipeline(String projectId, String actionedBy,
+            DeploymentPipeline deploymentPipeline) {
+
+        assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
+
+        this.projectPersistenceHandler.updateDevDeploymentPipeline(projectId,
+                deploymentPipeline);
+
+    }
+
+    public void updateReleaseDeploymentPipelines(String projectId, String actionedBy,
+                                            List<? extends DeploymentPipeline> deploymentPipelines) {
+
+        assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
+
+        this.projectPersistenceHandler.updateReleaseDeploymentPipelines(projectId,
+                deploymentPipelines);
+
     }
 
     public void deleteProject(String projectId) {

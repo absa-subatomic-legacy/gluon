@@ -116,6 +116,149 @@ public class ProjectPersistenceHandler {
     }
 
     @Transactional
+    public ProjectEntity updateDevDeploymentPipeline(String projectId,
+            DeploymentPipeline updatedPipeline) {
+        ProjectEntity project = projectRepository
+                .findByProjectId(projectId);
+
+        DevDeploymentPipelineEntity devDeploymentPipeline = project
+                .getDevDeploymentPipeline();
+
+        List<DevDeploymentEnvironmentEntity> environments = new ArrayList<>();
+
+        List<DevDeploymentEnvironmentEntity> originalEnvironments = devDeploymentPipeline
+                .getEnvironments();
+
+        if (originalEnvironments == null) {
+            originalEnvironments = new ArrayList<>();
+        }
+
+        for (DeploymentEnvironment updatedEnvironment : updatedPipeline
+                .getEnvironments()) {
+            // Try match the updatedEnvironment to an existing one. If matched the environment is
+            // removed from the supplied environment list
+            DevDeploymentEnvironmentEntity environmentEntity = extractAndMergeExistingDevEnvironment(
+                    originalEnvironments, updatedEnvironment);
+            // If environment did not exist, create a new one.
+            if (environmentEntity == null) {
+                environmentEntity = this
+                        .environmentToDevDeploymentEnvironmentEntity(
+                                updatedEnvironment, devDeploymentPipeline);
+            }
+
+            // Set the position based on the newly provided position
+            environmentEntity
+                    .setPositionInPipeline(environments.size() + 1);
+
+            environments.add(environmentEntity);
+
+        }
+
+        this.devDeploymentEnvironmentRepository.saveAll(environments);
+        devDeploymentPipeline.setEnvironments(environments);
+        this.devDeploymentPipelineRepository.save(devDeploymentPipeline);
+
+        // Delete the remaining unmatched original environments as they are considered removed now
+        this.devDeploymentEnvironmentRepository.deleteAll(originalEnvironments);
+
+        return project;
+    }
+
+    @Transactional
+    public ProjectEntity updateReleaseDeploymentPipelines(String projectId,
+            List<? extends DeploymentPipeline> updatedPipelines) {
+        ProjectEntity project = projectRepository
+                .findByProjectId(projectId);
+
+        List<ReleaseDeploymentPipelineEntity> pipelines = new ArrayList<>();
+
+        List<ReleaseDeploymentPipelineEntity> originalPipelines = project
+                .getReleaseDeploymentPipelines();
+
+        if (originalPipelines == null) {
+            originalPipelines = new ArrayList<>();
+        }
+
+        for (DeploymentPipeline updatedPipeline : updatedPipelines) {
+            // Try match the updatedPipeline to an existing one. If matched the environment is
+            // removed from the supplied pipeline list
+            ReleaseDeploymentPipelineEntity pipelineEntity = extractAndMergeExistingReleasePipeline(
+                    originalPipelines, updatedPipeline);
+            // If pipeline did not exist, create a new one.
+            if (pipelineEntity == null) {
+                pipelineEntity = this
+                        .pipelineToReleaseDeploymentPipelineEntity(
+                                updatedPipeline);
+            }
+            else if (updatedPipeline.getEnvironments() != null) {
+                // Update the existing deployment pipeline environments
+                pipelineEntity = this.updateReleaseDeploymentPipeline(
+                        pipelineEntity,
+                        updatedPipeline);
+            }
+
+            pipelines.add(pipelineEntity);
+        }
+
+        this.releaseDeploymentPipelineRepository.saveAll(pipelines);
+        project.setReleaseDeploymentPipelines(pipelines);
+        this.projectRepository.save(project);
+
+        // Delete the remaining unmatched original pipelines as they are considered removed now
+        this.releaseDeploymentPipelineRepository.deleteAll(originalPipelines);
+
+        return project;
+    }
+
+    @Transactional
+    public ReleaseDeploymentPipelineEntity updateReleaseDeploymentPipeline(
+            ReleaseDeploymentPipelineEntity releaseDeploymentPipelineEntity,
+            DeploymentPipeline updatedPipeline) {
+
+        List<ReleaseDeploymentEnvironmentEntity> environments = new ArrayList<>();
+
+        List<ReleaseDeploymentEnvironmentEntity> originalEnvironments = releaseDeploymentPipelineEntity
+                .getEnvironments();
+
+        if (originalEnvironments == null) {
+            originalEnvironments = new ArrayList<>();
+        }
+
+        for (DeploymentEnvironment updatedEnvironment : updatedPipeline
+                .getEnvironments()) {
+            // Try match the updatedEnvironment to an existing one. If matched the environment is
+            // removed from the supplied environment list
+            ReleaseDeploymentEnvironmentEntity environmentEntity = extractAndMergeExistingReleaseEnvironment(
+                    originalEnvironments, updatedEnvironment);
+            // If environment did not exist, create a new one.
+            if (environmentEntity == null) {
+                environmentEntity = this
+                        .environmentToReleaseDeploymentEnvironmentEntity(
+                                updatedEnvironment,
+                                releaseDeploymentPipelineEntity);
+            }
+
+            // Set the position based on the newly provided position
+            environmentEntity
+                    .setPositionInPipeline(environments.size() + 1);
+
+            environments.add(environmentEntity);
+
+        }
+
+        this.releaseDeploymentEnvironmentRepository.saveAll(environments);
+        releaseDeploymentPipelineEntity.setEnvironments(environments);
+        this.releaseDeploymentPipelineRepository
+                .save(releaseDeploymentPipelineEntity);
+
+        // Delete the remaining unmatched original environments as they are considered removed now
+        this.releaseDeploymentEnvironmentRepository
+                .deleteAll(originalEnvironments);
+
+        return releaseDeploymentPipelineEntity;
+    }
+
+    @Transactional
     public void deleteProject(String projectId) {
         projectRepository
                 .deleteByProjectId(projectId);
@@ -149,16 +292,26 @@ public class ProjectPersistenceHandler {
 
     private DevDeploymentPipelineEntity pipelineToDevDeploymentPipelineEntity(
             DeploymentPipeline deploymentPipeline) {
+        DevDeploymentPipelineEntity.DevDeploymentPipelineEntityBuilder devDeploymentPipelineEntityBuilder = DevDeploymentPipelineEntity
+                .builder().pipelineId(UUID.randomUUID().toString());
+        DevDeploymentPipelineEntity devDeploymentPipelineEntity;
+        if (deploymentPipeline != null) {
 
-        DevDeploymentPipelineEntity devDeploymentPipelineEntity = DevDeploymentPipelineEntity
-                .builder().pipelineId(UUID.randomUUID().toString()).name(deploymentPipeline.getName()).build();
+            devDeploymentPipelineEntity = devDeploymentPipelineEntityBuilder
+                    .name(deploymentPipeline.getName()).build();
 
-        devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
-        devDeploymentPipelineEntity.setEnvironments(
-                this.environmentsToDevDeploymentEnvironmentEntity(
-                        deploymentPipeline.getEnvironments(),
-                        devDeploymentPipelineEntity));
-        devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+            devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+            devDeploymentPipelineEntity.setEnvironments(
+                    this.environmentsToDevDeploymentEnvironmentEntity(
+                            deploymentPipeline.getEnvironments(),
+                            devDeploymentPipelineEntity));
+            devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+        }
+        else {
+            devDeploymentPipelineEntity = devDeploymentPipelineEntityBuilder
+                    .build();
+            devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
+        }
 
         return devDeploymentPipelineEntity;
     }
@@ -169,13 +322,9 @@ public class ProjectPersistenceHandler {
         List<DevDeploymentEnvironmentEntity> environments = new ArrayList<>();
         if (deploymentEnvironments != null) {
             for (DeploymentEnvironment environment : deploymentEnvironments) {
-                DevDeploymentEnvironmentEntity environmentEntity = DevDeploymentEnvironmentEntity
-                        .builder()
-                        .positionInPipeline(environment.getPositionInPipeline())
-                        .displayName(environment.getDisplayName())
-                        .postfix(environment.getPostfix())
-                        .pipeline(owningPipeline)
-                        .build();
+                DevDeploymentEnvironmentEntity environmentEntity = this
+                        .environmentToDevDeploymentEnvironmentEntity(
+                                environment, owningPipeline);
                 this.devDeploymentEnvironmentRepository.save(environmentEntity);
                 environments.add(environmentEntity);
             }
@@ -183,11 +332,36 @@ public class ProjectPersistenceHandler {
         return environments;
     }
 
+    private DevDeploymentEnvironmentEntity environmentToDevDeploymentEnvironmentEntity(
+            DeploymentEnvironment environment,
+            DevDeploymentPipelineEntity owningPipeline) {
+        return DevDeploymentEnvironmentEntity
+                .builder()
+                .positionInPipeline(environment.getPositionInPipeline())
+                .displayName(environment.getDisplayName())
+                .postfix(environment.getPostfix())
+                .pipeline(owningPipeline)
+                .build();
+    }
+
+    private ReleaseDeploymentEnvironmentEntity environmentToReleaseDeploymentEnvironmentEntity(
+            DeploymentEnvironment environment,
+            ReleaseDeploymentPipelineEntity owningPipeline) {
+        return ReleaseDeploymentEnvironmentEntity
+                .builder()
+                .positionInPipeline(environment.getPositionInPipeline())
+                .displayName(environment.getDisplayName())
+                .postfix(environment.getPostfix())
+                .pipeline(owningPipeline)
+                .build();
+    }
+
     private ReleaseDeploymentPipelineEntity pipelineToReleaseDeploymentPipelineEntity(
             DeploymentPipeline deploymentPipeline) {
 
         ReleaseDeploymentPipelineEntity devDeploymentPipelineEntity = ReleaseDeploymentPipelineEntity
-                .builder().pipelineId(UUID.randomUUID().toString()).name(deploymentPipeline.getName())
+                .builder().pipelineId(UUID.randomUUID().toString())
+                .name(deploymentPipeline.getName())
                 .tag(deploymentPipeline.getTag()).build();
 
         releaseDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
@@ -219,5 +393,71 @@ public class ProjectPersistenceHandler {
             }
         }
         return environments;
+    }
+
+    private DevDeploymentEnvironmentEntity extractAndMergeExistingDevEnvironment(
+            List<DevDeploymentEnvironmentEntity> devDeploymentEnvironmentEntities,
+            DeploymentEnvironment updatedEnvironment) {
+
+        DevDeploymentEnvironmentEntity environmentEntity = null;
+        for (int index = devDeploymentEnvironmentEntities.size()
+                - 1; index >= 0; index--) {
+            DevDeploymentEnvironmentEntity deploymentEnvironmentEntity = devDeploymentEnvironmentEntities
+                    .get(index);
+            if (deploymentEnvironmentEntity.getPostfix()
+                    .equals(updatedEnvironment.getPostfix())) {
+                environmentEntity = deploymentEnvironmentEntity;
+                environmentEntity.setDisplayName(
+                        updatedEnvironment.getDisplayName());
+                devDeploymentEnvironmentEntities.remove(index);
+                break;
+            }
+        }
+        return environmentEntity;
+    }
+
+    private ReleaseDeploymentEnvironmentEntity extractAndMergeExistingReleaseEnvironment(
+            List<ReleaseDeploymentEnvironmentEntity> releaseDeploymentEnvironmentEntities,
+            DeploymentEnvironment updatedEnvironment) {
+
+        ReleaseDeploymentEnvironmentEntity environmentEntity = null;
+        for (int index = releaseDeploymentEnvironmentEntities.size()
+                - 1; index >= 0; index--) {
+            ReleaseDeploymentEnvironmentEntity deploymentEnvironmentEntity = releaseDeploymentEnvironmentEntities
+                    .get(index);
+            if (deploymentEnvironmentEntity.getPostfix()
+                    .equals(updatedEnvironment.getPostfix())) {
+                environmentEntity = deploymentEnvironmentEntity;
+                environmentEntity.setDisplayName(
+                        updatedEnvironment.getDisplayName());
+                releaseDeploymentEnvironmentEntities.remove(index);
+                break;
+            }
+        }
+        return environmentEntity;
+    }
+
+    private ReleaseDeploymentPipelineEntity extractAndMergeExistingReleasePipeline(
+            List<ReleaseDeploymentPipelineEntity> releaseDeploymentPipelineEntities,
+            DeploymentPipeline updatedPipeline) {
+
+        ReleaseDeploymentPipelineEntity pipelineEntity = null;
+        for (int index = releaseDeploymentPipelineEntities.size()
+                - 1; index >= 0; index--) {
+            ReleaseDeploymentPipelineEntity releaseDeploymentPipelineEntity = releaseDeploymentPipelineEntities
+                    .get(index);
+            if (releaseDeploymentPipelineEntity.getPipelineId()
+                    .equals(updatedPipeline.getPipelineId())
+                    || releaseDeploymentPipelineEntity.getTag()
+                            .equals(updatedPipeline.getTag())) {
+                pipelineEntity = releaseDeploymentPipelineEntity;
+                pipelineEntity.setName(
+                        updatedPipeline.getName());
+                pipelineEntity.setTag(updatedPipeline.getTag());
+                releaseDeploymentPipelineEntities.remove(index);
+                break;
+            }
+        }
+        return pipelineEntity;
     }
 }

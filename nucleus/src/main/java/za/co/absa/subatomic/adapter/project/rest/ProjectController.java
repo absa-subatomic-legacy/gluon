@@ -86,6 +86,14 @@ public class ProjectController {
             projectService.newProjectEnvironment(id,
                     request.getProjectEnvironment().getRequestedBy());
         }
+        if (request.getDevDeploymentPipeline() != null) {
+            projectService.updateDevDeploymentPipeline(id,
+                    request.getCreatedBy(), request.getDevDeploymentPipeline());
+        }
+        if (request.getReleaseDeploymentPipelines() != null) {
+            projectService.updateReleaseDeploymentPipelines(id,
+                    request.getCreatedBy(), request.getReleaseDeploymentPipelines());
+        }
 
         return ResponseEntity.accepted()
                 .body(assembler.toResource(projectService
