@@ -26,9 +26,13 @@ public class AtomistProjectMapper {
 
         List<AtomistDeploymentEnvironment> environments = new ArrayList<>();
 
-        for (DeploymentEnvironment environment : pipeline.getEnvironments()) {
-            environments
-                    .add(this.createAtomistDeploymentEnvironment(environment));
+        if (pipeline.getEnvironments() != null) {
+            for (DeploymentEnvironment environment : pipeline
+                    .getEnvironments()) {
+                environments
+                        .add(this.createAtomistDeploymentEnvironment(
+                                environment));
+            }
         }
 
         return new AtomistDeploymentPipeline.Builder()
@@ -48,10 +52,12 @@ public class AtomistProjectMapper {
 
         List<AtomistDeploymentPipeline> releaseDeploymentPipelines = new ArrayList<>();
 
-        for (DeploymentPipeline pipeline : projectEntity
-                .getReleaseDeploymentPipelines()) {
-            releaseDeploymentPipelines
-                    .add(this.createAtomistDeploymentPipeline(pipeline));
+        if (projectEntity.getReleaseDeploymentPipelines() != null) {
+            for (DeploymentPipeline pipeline : projectEntity
+                    .getReleaseDeploymentPipelines()) {
+                releaseDeploymentPipelines
+                        .add(this.createAtomistDeploymentPipeline(pipeline));
+            }
         }
 
         return new AtomistProject.Builder()
