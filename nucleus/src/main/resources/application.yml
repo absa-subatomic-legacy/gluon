@@ -15,8 +15,8 @@ spring:
       enabled: true
       path: /h2-console
   data.rest.detection-strategy: visibility
-flyway:
-  enabled: true
+  flyway:
+    enabled: true
 gluon:
   encryption:
     encryptionKey: "REPLACE_THIS"

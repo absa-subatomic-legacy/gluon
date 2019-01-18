@@ -34,6 +34,6 @@ public class OpenShiftResourceEntity {
     private String name;
 
     @Convert(converter = EncryptedAttributeConverter.class)
-    @Column(length = 65535)
+    @Column(columnDefinition = "varchar")
     private String resourceDetails;
 }
