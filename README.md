@@ -1,6 +1,7 @@
 # Gluon  [![Build Status](https://travis-ci.org/absa-subatomic/gluon.svg?branch=master)](https://travis-ci.org/absa-subatomic/gluon) [![codecov](https://codecov.io/gh/absa-subatomic/gluon/branch/master/graph/badge.svg)](https://codecov.io/gh/absa-subatomic/gluon) [![Maintainability](https://api.codeclimate.com/v1/badges/b7ab83c942404ff6fa90/maintainability)](https://codeclimate.com/github/absa-subatomic/gluon/maintainability)
 
-A supporting domain applying logic and emitting events to indicate desired state. - no idea what this means
+Gluon stores and gives context in the exchange between Quantum Mechanic and Atomist. It also emits events to Atomist in
+response to data changes. 
 
 > A gluon is an elementary particle that acts as the exchange particle for the strong force between quarks. It is analogous 
 to the exchange of photons in the electromagnetic force between two charged particles. - [Wikipedia](https://g.co/kgs/tuyx3j)
@@ -20,9 +21,9 @@ Refer to the [Local-Hadron-Colider](https://github.com/absa-subatomic/local-hadr
 2. Clone the repo to your local drive.
 ```console
  git clone https://github.com/absa-subatomic/gluon.git
- ```
+ ``` 
 3. Navigate to the folder containing the code 
-4. Run the the following command in the same terminal 
+4. Run the the following command in the same terminal to run and test installation
 ```console
 $ ./mvnw spring-boot:run -pl nucleus -Dspring.profiles.active=local
 ```
@@ -83,7 +84,7 @@ $ docker run -p 8080 subatomic-gluon
 
 ## Running the tests
 
-#### Postman
+### Postman
 
 There are Postman collections located in the `nucleus/src/etc/postman` directory.
 These can be imported and used to test the available API resources.
@@ -94,8 +95,7 @@ for more information.
 ## Deployment
 Add additional notes about how to deploy this on a live system
 
-## Built With
-Not applicable
+Preferred method is to run in a Docker image. Refer to note on Docker under development.
 
 ## Contributing
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of 
@@ -105,16 +105,18 @@ conduct, and the process for submitting pull requests to us.
 No versioning is in place at the time of creating this documentation.
 
 ## Authors
-kbristow
-donovanmuller
-KieranHons
-andrejonathan
-chriskieser
+[Kieran Bristow](https://github.com/kbristow), 
+[Kieran Bester](https://github.com/KieranHons),
+[Donovan Muller](https://github.com/donovanmuller),
+[Andre de Jager](https://github.com/andrejonathan),
+[Chris Kieser](https://github.com/chriskieser)
 
 ## License
-This project is licensed under the Apache License v2.0 - see the LICENSE file for details
+This project is licensed under the Apache License v2.0 - see the 
+[LICENSE](https://github.com/absa-subatomic/gluon/blob/Update-readme.md/LICENSE) file for details
 
+<!-- Placeholder for future if required
 ## Acknowledgments
 Hat tip to anyone whose code was used
-Inspiration
-etc when needed 
+Inspiration 
+-->
