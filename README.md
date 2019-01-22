@@ -1,5 +1,4 @@
 # Gluon  [![Build Status](https://travis-ci.org/absa-subatomic/gluon.svg?branch=master)](https://travis-ci.org/absa-subatomic/gluon) [![codecov](https://codecov.io/gh/absa-subatomic/gluon/branch/master/graph/badge.svg)](https://codecov.io/gh/absa-subatomic/gluon) [![Maintainability](https://api.codeclimate.com/v1/badges/b7ab83c942404ff6fa90/maintainability)](https://codeclimate.com/github/absa-subatomic/gluon/maintainability)
-
 Gluon stores and gives context in the exchange between Quantum Mechanic and Atomist. It also emits events to Atomist in
 response to data changes. 
 
@@ -16,7 +15,6 @@ Refer to the [Local-Hadron-Colider](https://github.com/absa-subatomic/local-hadr
              use Gluon
 
 ### Installing
-
 1. Open a terminal
 2. Clone the repo to your local drive.
 ```console
@@ -29,7 +27,6 @@ $ ./mvnw spring-boot:run -pl nucleus -Dspring.profiles.active=local
 ```
 
 ### Development Setup
-
 To run Gluon locally using an in memory H2 database:
 
 ```console
@@ -37,18 +34,15 @@ $ ./mvnw spring-boot:run -pl nucleus -Dspring.profiles.active=local
 ```
 
 #### `local` Spring profile
-
 The local Spring profile can be setup by following the instructions [here](nucleus/src/etc/atomist-config/README.md).
 To successfully invoke the Atomist webhooks, you **must complete the steps above** before starting Gluon.
 
 By default Gluon will be available at: http://localhost:8080
 
 #### Docker
-
 To build a Docker image with a runnable build of Gluon, you can use the S2I tool.
 
 ##### S2I
-
 [Source-to-Image (S2I)](https://github.com/openshift/source-to-image)
 is a toolkit and workflow for building reproducible Docker images from source code.
 
@@ -74,7 +68,6 @@ $ s2i build https://github.com/absa-subatomic/gluon.git absasubatomic/s2i-jdk8-m
 ```
 
 ##### Running the Docker image
-
 Once the S2I build has completed, you can run Gluon with:
 
 ```console
@@ -85,7 +78,6 @@ $ docker run -p 8080 subatomic-gluon
 ## Running the tests
 
 ### Postman
-
 There are Postman collections located in the `nucleus/src/etc/postman` directory.
 These can be imported and used to test the available API resources.
 
@@ -93,7 +85,7 @@ See the Postman [reference documentation](https://www.getpostman.com/docs/postma
 for more information.
 
 ## Deployment
-Add additional notes about how to deploy this on a live system
+Notes on how to deploy this on a live system.
 
 Preferred method is to run in a Docker image. Refer to note on Docker under development.
 
@@ -114,9 +106,3 @@ No versioning is in place at the time of creating this documentation.
 ## License
 This project is licensed under the Apache License v2.0 - see the 
 [LICENSE](https://github.com/absa-subatomic/gluon/blob/Update-readme.md/LICENSE) file for details
-
-<!-- Placeholder for future if required
-## Acknowledgments
-Hat tip to anyone whose code was used
-Inspiration 
--->
