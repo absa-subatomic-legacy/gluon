@@ -1,6 +1,5 @@
 package za.co.absa.subatomic.adapter.project.rest;
 
-import static java.util.Optional.ofNullable;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
@@ -26,11 +25,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import za.co.absa.subatomic.adapter.team.rest.TeamController;
+import za.co.absa.subatomic.adapter.team.rest.TeamResourceBaseAssembler;
 import za.co.absa.subatomic.application.project.ProjectService;
 import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 @RestController
 @RequestMapping("/projects")
@@ -92,7 +91,14 @@ public class ProjectController {
         }
         if (request.getReleaseDeploymentPipelines() != null) {
             projectService.updateReleaseDeploymentPipelines(id,
-                    request.getCreatedBy(), request.getReleaseDeploymentPipelines());
+                    request.getCreatedBy(),
+                    request.getReleaseDeploymentPipelines());
+        }
+        // If either the dev pipelines or release pipelines are changed, we should request
+        // environment creation.
+        if (request.getDevDeploymentPipeline() != null
+                || request.getReleaseDeploymentPipelines() != null) {
+            projectService.newProjectEnvironment(id, request.getCreatedBy());
         }
 
         return ResponseEntity.accepted()
@@ -154,6 +160,9 @@ public class ProjectController {
         @Override
         public ProjectResource toResource(ProjectEntity entity) {
             if (entity != null) {
+
+                TeamResourceBaseAssembler teamResourceBaseAssembler = new TeamResourceBaseAssembler();
+
                 ProjectResource resource = createResourceWithId(
                         entity.getProjectId(),
                         entity);
@@ -162,12 +171,12 @@ public class ProjectController {
                 resource.setDescription(entity.getDescription());
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
-                resource.setOwningTeam(new TeamResourceAssembler()
+                resource.setOwningTeam(teamResourceBaseAssembler
                         .toResource(entity.getOwningTeam()));
                 resource.setOwningTenant(
                         entity.getOwningTenant().getTenantId());
                 resource.setTeams(
-                        new TeamResourceAssembler()
+                        teamResourceBaseAssembler
                                 .toResources(entity.getTeams()));
 
                 if (entity.getBitbucketProject() != null) {
@@ -206,30 +215,6 @@ public class ProjectController {
             else {
                 return null;
             }
-        }
-    }
-
-    private class TeamResourceAssembler extends
-            ResourceAssemblerSupport<TeamEntity, TeamResource> {
-
-        public TeamResourceAssembler() {
-            super(TeamController.class, TeamResource.class);
-        }
-
-        @Override
-        public TeamResource toResource(TeamEntity entity) {
-            TeamResource resource = createResourceWithId(
-                    entity.getTeamId(),
-                    entity);
-            resource.setTeamId(entity.getTeamId());
-            resource.setName(entity.getName());
-
-            ofNullable(entity.getSlackDetails())
-                    .ifPresent(slackDetails -> resource
-                            .setSlack(
-                                    new Slack(slackDetails
-                                            .getTeamChannel())));
-            return resource;
         }
     }
 }

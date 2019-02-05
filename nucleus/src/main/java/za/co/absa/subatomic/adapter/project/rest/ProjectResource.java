@@ -6,6 +6,7 @@ import java.util.List;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import za.co.absa.subatomic.adapter.team.rest.TeamResourceBase;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -17,9 +18,9 @@ public class ProjectResource extends ProjectResourceBase {
 
     private BitbucketProjectResource bitbucketProject;
 
-    private TeamResource owningTeam;
+    private TeamResourceBase owningTeam;
 
-    private List<TeamResource> teams = new ArrayList<>();
+    private List<TeamResourceBase> teams = new ArrayList<>();
 
     private ProjectEnvironment projectEnvironment;
 
