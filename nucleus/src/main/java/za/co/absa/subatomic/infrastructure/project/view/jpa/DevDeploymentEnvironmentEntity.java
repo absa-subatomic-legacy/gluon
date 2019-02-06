@@ -26,7 +26,7 @@ import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Setter(value = AccessLevel.PACKAGE)
 @Getter
-class DevDeploymentEnvironmentEntity implements DeploymentEnvironment {
+public class DevDeploymentEnvironmentEntity implements DeploymentEnvironment {
 
     @Id
     @GeneratedValue

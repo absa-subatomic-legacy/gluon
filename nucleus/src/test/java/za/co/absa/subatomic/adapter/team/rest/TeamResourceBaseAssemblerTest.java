@@ -12,13 +12,13 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
 public class TeamResourceBaseAssemblerTest {
     @Test
-    public void toResourceWithFullEntityShouldReturnResource()
+    public void whenToResourceWithFullEntity_thenReturnResource()
             throws Exception {
         TeamMemberEntity member = TeamMemberEntity.builder().memberId("1234")
                 .firstName("Kieran").lastName("Bristow")
                 .domainUsername("username").email("kieran@mail.com")
                 .slackDetails(new SlackDetailsEmbedded("kb", "kb2")).build();
-        TeamEntity entity = TeamEntity.builder().id(1L).description("A Team")
+        TeamEntity entity = TeamEntity.builder().description("A Team")
                 .name("Team").teamId("1235").createdBy(member)
                 .openShiftCloud("cloud-name")
                 .slackDetails(
@@ -41,7 +41,7 @@ public class TeamResourceBaseAssemblerTest {
     }
 
     @Test
-    public void toResourceWithEntityWithNoSlackShouldReturnResource()
+    public void whenToResourceWithEntityAndNoSlack_thenReturnResource()
             throws Exception {
         TeamMemberEntity member = TeamMemberEntity.builder().memberId("1234")
                 .firstName("Kieran").lastName("Bristow")
@@ -64,5 +64,16 @@ public class TeamResourceBaseAssemblerTest {
                 .isEqualTo("cloud-name");
         assertThat(teamResourceBase.getSlack())
                 .isEqualTo(null);
+    }
+
+    @Test
+    public void whenToResourceWithNullEntity_thenReturnNull()
+            throws Exception {
+
+        TeamResourceBaseAssembler assembler = new TeamResourceBaseAssembler();
+
+        TeamResourceBase teamResourceBase = assembler.toResource(null);
+
+        assertThat(teamResourceBase).isEqualTo(null);
     }
 }

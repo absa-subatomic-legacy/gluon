@@ -64,7 +64,8 @@ public class AtomistProjectMapper {
                 .projectId(projectEntity.getProjectId())
                 .name(projectEntity.getName())
                 .description(projectEntity.getDescription())
-                .createdBy(new TeamMemberId(projectEntity.getProjectId()))
+                .createdBy(new TeamMemberId(
+                        projectEntity.getCreatedBy().getMemberId()))
                 .team(new TeamId(projectEntity.getOwningTeam().getTeamId()))
                 .tenant(new TenantId(
                         projectEntity.getOwningTenant().getTenantId()))
@@ -81,7 +82,8 @@ public class AtomistProjectMapper {
                 .projectId(projectEntity.getProjectId())
                 .name(projectEntity.getName())
                 .description(projectEntity.getDescription())
-                .createdBy(new TeamMemberId(projectEntity.getProjectId()))
+                .createdBy(new TeamMemberId(
+                        projectEntity.getCreatedBy().getMemberId()))
                 .team(new TeamId(projectEntity.getOwningTeam().getTeamId()))
                 .tenant(new TenantId(
                         projectEntity.getOwningTenant().getTenantId()))
