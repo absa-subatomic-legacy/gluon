@@ -271,7 +271,7 @@ public class TeamAutomationHandler {
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
-                        .getMembersRemovedFromTeamEventUrl(),
+                        .getMemberRemovedFromTeamEventUrl(),
                 ingestableObject,
                 String.class);
 

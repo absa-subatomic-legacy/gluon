@@ -36,7 +36,7 @@ public class AtomistConfigurationProperties {
 
     private String membersAddedToTeamEventUrl;
 
-    private String membersRemovedFromTeamEventUrl;
+    private String memberRemovedFromTeamEventUrl;
 
     private String teamsLinkedToProjectEventUrl;
 
