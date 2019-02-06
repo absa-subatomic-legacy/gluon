@@ -16,8 +16,12 @@ public class DeploymentPipelineResourceAssembler {
 
         List<DeploymentEnvironmentResource> environments = new ArrayList<>();
 
-        for (DeploymentEnvironment environment : pipeline.getEnvironments()) {
-            environments.add(this.toDeploymentEnvironmentResource(environment));
+        if (pipeline.getEnvironments() != null) {
+            for (DeploymentEnvironment environment : pipeline
+                    .getEnvironments()) {
+                environments
+                        .add(this.toDeploymentEnvironmentResource(environment));
+            }
         }
 
         deploymentPipelineResource.setEnvironments(environments);

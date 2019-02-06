@@ -8,7 +8,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import za.co.absa.subatomic.adapter.project.rest.ProjectResource;
-import za.co.absa.subatomic.adapter.project.rest.TeamResource;
+import za.co.absa.subatomic.adapter.team.rest.TeamResourceBase;
 import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.application.team.TeamAssertions;
 import za.co.absa.subatomic.application.tenant.TenantService;
@@ -16,6 +16,7 @@ import za.co.absa.subatomic.domain.exception.ApplicationAuthorisationException;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.project.BitbucketProject;
+import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.ProjectAutomationHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -146,7 +147,7 @@ public class ProjectService {
     }
 
     public String linkProjectToTeams(String projectId, String actionedBy,
-            List<TeamResource> teamsToLink) {
+            List<TeamResourceBase> teamsToLink) {
         TeamMemberEntity actionedByEntity = teamMemberService
                 .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedBy);
@@ -155,7 +156,7 @@ public class ProjectService {
 
         List<TeamEntity> teamEntitiesToLink = new ArrayList<>();
 
-        for (TeamResource team : teamsToLink) {
+        for (TeamResourceBase team : teamsToLink) {
             teamEntitiesToLink
                     .add(teamPersistenceHandler.findByTeamId(team.getTeamId()));
         }
@@ -168,6 +169,28 @@ public class ProjectService {
                 actionedByEntity, teamEntitiesToLink);
 
         return projectEntity.getProjectId();
+    }
+
+    public void updateDevDeploymentPipeline(String projectId, String actionedBy,
+            DeploymentPipeline deploymentPipeline) {
+
+        assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
+
+        this.projectPersistenceHandler.updateDevDeploymentPipeline(projectId,
+                deploymentPipeline);
+
+    }
+
+    public void updateReleaseDeploymentPipelines(String projectId,
+            String actionedBy,
+            List<? extends DeploymentPipeline> deploymentPipelines) {
+
+        assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
+
+        this.projectPersistenceHandler.updateReleaseDeploymentPipelines(
+                projectId,
+                deploymentPipelines);
+
     }
 
     public void deleteProject(String projectId) {

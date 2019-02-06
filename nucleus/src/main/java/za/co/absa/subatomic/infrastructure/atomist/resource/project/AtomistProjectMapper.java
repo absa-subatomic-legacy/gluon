@@ -26,9 +26,13 @@ public class AtomistProjectMapper {
 
         List<AtomistDeploymentEnvironment> environments = new ArrayList<>();
 
-        for (DeploymentEnvironment environment : pipeline.getEnvironments()) {
-            environments
-                    .add(this.createAtomistDeploymentEnvironment(environment));
+        if (pipeline.getEnvironments() != null) {
+            for (DeploymentEnvironment environment : pipeline
+                    .getEnvironments()) {
+                environments
+                        .add(this.createAtomistDeploymentEnvironment(
+                                environment));
+            }
         }
 
         return new AtomistDeploymentPipeline.Builder()
@@ -48,17 +52,20 @@ public class AtomistProjectMapper {
 
         List<AtomistDeploymentPipeline> releaseDeploymentPipelines = new ArrayList<>();
 
-        for (DeploymentPipeline pipeline : projectEntity
-                .getReleaseDeploymentPipelines()) {
-            releaseDeploymentPipelines
-                    .add(this.createAtomistDeploymentPipeline(pipeline));
+        if (projectEntity.getReleaseDeploymentPipelines() != null) {
+            for (DeploymentPipeline pipeline : projectEntity
+                    .getReleaseDeploymentPipelines()) {
+                releaseDeploymentPipelines
+                        .add(this.createAtomistDeploymentPipeline(pipeline));
+            }
         }
 
         return new AtomistProject.Builder()
                 .projectId(projectEntity.getProjectId())
                 .name(projectEntity.getName())
                 .description(projectEntity.getDescription())
-                .createdBy(new TeamMemberId(projectEntity.getProjectId()))
+                .createdBy(new TeamMemberId(
+                        projectEntity.getCreatedBy().getMemberId()))
                 .team(new TeamId(projectEntity.getOwningTeam().getTeamId()))
                 .tenant(new TenantId(
                         projectEntity.getOwningTenant().getTenantId()))
@@ -75,7 +82,8 @@ public class AtomistProjectMapper {
                 .projectId(projectEntity.getProjectId())
                 .name(projectEntity.getName())
                 .description(projectEntity.getDescription())
-                .createdBy(new TeamMemberId(projectEntity.getProjectId()))
+                .createdBy(new TeamMemberId(
+                        projectEntity.getCreatedBy().getMemberId()))
                 .team(new TeamId(projectEntity.getOwningTeam().getTeamId()))
                 .tenant(new TenantId(
                         projectEntity.getOwningTenant().getTenantId()))
