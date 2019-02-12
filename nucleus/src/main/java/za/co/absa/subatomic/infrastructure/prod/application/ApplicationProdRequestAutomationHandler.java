@@ -101,7 +101,7 @@ public class ApplicationProdRequestAutomationHandler {
                 .applicationId(applicationEntity.getApplicationId())
                 .applicationType(applicationEntity.getApplicationType())
                 .description(applicationEntity.getDescription())
-                .name(applicationEntity.getDescription())
+                .name(applicationEntity.getName())
                 .build();
     }
 
