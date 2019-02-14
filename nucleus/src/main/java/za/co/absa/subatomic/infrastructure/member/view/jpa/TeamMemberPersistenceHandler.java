@@ -71,6 +71,20 @@ public class TeamMemberPersistenceHandler {
     }
 
     @Transactional(readOnly = true)
+    public TeamMemberEntity findByDomainUsernameWithOrWithoutDomain(
+            String domainUsername) {
+        TeamMemberEntity entity = null;
+        if (!domainUsername.contains("\\")) {
+            entity = teamMemberRepository
+                    .findByDomainUsernameLike("\\" + domainUsername);
+        }
+        if (entity == null) {
+            entity = teamMemberRepository.findByDomainUsername(domainUsername);
+        }
+        return entity;
+    }
+
+    @Transactional(readOnly = true)
     public List<TeamMemberEntity> findAll() {
         return teamMemberRepository.findAll();
     }
