@@ -76,7 +76,7 @@ public class TeamMemberPersistenceHandler {
         TeamMemberEntity entity = null;
         if (!domainUsername.contains("\\")) {
             entity = teamMemberRepository
-                    .findByDomainUsernameLike("\\" + domainUsername);
+                    .findByDomainUsernameEndingWith("\\" + domainUsername);
         }
         if (entity == null) {
             entity = teamMemberRepository.findByDomainUsername(domainUsername);
