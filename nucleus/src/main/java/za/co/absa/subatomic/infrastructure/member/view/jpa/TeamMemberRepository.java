@@ -15,6 +15,8 @@ public interface TeamMemberRepository
 
     TeamMemberEntity findByDomainUsername(String domainUsername);
 
+    TeamMemberEntity findByDomainUsernameEndingWith(String domainUsername);
+
     List<TeamMemberEntity> findByTeams_TeamId(String teamId);
 
     List<TeamMemberEntity> findByMemberIdIn(List<String> memberIds);

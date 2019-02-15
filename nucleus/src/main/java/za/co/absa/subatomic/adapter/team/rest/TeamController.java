@@ -137,7 +137,8 @@ public class TeamController {
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String slackScreenName,
             @RequestParam(required = false) String slackTeamChannel,
-            @RequestParam(required = false) String projectId) {
+            @RequestParam(required = false) String projectId,
+            @RequestParam(required = false) String memberId) {
         Set<TeamResource> teams = new HashSet<>();
 
         // TODO see if we can't use that functional library for Java that has pattern matching?
@@ -150,6 +151,13 @@ public class TeamController {
             teams.addAll(teamService.getPersistenceHandler()
                     .findByMemberOrOwnerSlackScreenName(
                             slackScreenName)
+                    .stream()
+                    .map(assembler::toResource).collect(Collectors.toList()));
+        }
+        else if (StringUtils.isNotBlank(memberId)) {
+            teams.addAll(teamService.getPersistenceHandler()
+                    .findByMemberOrOwnerMemberId(
+                            memberId)
                     .stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
@@ -174,7 +182,7 @@ public class TeamController {
         return new Resources<>(teams,
                 linkTo(TeamController.class).withRel("self"),
                 linkTo(methodOn(TeamController.class).list(name,
-                        slackScreenName, slackTeamChannel, projectId))
+                        slackScreenName, slackTeamChannel, projectId, memberId))
                                 .withRel("self"));
     }
 
