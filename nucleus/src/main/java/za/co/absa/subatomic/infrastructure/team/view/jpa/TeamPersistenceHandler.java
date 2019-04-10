@@ -230,7 +230,7 @@ public class TeamPersistenceHandler {
         return membershipRequestEntity;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public TeamEntity updateOpenShiftCloud(TeamEntity team,
             String openShiftCloud) {
         team.setOpenShiftCloud(openShiftCloud);
