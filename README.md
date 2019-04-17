@@ -25,6 +25,9 @@ Refer to the [Local-Hadron-Colider](https://github.com/absa-subatomic/local-hadr
 ```console
 $ ./mvnw spring-boot:run -pl nucleus -Dspring.profiles.active=local
 ```
+or if you have maven installed
+
+```mvn spring-boot:run -pl nucleus -Dspring.profiles.active=local```
 
 ### Development Setup
 To run Gluon locally using an in memory H2 database:
