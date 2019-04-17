@@ -31,6 +31,7 @@ import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
 import za.co.absa.subatomic.application.team.TeamService;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamPersistenceHandler;
 
 @RestController
 @RequestMapping("/teams")
@@ -41,9 +42,11 @@ public class TeamController {
     private final TeamResourceAssembler assembler;
 
     private TeamService teamService;
+    private TeamPersistenceHandler teamPersistenceHandler;
 
-    public TeamController(TeamService teamService) {
+    public TeamController(TeamService teamService, TeamPersistenceHandler teamPersistenceHandler) {
         this.teamService = teamService;
+        this.teamPersistenceHandler = teamPersistenceHandler;
         this.assembler = new TeamResourceAssembler();
     }
 
@@ -69,7 +72,7 @@ public class TeamController {
 
     @PutMapping("/{id}")
     ResponseEntity<TeamResource> update(@PathVariable String id,
-            @RequestBody TeamResource request) {
+                                        @RequestBody TeamResource request) {
         log.info("Trying to update Team with: {}", request);
         if (!request.getOwners().isEmpty() || !request.getMembers().isEmpty()) {
 
@@ -105,8 +108,7 @@ public class TeamController {
                             "Updating membership request with approval status: {}",
                             membershipRequest.getRequestStatus());
                     teamService.updateMembershipRequest(id, membershipRequest);
-                }
-                else if (StringUtils
+                } else if (StringUtils
                         .isBlank(membershipRequest.getMembershipRequestId())
                         && membershipRequest.getRequestedBy() != null) {
                     teamService.newMembershipRequest(id,
@@ -123,13 +125,13 @@ public class TeamController {
 
         return ResponseEntity.accepted()
                 .body(assembler.toResource(
-                        teamService.getPersistenceHandler().findByTeamId(id)));
+                        teamPersistenceHandler.findByTeamId(id)));
     }
 
     @GetMapping("/{id}")
     TeamResource get(@PathVariable String id) {
         return assembler.toResource(
-                teamService.getPersistenceHandler().findByTeamId(id));
+                teamPersistenceHandler.findByTeamId(id));
     }
 
     @GetMapping
@@ -144,38 +146,33 @@ public class TeamController {
         // TODO see if we can't use that functional library for Java that has pattern matching?
         if (StringUtils.isNotBlank(name)) {
             teams.add(
-                    assembler.toResource(teamService.getPersistenceHandler()
+                    assembler.toResource(teamPersistenceHandler
                             .findByName(name)));
-        }
-        else if (StringUtils.isNotBlank(slackScreenName)) {
-            teams.addAll(teamService.getPersistenceHandler()
+        } else if (StringUtils.isNotBlank(slackScreenName)) {
+            teams.addAll(teamPersistenceHandler
                     .findByMemberOrOwnerSlackScreenName(
                             slackScreenName)
                     .stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
-        }
-        else if (StringUtils.isNotBlank(memberId)) {
-            teams.addAll(teamService.getPersistenceHandler()
+        } else if (StringUtils.isNotBlank(memberId)) {
+            teams.addAll(teamPersistenceHandler
                     .findByMemberOrOwnerMemberId(
                             memberId)
                     .stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
-        }
-        else if (StringUtils.isNotBlank(slackTeamChannel)) {
-            teams.addAll(teamService.getPersistenceHandler()
+        } else if (StringUtils.isNotBlank(slackTeamChannel)) {
+            teams.addAll(teamPersistenceHandler
                     .findBySlackTeamChannel(
                             slackTeamChannel)
                     .stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
-        }
-        else if (StringUtils.isNotBlank(projectId)) {
+        } else if (StringUtils.isNotBlank(projectId)) {
             teams.addAll(teamService.findTeamsAssociatedToProject(
                     projectId).stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
-        }
-        else if (StringUtils.isAllBlank(name, slackScreenName, slackTeamChannel,
+        } else if (StringUtils.isAllBlank(name, slackScreenName, slackTeamChannel,
                 projectId)) {
-            teams.addAll(teamService.getPersistenceHandler().findAll().stream()
+            teams.addAll(teamPersistenceHandler.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
@@ -183,13 +180,13 @@ public class TeamController {
                 linkTo(TeamController.class).withRel("self"),
                 linkTo(methodOn(TeamController.class).list(name,
                         slackScreenName, slackTeamChannel, projectId, memberId))
-                                .withRel("self"));
+                        .withRel("self"));
     }
 
     @DeleteMapping("/{teamId}/members/{memberId}")
     ResponseEntity delete(@PathVariable String teamId,
-            @PathVariable String memberId,
-            @RequestParam("requestedById") String requestedById) {
+                          @PathVariable String memberId,
+                          @RequestParam("requestedById") String requestedById) {
 
         log.info("Trying to delete member " + memberId + " from team " + teamId
                 + " by requestor " + requestedById);
@@ -198,8 +195,7 @@ public class TeamController {
                 && !requestedById.isEmpty()) {
             teamService.removeTeamMember(teamId, memberId, requestedById);
             return ResponseEntity.accepted().build();
-        }
-        else {
+        } else {
             return ResponseEntity.badRequest().build();
         }
     }
@@ -223,21 +219,22 @@ public class TeamController {
                 resource.setCreatedAt(entity.getCreatedAt());
                 resource.setCreatedBy(entity.getCreatedBy().getMemberId());
 
+
                 resource.getOwners()
                         .addAll(new TeamMemberResourceBaseAssembler()
                                 .toResources(entity.getOwners()));
-                resource.getMembers()
-                        .addAll(new TeamMemberResourceBaseAssembler()
-                                .toResources(entity.getMembers()));
-
+                ofNullable(entity.getMembers()).ifPresent(
+                        members -> resource.getMembers()
+                                .addAll(new TeamMemberResourceBaseAssembler()
+                                        .toResources(members)
+                                ));
                 ofNullable(entity.getSlackDetails())
                         .ifPresent(slackDetails -> resource
                                 .setSlack(
                                         new Slack(slackDetails
                                                 .getTeamChannel())));
                 return resource;
-            }
-            else {
+            } else {
                 return null;
             }
         }
