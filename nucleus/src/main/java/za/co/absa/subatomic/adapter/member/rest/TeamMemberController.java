@@ -49,22 +49,21 @@ public class TeamMemberController {
     }
 
     @PostMapping
-    ResponseEntity<TeamMemberResource> onboard(
+    public ResponseEntity<TeamMemberResource> onboard(
             @RequestBody TeamMemberResource request) {
-        String aggregateId = teamMemberService.newTeamMember(request)
-                .getMemberId();
+        TeamMemberEntity newTeamMember = teamMemberService.newTeamMember(request);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(aggregateId)
+                .buildAndExpand(newTeamMember.getMemberId())
                 .toUri();
 
-        return ResponseEntity.created(location).build();
+        return ResponseEntity.created(location).body(this.assembler.toResource(newTeamMember));
     }
 
     @PutMapping("/{id}")
     ResponseEntity<TeamMemberResource> update(@PathVariable String id,
-            @RequestBody TeamMemberResource request) {
+                                              @RequestBody TeamMemberResource request) {
         log.debug("Updating Team Member: {} -> {}", id, request);
 
         ofNullable(request.getSlack()).ifPresent(slack -> teamMemberService
@@ -97,28 +96,24 @@ public class TeamMemberController {
                     assembler.toResource(
                             teamMemberService.getTeamMemberPersistenceHandler()
                                     .findByEmail(email)));
-        }
-        else if (StringUtils.isNotBlank(slackScreenName)) {
+        } else if (StringUtils.isNotBlank(slackScreenName)) {
             members.add(
                     assembler.toResource(
                             teamMemberService.getTeamMemberPersistenceHandler()
                                     .findBySlackScreenName(slackScreenName)));
-        }
-        else if (StringUtils.isNotBlank(teamId)) {
+        } else if (StringUtils.isNotBlank(teamId)) {
             members.addAll(
                     teamMemberService.getTeamMemberPersistenceHandler()
                             .findMembersAssociatedToTeam(teamId)
                             .stream()
                             .map(assembler::toResource)
                             .collect(Collectors.toList()));
-        }
-        else if (StringUtils.isNotBlank(domainUsername)) {
+        } else if (StringUtils.isNotBlank(domainUsername)) {
             members.add(assembler.toResource(
                     teamMemberService.getTeamMemberPersistenceHandler()
                             .findByDomainUsernameWithOrWithoutDomain(
                                     domainUsername)));
-        }
-        else if (StringUtils.isAllBlank(email, slackScreenName)) {
+        } else if (StringUtils.isAllBlank(email, slackScreenName)) {
             members.addAll(teamMemberService.getTeamMemberPersistenceHandler()
                     .findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
@@ -128,7 +123,7 @@ public class TeamMemberController {
                 linkTo(TeamMemberController.class).withRel("self"),
                 linkTo(methodOn(TeamMemberController.class).list(email,
                         slackScreenName, teamId, domainUsername))
-                                .withRel("self"));
+                        .withRel("self"));
     }
 
     private class TeamMemberResourceAssembler extends
@@ -181,7 +176,7 @@ public class TeamMemberController {
             resource.setName(entity.getName());
             resource.setSlack((entity.getSlackDetails() != null)
                     ? new za.co.absa.subatomic.adapter.team.rest.Slack(
-                            entity.getSlackDetails().getTeamChannel())
+                    entity.getSlackDetails().getTeamChannel())
                     : null);
             return resource;
         }

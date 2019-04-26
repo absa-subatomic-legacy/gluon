@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class TeamResource extends TeamResourceBase {
 
