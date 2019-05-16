@@ -86,7 +86,7 @@ public class TeamAutomationHandler {
         teamSlackChannelCreated ingestableObject = new teamSlackChannelCreated(
                 teamCreated, atomistMemberBase);
 
-        ResponseEntity<String> responseteamSlackChannelCreated = restTemplate.postForEntity(
+        ResponseEntity<String> responseTeamSlackChannelCreated = restTemplate.postForEntity(
                 atomistConfigurationProperties
                         .getMemberRemovedFromTeamEventUrl(),
                 ingestableObject,
