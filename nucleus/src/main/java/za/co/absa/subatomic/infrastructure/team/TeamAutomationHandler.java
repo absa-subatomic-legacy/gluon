@@ -64,11 +64,13 @@ public class TeamAutomationHandler {
                 new TeamMemberId(newTeamEntity.getCreatedBy().getMemberId()),
                 teamSlackIdentity);
 
+        AtomistMemberBase atomistMemberBase = new AtomistMemberBase(
+                teamMemberEntity.getFirstName(),
+                teamMemberEntity.getDomainUsername(),
+                teamMemberSlackIdentity);
+
         TeamCreatedWithDetails newTeam = new TeamCreatedWithDetails(teamCreated,
-                new AtomistMemberBase(
-                        teamMemberEntity.getFirstName(),
-                        teamMemberEntity.getDomainUsername(),
-                        teamMemberSlackIdentity));
+                atomistMemberBase);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties.getTeamCreatedEventUrl(),
@@ -76,9 +78,26 @@ public class TeamAutomationHandler {
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested event successfully: {} -> {}",
+            log.info("Atomist has ingested teamCreatedEvent successfully: {} -> {}",
                     response.getHeaders(), response.getBody());
         }
+
+        // Raise event for teamSlackChannelCreated
+        teamSlackChannelCreated ingestableObject = new teamSlackChannelCreated(
+                teamCreated, atomistMemberBase);
+
+        ResponseEntity<String> responseteamSlackChannelCreated = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getMemberRemovedFromTeamEventUrl(),
+                ingestableObject,
+                String.class);
+
+        if (responseteamSlackChannelCreated.getStatusCode().is2xxSuccessful()) {
+            log.info("Atomist has ingested teamSlackChannelCreatedevent successfully: -> {}",
+                    responseteamSlackChannelCreated.getHeaders(),
+                    responseteamSlackChannelCreated.getBody());
+        }
+        // End of event teamSlackChannelCreated
     }
 
     public void devOpsEnvironmentRequested(TeamEntity teamEntity,
@@ -365,6 +384,13 @@ public class TeamAutomationHandler {
         AtomistTeam team;
 
         AtomistMemberBase requestedBy;
+    }
+
+    @Value
+    private class teamSlackChannelCreated {
+        private TeamCreated team;
+
+        private AtomistMemberBase createdBy;
     }
 
 }
