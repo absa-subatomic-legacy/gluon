@@ -59,7 +59,7 @@ public class TeamAutomationHandler {
             teamSlackIdentity = new TeamSlackIdentity(
                     newTeamEntity.getSlackDetails().getTeamChannel());
         }
-        TeamCreated teamCreated = new TeamCreated(newTeamEntity.getTeamId(),
+        TeamCreated teamCreated = new TeamCreated (newTeamEntity.getTeamId(),
                 newTeamEntity.getName(), newTeamEntity.getDescription(),
                 new TeamMemberId(newTeamEntity.getCreatedBy().getMemberId()),
                 teamSlackIdentity);
@@ -78,26 +78,9 @@ public class TeamAutomationHandler {
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested teamCreatedEvent successfully: {} -> {}",
+            log.info("Atomist has ingested TeamCreatedEvent successfully: {} -> {}",
                     response.getHeaders(), response.getBody());
         }
-
-        // Raise event for teamSlackChannelCreated
-        teamSlackChannelCreated ingestableObject = new teamSlackChannelCreated(
-                teamCreated, atomistMemberBase);
-
-        ResponseEntity<String> responseTeamSlackChannelCreated = restTemplate.postForEntity(
-                atomistConfigurationProperties
-                        .getMemberRemovedFromTeamEventUrl(),
-                ingestableObject,
-                String.class);
-
-        if (responseteamSlackChannelCreated.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested teamSlackChannelCreatedevent successfully: -> {}",
-                    responseteamSlackChannelCreated.getHeaders(),
-                    responseteamSlackChannelCreated.getBody());
-        }
-        // End of event teamSlackChannelCreated
     }
 
     public void devOpsEnvironmentRequested(TeamEntity teamEntity,
@@ -385,12 +368,4 @@ public class TeamAutomationHandler {
 
         AtomistMemberBase requestedBy;
     }
-
-    @Value
-    private class teamSlackChannelCreated {
-        private TeamCreated team;
-
-        private AtomistMemberBase createdBy;
-    }
-
 }

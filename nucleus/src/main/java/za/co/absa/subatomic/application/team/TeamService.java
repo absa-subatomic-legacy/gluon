@@ -7,14 +7,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import lombok.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.client.RestTemplate;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
+import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
+import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
@@ -43,6 +49,10 @@ public class TeamService {
     private MembershipRequestRepository membershipRequestRepository;
 
     private TeamAssertions teamAssertions = new TeamAssertions();
+
+    private RestTemplate restTemplate;
+
+    private AtomistConfigurationProperties atomistConfigurationProperties;
 
     public TeamService(TeamRepository teamRepository,
             MembershipRequestRepository membershipRequestRepository,
@@ -140,6 +150,19 @@ public class TeamService {
     }
 
     public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
+
+        AtomistTeam atomistTeam = new AtomistTeam (newTeamEntity.getTeamId(),
+                newTeamEntity.getName(),
+                newTeamEntity.getOpenShiftCloud(),
+                teamSlackIdentity);
+
+        AtomistMemberBase atomistMemberBase = new AtomistMemberBase(
+                teamMemberEntity.getFirstName(),
+                teamMemberEntity.getDomainUsername(),
+                teamMemberSlackIdentity);
+
+        teamSlackChannelCreated(atomistTeam,atomistMemberBase);
+
         return this.persistenceHandler.addSlackIdentity(teamId,
                 teamChannel);
     }
@@ -233,6 +256,26 @@ public class TeamService {
                 requestedByMemberEntity, previousCloud);
     }
 
+    public void teamSlackChannelCreated(AtomistTeam atomistTeam, AtomistMemberBase atomistMemberBase) {
+        // Raise event for teamSlackChannelCreated -- todo: move to team service as a function and call from here
+
+        TeamService.TeamSlackChannelCreated ingestableObject = new TeamService.TeamSlackChannelCreated(
+                atomistTeam, atomistMemberBase);
+
+        ResponseEntity<String> responseTeamSlackChannelCreated = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getMemberRemovedFromTeamEventUrl(),
+                ingestableObject,
+                String.class);
+
+        if (responseTeamSlackChannelCreated.getStatusCode().is2xxSuccessful()) {
+            log.info("Atomist has ingested TeamSlackChannelCreatedEvent successfully: -> {}",
+                    responseTeamSlackChannelCreated.getHeaders(),
+                    responseTeamSlackChannelCreated.getBody());
+        }
+        // End of event TeamSlackChannelCreated
+    }
+
     @Transactional(readOnly = true)
     public Set<TeamEntity> findTeamsAssociatedToProject(String projectId) {
         ProjectEntity projectEntity = projectRepository
@@ -241,6 +284,13 @@ public class TeamService {
         associatedTeams.add(projectEntity.getOwningTeam());
         associatedTeams.addAll(projectEntity.getTeams());
         return associatedTeams;
+    }
+
+    @Value
+    private class TeamSlackChannelCreated {
+        private AtomistTeam team;
+
+        private AtomistMemberBase createdBy;
     }
 
     public TeamPersistenceHandler getPersistenceHandler() {

@@ -71,8 +71,10 @@ public class AtomistTeam extends AtomistTeamBase {
 
     private List<AtomistMemberBase> members = new ArrayList<>();
 
-    public AtomistTeam(String teamId, String name, String openShiftCloud,
-            TeamSlackIdentity slackIdentity) {
+    public AtomistTeam(String teamId,
+                       String name,
+                       String openShiftCloud,
+                       TeamSlackIdentity slackIdentity) {
         super(teamId, name, openShiftCloud, slackIdentity);
     }
 
