@@ -19,6 +19,7 @@ import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeamMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
