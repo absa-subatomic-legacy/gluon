@@ -59,6 +59,7 @@ public class TeamAutomationHandler {
             teamSlackIdentity = new TeamSlackIdentity(
                     newTeamEntity.getSlackDetails().getTeamChannel());
         }
+
         TeamCreated teamCreated = new TeamCreated (newTeamEntity.getTeamId(),
                 newTeamEntity.getName(), newTeamEntity.getDescription(),
                 new TeamMemberId(newTeamEntity.getCreatedBy().getMemberId()),
@@ -81,6 +82,26 @@ public class TeamAutomationHandler {
             log.info("Atomist has ingested TeamCreatedEvent successfully: {} -> {}",
                     response.getHeaders(), response.getBody());
         }
+    }
+
+    public void teamSlackChannelCreated(AtomistTeam atomistTeam, AtomistMemberBase atomistMemberBase) {
+        // Raise event for teamSlackChannelCreated
+
+        TeamSlackChannelCreated ingestableObject = new TeamSlackChannelCreated(
+                atomistTeam, atomistMemberBase);
+
+        ResponseEntity<String> responseTeamSlackChannelCreated = restTemplate.postForEntity(
+                atomistConfigurationProperties
+                        .getTeamSlackChannelCreatedEventUrl(),
+                ingestableObject,
+                String.class);
+
+        if (responseTeamSlackChannelCreated.getStatusCode().is2xxSuccessful()) {
+            log.info("Atomist has ingested TeamSlackChannelCreatedEvent successfully: -> {}",
+                    responseTeamSlackChannelCreated.getHeaders(),
+                    responseTeamSlackChannelCreated.getBody());
+        }
+        // End of event TeamSlackChannelCreated
     }
 
     public void devOpsEnvironmentRequested(TeamEntity teamEntity,
@@ -367,5 +388,12 @@ public class TeamAutomationHandler {
         AtomistTeam team;
 
         AtomistMemberBase requestedBy;
+    }
+
+    @Value
+    private class TeamSlackChannelCreated {
+        private AtomistTeam team;
+
+        private AtomistMemberBase createdBy;
     }
 }

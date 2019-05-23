@@ -70,8 +70,9 @@ public class TeamController {
         return ResponseEntity.created(location).build();
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id}/members/{memberId}")
     ResponseEntity<TeamResource> update(@PathVariable String id,
+                                        @PathVariable String memberId,
                                         @RequestBody TeamResource request) {
         log.info("Trying to update Team with: {}", request);
         if (!request.getOwners().isEmpty() || !request.getMembers().isEmpty()) {
@@ -88,6 +89,7 @@ public class TeamController {
 
         if (request.getSlack() != null) {
             teamService.addSlackIdentity(id,
+                    memberId,
                     request.getSlack().getTeamChannel());
         }
 
