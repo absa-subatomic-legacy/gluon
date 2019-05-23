@@ -14,11 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
-import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
-import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
-import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeamMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberPersistenceHandler;
@@ -149,27 +145,10 @@ public class TeamService {
         TeamEntity teamEntity = this.persistenceHandler.addSlackIdentity(teamId,
                 teamChannel);
 
-        TeamMemberEntity member = this.teamMemberPersistenceHandler
+        TeamMemberEntity teamMemberEntity = this.teamMemberPersistenceHandler
                 .findByTeamMemberId(actionedByMemberId);
 
-        TeamSlackIdentity teamSlackIdentity = new TeamSlackIdentity(
-                teamEntity.getSlackDetails().getTeamChannel());
-
-        TeamMemberSlackIdentity teamMemberSlackIdentity = new TeamMemberSlackIdentity(
-                member.getSlackDetails().getScreenName(),
-                member.getSlackDetails().getUserId());
-
-        AtomistTeam atomistTeam = new AtomistTeam (teamEntity.getTeamId(),
-                teamEntity.getName(),
-                teamEntity.getOpenShiftCloud(),
-                teamSlackIdentity);
-
-         AtomistMemberBase atomistMemberBase = new AtomistMemberBase(
-                member.getFirstName(),
-                member.getDomainUsername(),
-                teamMemberSlackIdentity);
-
-        this.automationHandler.teamSlackChannelCreated(atomistTeam,atomistMemberBase);
+        this.automationHandler.teamSlackChannelCreated(teamEntity, teamMemberEntity);
         return teamEntity;
     }
 

@@ -84,8 +84,25 @@ public class TeamAutomationHandler {
         }
     }
 
-    public void teamSlackChannelCreated(AtomistTeam atomistTeam, AtomistMemberBase atomistMemberBase) {
+    public void teamSlackChannelCreated(TeamEntity teamEntity, TeamMemberEntity teamMemberEntity) {
         // Raise event for teamSlackChannelCreated
+
+        TeamSlackIdentity teamSlackIdentity = new TeamSlackIdentity(
+                teamEntity.getSlackDetails().getTeamChannel());
+
+        AtomistTeam atomistTeam = new AtomistTeam (teamEntity.getTeamId(),
+                teamEntity.getName(),
+                teamEntity.getOpenShiftCloud(),
+                teamSlackIdentity);
+
+        TeamMemberSlackIdentity teamMemberSlackIdentity = new TeamMemberSlackIdentity(
+                teamMemberEntity.getSlackDetails().getScreenName(),
+                teamMemberEntity.getSlackDetails().getUserId());
+
+         AtomistMemberBase atomistMemberBase = new AtomistMemberBase(
+                 teamMemberEntity.getFirstName(),
+                 teamMemberEntity.getDomainUsername(),
+                 teamMemberSlackIdentity);
 
         TeamSlackChannelCreated ingestableObject = new TeamSlackChannelCreated(
                 atomistTeam, atomistMemberBase);
