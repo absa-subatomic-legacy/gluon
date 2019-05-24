@@ -1,16 +1,11 @@
 package za.co.absa.subatomic.infrastructure.team;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamCreated;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
@@ -23,6 +18,10 @@ import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 @Component
 @Slf4j
 public class TeamAutomationHandler {
@@ -34,7 +33,7 @@ public class TeamAutomationHandler {
     private AtomistTeamMapper atomistTeamMapper = new AtomistTeamMapper();
 
     public TeamAutomationHandler(RestTemplate restTemplate,
-            AtomistConfigurationProperties atomistConfigurationProperties) {
+                                 AtomistConfigurationProperties atomistConfigurationProperties) {
         this.restTemplate = restTemplate;
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
@@ -60,7 +59,7 @@ public class TeamAutomationHandler {
                     newTeamEntity.getSlackDetails().getTeamChannel());
         }
 
-        TeamCreated teamCreated = new TeamCreated (newTeamEntity.getTeamId(),
+        TeamCreated teamCreated = new TeamCreated(newTeamEntity.getTeamId(),
                 newTeamEntity.getName(), newTeamEntity.getDescription(),
                 new TeamMemberId(newTeamEntity.getCreatedBy().getMemberId()),
                 teamSlackIdentity);
@@ -87,22 +86,16 @@ public class TeamAutomationHandler {
     public void teamSlackChannelCreated(TeamEntity teamEntity, TeamMemberEntity teamMemberEntity) {
         // Raise event for teamSlackChannelCreated
 
-        TeamSlackIdentity teamSlackIdentity = new TeamSlackIdentity(
-                teamEntity.getSlackDetails().getTeamChannel());
-
-        AtomistTeam atomistTeam = new AtomistTeam (teamEntity.getTeamId(),
-                teamEntity.getName(),
-                teamEntity.getOpenShiftCloud(),
-                teamSlackIdentity);
+        AtomistTeam atomistTeam = new AtomistTeamMapper().createAtomistTeam(teamEntity);
 
         TeamMemberSlackIdentity teamMemberSlackIdentity = new TeamMemberSlackIdentity(
                 teamMemberEntity.getSlackDetails().getScreenName(),
                 teamMemberEntity.getSlackDetails().getUserId());
 
-         AtomistMemberBase atomistMemberBase = new AtomistMemberBase(
-                 teamMemberEntity.getFirstName(),
-                 teamMemberEntity.getDomainUsername(),
-                 teamMemberSlackIdentity);
+        AtomistMemberBase atomistMemberBase = new AtomistMemberBase(
+                teamMemberEntity.getFirstName(),
+                teamMemberEntity.getDomainUsername(),
+                teamMemberSlackIdentity);
 
         TeamSlackChannelCreated ingestableObject = new TeamSlackChannelCreated(
                 atomistTeam, atomistMemberBase);
@@ -114,7 +107,7 @@ public class TeamAutomationHandler {
                 String.class);
 
         if (responseTeamSlackChannelCreated.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested TeamSlackChannelCreatedEvent successfully: -> {}",
+            log.info("Atomist has ingested TeamSlackChannelCreatedEvent successfully: {} -> {}",
                     responseTeamSlackChannelCreated.getHeaders(),
                     responseTeamSlackChannelCreated.getBody());
         }
@@ -122,7 +115,7 @@ public class TeamAutomationHandler {
     }
 
     public void devOpsEnvironmentRequested(TeamEntity teamEntity,
-            TeamMemberEntity teamMemberEntity) {
+                                           TeamMemberEntity teamMemberEntity) {
         log.info(
                 "A team DevOps environment was requested, sending event to Atomist...");
 
@@ -153,7 +146,7 @@ public class TeamAutomationHandler {
     }
 
     public void teamOpenShiftCloudUpdated(TeamEntity teamEntity,
-            TeamMemberEntity teamMemberEntity, String previousCloud) {
+                                          TeamMemberEntity teamMemberEntity, String previousCloud) {
         log.info(
                 "A team OpenShift cloud has been updated, sending event to Atomist...");
 
@@ -236,8 +229,8 @@ public class TeamAutomationHandler {
     }
 
     public void teamMembersAdded(TeamEntity teamEntity,
-            List<TeamMemberEntity> teamOwnersRequested,
-            List<TeamMemberEntity> teamMembersRequested) {
+                                 List<TeamMemberEntity> teamOwnersRequested,
+                                 List<TeamMemberEntity> teamMembersRequested) {
         TeamSlackIdentity teamEntitySlackIdentity = null;
         if (teamEntity.getSlackDetails() != null) {
             teamEntitySlackIdentity = new TeamSlackIdentity(
@@ -275,8 +268,8 @@ public class TeamAutomationHandler {
     }
 
     public void teamMemberRemoved(TeamEntity teamEntity,
-            TeamMemberEntity memberEntity,
-            TeamMemberEntity requesterEntity) {
+                                  TeamMemberEntity memberEntity,
+                                  TeamMemberEntity requesterEntity) {
 
         TeamSlackIdentity teamEntitySlackIdentity = null;
 
@@ -305,8 +298,7 @@ public class TeamAutomationHandler {
         MemberRemovedFromTeam ingestableObject = new MemberRemovedFromTeam(
                 team, memberRemoved, memberRequested);
 
-        log.info(
-                "A member has been removed from a team, sending event to Atomist for ingestion",
+        log.info("A member has been removed from a team, sending event to Atomist for ingestion: {}",
                 ingestableObject);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
