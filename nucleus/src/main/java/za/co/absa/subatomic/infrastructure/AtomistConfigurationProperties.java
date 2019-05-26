@@ -46,5 +46,5 @@ public class AtomistConfigurationProperties {
 
     private String teamOpenShiftCloudMigratedEventUrl;
 
-    private String teamSlackChannelCreatedEventUrl;
+    private String teamSetupCompletedEventUrl;
 }

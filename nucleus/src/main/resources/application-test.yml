@@ -48,4 +48,4 @@ atomist:
   packageConfigurationRequestedEventUrl: "http://localhost:1234/PackageConfigurationRequestedEvent"
   configServerRequestedEventUrl: "http://localhost:1234/ConfigServerRequestedEvent"
   broadcastMessageAllChannelsEventUrl: "http://localhost:1234/BroadcastMessageAllChannelsEvent"
-  teamSlackChannelCreatedEventUrl: "http://localhost:1234/TeamSlackChannelCreatedEvent"
+  teamSetupCompletedEventUrl: "http://localhost:1234/teamSetupCompletedEvent"

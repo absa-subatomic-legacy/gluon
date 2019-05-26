@@ -84,7 +84,7 @@ public class TeamAutomationHandler {
     }
 
     public void teamSlackChannelCreated(TeamEntity teamEntity, TeamMemberEntity teamMemberEntity) {
-        // Raise event for teamSlackChannelCreated
+        // Raise event for TeamSetupCompletedEvent
 
         AtomistTeam atomistTeam = new AtomistTeamMapper().createAtomistTeam(teamEntity);
 
@@ -102,16 +102,16 @@ public class TeamAutomationHandler {
 
         ResponseEntity<String> responseTeamSlackChannelCreated = restTemplate.postForEntity(
                 atomistConfigurationProperties
-                        .getTeamSlackChannelCreatedEventUrl(),
+                        .getTeamSetupCompletedEventUrl(),
                 ingestableObject,
                 String.class);
 
         if (responseTeamSlackChannelCreated.getStatusCode().is2xxSuccessful()) {
-            log.info("Atomist has ingested TeamSlackChannelCreatedEvent successfully: {} -> {}",
+            log.info("Atomist has ingested TeamSetupCompletedEvent successfully: -> {}",
                     responseTeamSlackChannelCreated.getHeaders(),
                     responseTeamSlackChannelCreated.getBody());
         }
-        // End of event TeamSlackChannelCreated
+        // End of event TeamSetupCompletedEvent
     }
 
     public void devOpsEnvironmentRequested(TeamEntity teamEntity,

@@ -162,7 +162,7 @@ public class TeamControllerTest {
 
         // expect the teamSlackChannel created event fired and assert the correct json body is sent
         mockServer.expect(ExpectedCount.once(),
-                requestTo(new URI(this.atomistConfiguration.getTeamSlackChannelCreatedEventUrl())))
+                requestTo(new URI(this.atomistConfiguration.getTeamSetupCompletedEventUrl())))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().json(gson.toJson(jsonObject)))
                 .andRespond(withStatus(HttpStatus.ACCEPTED));
