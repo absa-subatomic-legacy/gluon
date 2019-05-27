@@ -45,4 +45,6 @@ public class AtomistConfigurationProperties {
     private String genericProdRequestedEventUrl;
 
     private String teamOpenShiftCloudMigratedEventUrl;
+
+    private String teamSetupCompletedEventUrl;
 }

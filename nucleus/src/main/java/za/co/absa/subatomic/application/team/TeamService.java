@@ -139,9 +139,16 @@ public class TeamService {
                 actionedByEntity);
     }
 
-    public TeamEntity addSlackIdentity(String teamId, String teamChannel) {
-        return this.persistenceHandler.addSlackIdentity(teamId,
+    public TeamEntity addSlackIdentity(String teamId, String actionedByMemberId, String teamChannel) {
+        // actionedByMemberId (is the now the variable name standard) = createBy = requestedById
+        TeamEntity teamEntity = this.persistenceHandler.addSlackIdentity(teamId,
                 teamChannel);
+
+        TeamMemberEntity teamMemberEntity = this.teamMemberPersistenceHandler
+                .findByTeamMemberId(actionedByMemberId);
+
+        this.automationHandler.teamSlackChannelCreated(teamEntity, teamMemberEntity);
+        return teamEntity;
     }
 
     public void newDevOpsEnvironment(String teamId, String requestedById) {

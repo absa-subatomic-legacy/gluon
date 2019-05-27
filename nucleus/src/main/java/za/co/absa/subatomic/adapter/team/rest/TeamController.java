@@ -1,15 +1,6 @@
 package za.co.absa.subatomic.adapter.team.rest;
 
-import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
@@ -25,13 +16,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
 import za.co.absa.subatomic.application.team.TeamService;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamPersistenceHandler;
+
+import java.net.URI;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/teams")
@@ -67,7 +66,7 @@ public class TeamController {
                 .buildAndExpand(newTeam.getTeamId())
                 .toUri();
 
-        return ResponseEntity.created(location).build();
+        return ResponseEntity.created(location).body(assembler.toResource(newTeam));
     }
 
     @PutMapping("/{id}")
@@ -88,6 +87,7 @@ public class TeamController {
 
         if (request.getSlack() != null) {
             teamService.addSlackIdentity(id,
+                    request.getCreatedBy(),
                     request.getSlack().getTeamChannel());
         }
 
@@ -203,7 +203,7 @@ public class TeamController {
     private class TeamResourceAssembler
             extends ResourceAssemblerSupport<TeamEntity, TeamResource> {
 
-        public TeamResourceAssembler() {
+        TeamResourceAssembler() {
             super(TeamController.class, TeamResource.class);
         }
 
