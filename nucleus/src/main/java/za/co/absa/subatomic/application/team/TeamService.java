@@ -1,16 +1,13 @@
 package za.co.absa.subatomic.application.team;
 
 import java.text.MessageFormat;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
@@ -58,10 +55,12 @@ public class TeamService {
         this.persistenceHandler = persistenceHandler;
     }
 
-    public TeamEntity newTeamFromSlack(String name, String description,
-            String openShiftCloud,
-            String createdBy,
-            String teamChannel) {
+    public TeamEntity newTeamFromSlack(String name,
+                                       String description,
+                                       String openShiftCloud,
+                                       String createdBy,
+                                       List<MetadataResource> metadata,
+                                       String teamChannel) {
         TeamEntity existingTeam = this.persistenceHandler.findByName(name);
         if (existingTeam != null) {
             throw new DuplicateRequestException(MessageFormat.format(
@@ -70,11 +69,37 @@ public class TeamService {
         }
 
         TeamEntity newTeam = this.persistenceHandler.createTeam(name,
-                description, openShiftCloud, teamChannel, createdBy);
+                description, openShiftCloud, teamChannel, createdBy, metadata);
 
         this.automationHandler.createNewTeam(newTeam);
 
         return newTeam;
+    }
+
+    public void setMetadata(String teamId,
+                            List<MetadataResource> metadata) {
+        TeamEntity existingTeam = this.persistenceHandler.findByTeamId(teamId);
+
+        if (existingTeam == null) {
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Requested team with ID {0} does not exist", teamId
+            ));
+        }
+
+        this.persistenceHandler.updateTeamMetadata(existingTeam, metadata, true);
+    }
+
+    public void updateMetadata(String teamId,
+                               List<MetadataResource> metadata) {
+        TeamEntity existingTeam = this.persistenceHandler.findByTeamId(teamId);
+
+        if (existingTeam == null) {
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Requested team with ID {0} does not exist", teamId
+            ));
+        }
+
+        this.persistenceHandler.updateTeamMetadata(existingTeam, metadata, false);
     }
 
     public void addTeamMembers(String teamId, String actionedBy,

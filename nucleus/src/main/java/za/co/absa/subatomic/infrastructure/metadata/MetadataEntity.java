@@ -1,6 +1,7 @@
 package za.co.absa.subatomic.infrastructure.metadata;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @Table(name = "metadata")
 @Setter(value = AccessLevel.PACKAGE)
 @Getter
+@Builder
 public class MetadataEntity {
     @Id
     @GeneratedValue
