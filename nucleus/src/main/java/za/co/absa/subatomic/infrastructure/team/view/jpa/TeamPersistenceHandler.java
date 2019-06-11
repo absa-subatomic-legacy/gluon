@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import sun.jvm.hotspot.oops.Metadata;
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataEntryResource;
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
@@ -23,7 +22,6 @@ import za.co.absa.subatomic.infrastructure.metadata.MetadataEntity;
 import za.co.absa.subatomic.infrastructure.metadata.MetadataEntry;
 
 import static java.util.stream.Collectors.toList;
-import static org.mockito.ArgumentMatchers.contains;
 
 @Component
 public class TeamPersistenceHandler {
@@ -47,10 +45,23 @@ public class TeamPersistenceHandler {
                                  String openShiftCloud,
                                  String slackTeamChannel,
                                  String createdById,
-                                 List<MetadataResource> metadata) {
+                                 List<MetadataResource> metadataResources) {
 
         TeamMemberEntity createdBy = this.teamMemberRepository
                 .findByMemberId(createdById);
+
+        List<MetadataEntity> metadataEntities;
+
+        metadataEntities = metadataResources
+                .stream()
+                .map(temp -> {
+                    List<MetadataEntry> metadataEntries = temp.getMetadataEntries()
+                            .stream()
+                            .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())
+                            .collect(toList());
+                    return MetadataEntity.builder().metadataEntries(metadataEntries).description(temp.getDescription()).build();
+                })
+                .collect(Collectors.toList());
 
         TeamEntity teamEntity = TeamEntity.builder()
                 .teamId(UUID.randomUUID().toString())
@@ -59,10 +70,8 @@ public class TeamPersistenceHandler {
                 .openShiftCloud(openShiftCloud)
                 .createdBy(createdBy)
                 .owners(Collections.singleton(createdBy))
-                .metadata(metadata.stream().map(metadataResource -> new MetadataEntity())
-                        .build();
-
-        // todo : mapping List<MetadataResource> to a List<MetadataEntity>.
+                .metadata(metadataEntities)
+                .build();
 
         if (slackTeamChannel != null) {
             teamEntity.setSlackDetails(
@@ -301,7 +310,6 @@ public class TeamPersistenceHandler {
         }
         return this.teamRepository.save(team);
     }
-}
 
     @Transactional(readOnly = true)
     public TeamEntity findByTeamId(String teamId) {
