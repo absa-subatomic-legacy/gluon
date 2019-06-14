@@ -1,13 +1,5 @@
 package za.co.absa.subatomic.adapter.application.rest;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
@@ -22,11 +14,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
 import za.co.absa.subatomic.application.application.ApplicationService;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
 import za.co.absa.subatomic.infrastructure.application.view.jpa.BitbucketRepositoryEmbedded;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/applications")
@@ -63,8 +62,7 @@ public class ApplicationController {
 
     @GetMapping("/{id}")
     ApplicationResource get(@PathVariable String id) {
-        return assembler.toResource(applicationService
-                .getApplicationPersistenceHandler().findByApplictionId(id));
+        return assembler.toResource(applicationService.findByApplicationId(id));
     }
 
     @GetMapping
@@ -78,41 +76,32 @@ public class ApplicationController {
         if (StringUtils.isNoneBlank(name, projectId)) {
             applications.add(
                     assembler.toResource(applicationService
-                            .getApplicationPersistenceHandler()
-                            .findByNameAndProjectProjectId(name, projectId)));
-        }
-        else if (StringUtils.isNotBlank(projectId)) {
+                            .findByNameAndProjectId(name, projectId)));
+        } else if (StringUtils.isNotBlank(projectId)) {
             applications.addAll(
                     assembler.toResources(
                             applicationService
-                                    .getApplicationPersistenceHandler()
                                     .findByProjectId(projectId)));
-        }
-        else if (StringUtils.isNoneBlank(name, projectName)) {
+        } else if (StringUtils.isNoneBlank(name, projectName)) {
             applications.add(
                     assembler.toResource(applicationService
-                            .getApplicationPersistenceHandler()
                             .findByNameAndProjectName(name, projectName)));
-        }
-        else if (StringUtils.isNotBlank(projectName)) {
+        } else if (StringUtils.isNotBlank(projectName)) {
             applications.addAll(
                     assembler.toResources(
                             applicationService
-                                    .getApplicationPersistenceHandler()
                                     .findByProjectName(projectName)));
         }
 
         if (StringUtils.isNotBlank(applicationType)) {
             applications.addAll(
                     assembler.toResources(applicationService
-                            .getApplicationPersistenceHandler()
                             .findByApplicationType(applicationType)));
         }
 
         if (StringUtils.isAllBlank(name, applicationType, projectName,
                 projectId)) {
-            applications.addAll(applicationService
-                    .getApplicationPersistenceHandler().findAll().stream()
+            applications.addAll(applicationService.findAll().stream()
                     .map(assembler::toResource).collect(Collectors.toList()));
         }
 
@@ -120,7 +109,7 @@ public class ApplicationController {
                 linkTo(ApplicationController.class).withRel("self"),
                 linkTo(methodOn(ApplicationController.class).list(name,
                         applicationType, projectName, projectId))
-                                .withRel("self"));
+                        .withRel("self"));
     }
 
     @DeleteMapping("/{id}")
@@ -164,8 +153,7 @@ public class ApplicationController {
                 }
 
                 return resource;
-            }
-            else {
+            } else {
                 return null;
             }
         }

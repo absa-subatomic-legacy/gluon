@@ -1,5 +1,12 @@
 package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
+import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
+
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashSet;
@@ -8,14 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-import za.co.absa.subatomic.domain.exception.InvalidRequestException;
-import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 
 @Component
 public class TeamPersistenceHandler {
@@ -27,8 +26,8 @@ public class TeamPersistenceHandler {
     private MembershipRequestRepository membershipRequestRepository;
 
     public TeamPersistenceHandler(TeamRepository teamRepository,
-            TeamMemberRepository teamMemberRepository,
-            MembershipRequestRepository membershipRequestRepository) {
+                                  TeamMemberRepository teamMemberRepository,
+                                  MembershipRequestRepository membershipRequestRepository) {
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.membershipRequestRepository = membershipRequestRepository;
@@ -36,9 +35,9 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public TeamEntity createTeam(String name, String description,
-            String openShiftCloud,
-            String slackTeamChannel,
-            String createdById) {
+                                 String openShiftCloud,
+                                 String slackTeamChannel,
+                                 String createdById) {
 
         TeamMemberEntity createdBy = this.teamMemberRepository
                 .findByMemberId(createdById);
@@ -80,8 +79,8 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public void addTeamMembers(String teamId,
-            List<String> teamOwnerIdsRequested,
-            List<String> teamMemberIdsRequested) {
+                               List<String> teamOwnerIdsRequested,
+                               List<String> teamMemberIdsRequested) {
         TeamEntity team = teamRepository.findByTeamId(teamId);
 
         List<String> existingMemberIds = team.getMembers().stream()
@@ -143,8 +142,8 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public void removeTeamMembers(String teamId,
-            List<String> teamOwnerIdsRequested,
-            List<String> teamMemberIdsRequested) {
+                                  List<String> teamOwnerIdsRequested,
+                                  List<String> teamMemberIdsRequested) {
         TeamEntity team = teamRepository.findByTeamId(teamId);
 
         team.setMembers(team.getMembers().stream()
@@ -176,7 +175,7 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public void removeTeamMember(String teamId,
-            String memberId) {
+                                 String memberId) {
 
         TeamEntity team = teamRepository.findByTeamId(teamId);
 
@@ -187,6 +186,22 @@ public class TeamPersistenceHandler {
         teamMemberRepository.save(member);
 
         team.getMembers().remove(member);
+        teamRepository.save(team);
+    }
+
+    @Transactional
+    public void removeTeamOwner(String teamId,
+                                String memberId) {
+
+        TeamEntity team = teamRepository.findByTeamId(teamId);
+
+        TeamMemberEntity member = this.teamMemberRepository
+                .findByMemberId(memberId);
+
+        member.getTeams().remove(team);
+        teamMemberRepository.save(member);
+
+        team.getOwners().remove(member);
         teamRepository.save(team);
     }
 
@@ -209,7 +224,7 @@ public class TeamPersistenceHandler {
 
     @Transactional
     public MembershipRequestEntity createMembershipRequest(String teamId,
-            String requestedById) {
+                                                           String requestedById) {
         TeamEntity team = teamRepository.findByTeamId(teamId);
         TeamMemberEntity requestedBy = this.teamMemberRepository
                 .findByMemberId(requestedById);
@@ -231,8 +246,23 @@ public class TeamPersistenceHandler {
     }
 
     @Transactional
+    public void deleteTeam(String teamId) {
+        TeamEntity team = this.teamRepository.findByTeamId(teamId);
+
+        for (TeamMemberEntity member : team.getMembers()) {
+            this.removeTeamMember(team.getTeamId(), member.getMemberId());
+        }
+
+        for (TeamMemberEntity owner : team.getOwners()) {
+            this.removeTeamOwner(team.getTeamId(), owner.getMemberId());
+        }
+
+        this.teamRepository.delete(team);
+    }
+
+    @Transactional
     public TeamEntity updateOpenShiftCloud(TeamEntity team,
-            String openShiftCloud) {
+                                           String openShiftCloud) {
         team.setOpenShiftCloud(openShiftCloud);
         return this.teamRepository.save(team);
     }

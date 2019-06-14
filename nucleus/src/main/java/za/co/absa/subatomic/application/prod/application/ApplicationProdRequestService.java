@@ -1,13 +1,7 @@
 package za.co.absa.subatomic.application.prod.application;
 
-import java.text.MessageFormat;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import za.co.absa.subatomic.adapter.openshift.rest.OpenShiftResource;
 import za.co.absa.subatomic.application.application.ApplicationService;
 import za.co.absa.subatomic.application.member.TeamMemberService;
@@ -23,6 +17,11 @@ import za.co.absa.subatomic.infrastructure.prod.application.view.jpa.Application
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ReleaseDeploymentPipelineRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 public class ApplicationProdRequestService {
@@ -65,15 +64,14 @@ public class ApplicationProdRequestService {
             String deploymentPipelineId,
             List<OpenShiftResource> requestedResources) {
         ApplicationEntity applicationEntity = this.applicationService
-                .getApplicationPersistenceHandler()
-                .findByApplictionId(applicationId);
+                .findByApplicationId(applicationId);
         TeamMemberEntity actionedBy = this.teamMemberService
                 .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedByMemberId);
         ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
                 .findByPipelineId(deploymentPipelineId);
         Set<TeamEntity> memberAssociatedTeams = this.teamService
-                .getPersistenceHandler()
+                .getTeamPersistenceHandler()
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
         if (applicationEntity.getProject().getTeams().stream()

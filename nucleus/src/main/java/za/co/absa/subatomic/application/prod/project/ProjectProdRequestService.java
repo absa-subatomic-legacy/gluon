@@ -68,7 +68,7 @@ public class ProjectProdRequestService {
         ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
                 .findByPipelineId(pipelineId);
 
-        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getTeamPersistenceHandler()
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
         assertMemberIsAMemberOfOwningTeam(actionedByMemberId,
@@ -129,7 +129,7 @@ public class ProjectProdRequestService {
                 .findByProjectProdRequestId(projectProdRequestId);
         TeamMemberEntity approvingMember = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(approvingMemberId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getTeamPersistenceHandler()
                 .findByMemberOrOwnerMemberId(approvingMemberId);
 
         assertMemberIsAMemberOfOwningTeam(approvingMemberId,
@@ -179,7 +179,7 @@ public class ProjectProdRequestService {
                 .findByProjectProdRequestId(projectProdRequestId);
         TeamMemberEntity rejectingMember = this.teamMemberService.getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(rejectingMemberId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getTeamPersistenceHandler()
                 .findByMemberOrOwnerMemberId(rejectingMemberId);
 
         assertMemberIsAMemberOfOwningTeam(rejectingMemberId,
@@ -239,7 +239,7 @@ public class ProjectProdRequestService {
                         projectId, pipelineId);
     }
 
-    public List<ProjectProdRequestEntity> findByProjectIdAndPipelineIdAndApprovalStatus(
+    private List<ProjectProdRequestEntity> findByProjectIdAndPipelineIdAndApprovalStatus(
             String projectId, String pipelineId,
             ProjectProductionRequestStatus status) {
         return this.projectProdRequestRepository
