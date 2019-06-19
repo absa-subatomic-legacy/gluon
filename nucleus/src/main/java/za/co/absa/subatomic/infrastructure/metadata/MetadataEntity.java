@@ -1,13 +1,12 @@
 package za.co.absa.subatomic.infrastructure.metadata;
 
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.List;
 
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Entity
 @Table(name = "metadata")
 @Setter(value = AccessLevel.PACKAGE)
@@ -20,6 +19,6 @@ public class MetadataEntity {
 
     private String description;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     private List<MetadataEntry> metadataEntries;
 }

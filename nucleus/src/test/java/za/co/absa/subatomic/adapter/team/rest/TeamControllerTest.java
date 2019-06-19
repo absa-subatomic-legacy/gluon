@@ -22,18 +22,19 @@ import org.springframework.web.client.RestTemplate;
 import za.co.absa.subatomic.adapter.member.rest.Slack;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResource;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataEntryResource;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.member.TeamMemberAutomationHandler;
+import za.co.absa.subatomic.infrastructure.metadata.MetadataEntry;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
@@ -59,6 +60,9 @@ public class TeamControllerTest {
     AtomistConfigurationProperties atomistConfiguration;
 
     private TeamMemberResource mainMember;
+
+    private List<MetadataResource> metadataResourceListTeam1;
+    private List<MetadataResource> metadataResourceListTeam2;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -94,11 +98,15 @@ public class TeamControllerTest {
 
         mainMember = Objects.requireNonNull(member.getBody());
 
+        metadataResourceListTeam1 = new ArrayList();
+        metadataResourceListTeam2 = new ArrayList();
+
         TeamResource team1 = new TeamResource();
         team1.setName("Team 1");
         team1.setDescription("Team 1 Description");
         team1.setCreatedBy(mainMember.getMemberId());
         team1.setOpenShiftCloud("12323");
+//        team1.setMetadata("");
         team1.setSlack(new za.co.absa.subatomic.adapter.team.rest.Slack("team1"));
 
         teamController.create(team1);
@@ -108,6 +116,7 @@ public class TeamControllerTest {
         team2.setDescription("Team 2 Description");
         team2.setCreatedBy(mainMember.getMemberId());
         team2.setOpenShiftCloud("12323");
+        team2.setMetadata(metadataResourceListTeam2);
         team2.setSlack(new za.co.absa.subatomic.adapter.team.rest.Slack("team2"));
 
         teamController.create(team2);
@@ -126,10 +135,10 @@ public class TeamControllerTest {
             assertThat(e.getDescription()).isNotEmpty();
             assertThat(e.getCreatedBy()).isNotEmpty();
             assertThat(e.getOpenShiftCloud()).isNotEmpty();
+            assertThat(e.getMetadata()).isNotEmpty();
             assertThat(e.getSlack().getTeamChannel()).isNotEmpty();
         });
     }
-
 
     private ResponseEntity<TeamResource> createTeam(TeamResource team) {
         return transactionTemplate.execute(transactionStatus -> this.teamController.create(team));
@@ -174,6 +183,7 @@ public class TeamControllerTest {
         team.setName("Team For Slack Test");
         team.setDescription("Team Description");
         team.setCreatedBy(mainMember.getMemberId());
+        team.setMetadata(metadataResourceListTeam1);
         team.setOpenShiftCloud("12323");
 
         ResponseEntity<TeamResource> teamResourceResponseEntity = this.createTeam(team);
@@ -189,4 +199,45 @@ public class TeamControllerTest {
         mockServer.verify();
     }
 
+//    @Test
+//    public void when_team1MetadataIsUpdated_expect_team1MetadataWillChange() throws URISyntaxException {
+//        // ------------ Prepare Mocks and expected results ------------
+//        mockServer.reset();
+//        // expect something to happen
+//        mockServer.expect(ExpectedCount.once(),
+//                requestTo(new URI(this.atomistConfiguration.getTeamCreatedEventUrl())))
+//                .andExpect(method(HttpMethod.POST))
+//                .andRespond(withStatus(HttpStatus.ACCEPTED));
+//
+//        // expect the teamSlackChannel created event fired and assert the correct json body is sent
+//        mockServer.expect(ExpectedCount.once(),
+//                requestTo(new URI(this.atomistConfiguration.getTeamSetupCompletedEventUrl())))
+//                .andExpect(method(HttpMethod.POST))
+//                .andExpect(content().json(gson.toJson(jsonObject)))
+//                .andRespond(withStatus(HttpStatus.ACCEPTED));
+//
+//        // ------------ Perform actions ------------
+//
+//        // ------------ Verify correct process was called ------------
+//        mockServer.verify();
+//    }
+//
+//    @Test
+//    public void when_team1MetadataIsExtended_expect_team1MetadataWillBeExtended() {
+//        // ------------ Prepare Mocks and expected results ------------
+//        mockServer.reset();
+//        // expect something to happen
+//        mockServer.expect();
+//        // expect the teamSlackChannel created event fired and assert the correct json body is sent
+//        mockServer.expect(ExpectedCount.once(),
+//                requestTo(new URI(this.atomistConfiguration.getTeamSetupCompletedEventUrl())))
+//                .andExpect(method(HttpMethod.POST))
+//                .andExpect(content().json(gson.toJson(jsonObject)))
+//                .andRespond(withStatus(HttpStatus.ACCEPTED));
+//
+//        // ------------ Perform actions ------------
+//
+//        // ------------ Verify correct process was called ------------
+//        mockServer.verify();
+//    }
 }

@@ -70,9 +70,8 @@ public class TeamController {
     ResponseEntity<TeamResource> patch(@PathVariable String id,
                                        @RequestBody TeamResource request) {
         log.info("Trying to patch Team with: {}", request);
-        if (!request.getMetadata().isEmpty()) {
-            teamService.updateMetadata(request.getTeamId(), request.getMetadata());
-
+        if (!id.isEmpty() && !request.getMetadata().isEmpty()) {
+            teamService.updateMetadata(id, request.getMetadata());
         }
         return ResponseEntity.accepted().body(assembler.toResource(
                 teamPersistenceHandler.findByTeamId(id)));

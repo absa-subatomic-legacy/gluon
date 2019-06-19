@@ -298,7 +298,6 @@ public class TeamPersistenceHandler {
                     }
                 } else {
                     // Override entire object
-
                     List<MetadataEntry> metadataEntries = metadataResource.getMetadataEntries()
                             .stream()
                             .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())

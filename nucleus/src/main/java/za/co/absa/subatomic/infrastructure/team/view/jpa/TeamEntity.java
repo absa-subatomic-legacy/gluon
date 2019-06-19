@@ -56,7 +56,7 @@ public class TeamEntity {
     @OneToMany
     private Set<MembershipRequestEntity> membershipRequests = new HashSet<>();
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     private List<MetadataEntity> metadata;
 
 }
