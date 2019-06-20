@@ -43,7 +43,7 @@ buildNumber.properties
 # From https://github.com/github/gitignore/blob/master/Global/Eclipse.gitignore
 ###
 
-.metadata
+.metadataEntity
 bin/
 tmp/
 *.tmp
@@ -206,7 +206,7 @@ modules.xml
 # If you're wondering about .project and .classpath files being staged by Git,
 # see https://github.com/github/gitignore/pull/2336
 
-.metadata
+.metadataEntity
 bin/
 tmp/
 *.tmp

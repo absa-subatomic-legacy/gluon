@@ -23,6 +23,8 @@ import org.springframework.web.client.RestTemplate;
 import za.co.absa.subatomic.adapter.member.rest.Slack;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResource;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataEntryResource;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
 import za.co.absa.subatomic.adapter.project.rest.ProjectResource;
 import za.co.absa.subatomic.application.member.TeamMemberService;
 import za.co.absa.subatomic.application.project.ProjectService;
@@ -150,10 +152,10 @@ public class TeamControllerTest {
             assertThat(e.getDescription()).isNotEmpty();
             assertThat(e.getCreatedBy()).isNotEmpty();
             assertThat(e.getOpenShiftCloud()).isNotEmpty();
+            assertThat(e.getMetadata()).isEmpty();
             assertThat(e.getSlack().getTeamChannel()).isNotEmpty();
         });
     }
-
 
     private ResponseEntity<TeamResource> createTeam(TeamResource team) {
         return transactionTemplate.execute(transactionStatus -> this.teamController.create(team));
@@ -190,7 +192,6 @@ public class TeamControllerTest {
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().json(gson.toJson(jsonObject)))
                 .andRespond(withStatus(HttpStatus.ACCEPTED));
-
 
         // ------------ Perform actions ------------
         // create the team
@@ -255,5 +256,70 @@ public class TeamControllerTest {
         assertThat(teamMemberEntity).isNotNull();
 
         mockServer.verify();
+    }
+    @Test
+    public void when_putMetadata_expect_TeamMetaDataToBeOverridden() {
+        // expect something to happen
+        TeamResource teamResource = new TeamResource();
+
+        MetadataResource metaData = new MetadataResource();
+        metaData.setDescription("Test");
+
+        MetadataEntryResource metadataEntryResource = new MetadataEntryResource("a", "1");
+
+        metaData.getMetadataEntries().add(metadataEntryResource);
+        teamResource.getMetadata().add(metaData);
+
+        // ------------ Perform actions ------------
+        transactionTemplate.execute(transactionStatus -> teamController.update(team1.getTeamId(), teamResource));
+
+        TeamResource body = Objects.requireNonNull(transactionTemplate.execute(transactionStatus -> teamController.get(team1.getTeamId())));
+
+        // ------------ Verify correct process was called ------------
+        assertThat(body.getMetadata().size()).isEqualTo(1);
+        assertThat(body.getMetadata().get(0).getDescription()).isEqualTo("Test");
+        assertThat(body.getMetadata().get(0).getMetadataEntries().get(0).getKey()).isEqualTo("a");
+        assertThat(body.getMetadata().get(0).getMetadataEntries().get(0).getValue()).isEqualTo("1");
+    }
+
+    @Test
+    public void when_team1MetadataIsExtended_expect_team1MetadataWillBeExtended() {
+        // expect something to happen
+        TeamResource teamResource = new TeamResource();
+
+        MetadataResource metaData = new MetadataResource();
+        metaData.setDescription("Test");
+
+        MetadataEntryResource metadataEntryResource = new MetadataEntryResource("a", "1");
+
+        metaData.getMetadataEntries().add(metadataEntryResource);
+        teamResource.getMetadata().add(metaData);
+
+        // ------------ Perform actions ------------
+        transactionTemplate.execute(transactionStatus -> teamController.patch(team1.getTeamId(), teamResource));
+
+        TeamResource bodyBefore = Objects.requireNonNull(transactionTemplate.execute(transactionStatus -> teamController.get(team1.getTeamId())));
+
+        // ------------ Verify correct process was called ------------
+        assertThat(bodyBefore.getMetadata().size()).isEqualTo(1);
+        assertThat(bodyBefore.getMetadata().get(0).getDescription()).isEqualTo("Test");
+        assertThat(bodyBefore.getMetadata().get(0).getMetadataEntries().get(0).getKey()).isEqualTo("a");
+        assertThat(bodyBefore.getMetadata().get(0).getMetadataEntries().get(0).getValue()).isEqualTo("1");
+
+        // ------------ Perform actions ------------
+        metadataEntryResource.setValue("2");
+
+        metaData.getMetadataEntries().add(metadataEntryResource);
+        teamResource.getMetadata().add(metaData);
+
+        transactionTemplate.execute(transactionStatus -> teamController.patch(team1.getTeamId(), teamResource));
+
+        TeamResource bodyAfter = Objects.requireNonNull(transactionTemplate.execute(transactionStatus -> teamController.get(team1.getTeamId())));
+
+        // ------------ Verify correct process was called ------------
+        assertThat(bodyAfter.getMetadata().size()).isEqualTo(1);
+        assertThat(bodyAfter.getMetadata().get(0).getDescription()).isEqualTo("Test");
+        assertThat(bodyAfter.getMetadata().get(0).getMetadataEntries().get(0).getKey()).isEqualTo("a");
+        assertThat(bodyAfter.getMetadata().get(0).getMetadataEntries().get(0).getValue()).isEqualTo("2");
     }
 }

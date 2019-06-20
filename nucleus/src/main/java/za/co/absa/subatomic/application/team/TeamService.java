@@ -1,8 +1,13 @@
 package za.co.absa.subatomic.application.team;
 
 import lombok.extern.slf4j.Slf4j;
+import java.text.MessageFormat;
+import java.util.*;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
 import za.co.absa.subatomic.adapter.team.rest.MembershipRequestResource;
 import za.co.absa.subatomic.domain.exception.DuplicateRequestException;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
@@ -16,13 +21,6 @@ import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestEntity
 import za.co.absa.subatomic.infrastructure.team.view.jpa.MembershipRequestRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamPersistenceHandler;
-
-import java.text.MessageFormat;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Service
 @Slf4j
@@ -52,9 +50,11 @@ public class TeamService {
         this.projectPersistenceHandler = projectPersistenceHandler;
     }
 
-    public TeamEntity newTeamFromSlack(String name, String description,
+    public TeamEntity newTeamFromSlack(String name,
+                                       String description,
                                        String openShiftCloud,
                                        String createdBy,
+                                       List<MetadataResource> metadata,
                                        String teamChannel) {
         TeamEntity existingTeam = this.teamPersistenceHandler.findByName(name);
         if (existingTeam != null) {
@@ -64,7 +64,7 @@ public class TeamService {
         }
 
         TeamEntity newTeam = this.teamPersistenceHandler.createTeam(name,
-                description, openShiftCloud, teamChannel, createdBy);
+                description, openShiftCloud, teamChannel, createdBy, metadata);
 
         this.automationHandler.createNewTeam(newTeam);
 
@@ -83,6 +83,33 @@ public class TeamService {
         }
         this.teamPersistenceHandler.deleteTeam(teamId);
     }
+
+    public void setMetadata(String teamId,
+                            List<MetadataResource> metadata) {
+        TeamEntity existingTeam = this.teamPersistenceHandler.findByTeamId(teamId);
+
+        if (existingTeam == null) {
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Requested team with ID {0} does not exist", teamId
+            ));
+        }
+
+        this.teamPersistenceHandler.setTeamMetadata(existingTeam, metadata);
+    }
+
+    public void updateMetadata(String teamId,
+                               List<MetadataResource> metadata) {
+        TeamEntity existingTeam = this.teamPersistenceHandler.findByTeamId(teamId);
+
+        if (existingTeam == null) {
+            throw new InvalidRequestException(MessageFormat.format(
+                    "Requested team with ID {0} does not exist", teamId
+            ));
+        }
+
+        this.teamPersistenceHandler.updateTeamMetadata(existingTeam, metadata);
+    }
+
 
     public void addTeamMembers(String teamId, String actionedBy,
                                List<String> teamOwnerIds,

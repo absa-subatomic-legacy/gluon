@@ -2,19 +2,10 @@ package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -23,6 +14,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.metadata.MetadataEntity;
 
 @Entity
 @Table(name = "team")
@@ -63,5 +55,8 @@ public class TeamEntity {
 
     @OneToMany(cascade = CascadeType.REMOVE)
     private Set<MembershipRequestEntity> membershipRequests = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<MetadataEntity> metadata;
 
 }

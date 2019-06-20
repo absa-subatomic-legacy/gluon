@@ -6,24 +6,19 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBase;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResourceBaseAssembler;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataResourceAssembler;
 import za.co.absa.subatomic.application.team.TeamService;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamPersistenceHandler;
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -57,9 +52,11 @@ public class TeamController {
         }
 
         TeamEntity newTeam = teamService.newTeamFromSlack(request.getName(),
-                request.getDescription(), request.getOpenShiftCloud(),
-                request.getCreatedBy(),
-                teamSlackChannel);
+                                                          request.getDescription(),
+                                                          request.getOpenShiftCloud(),
+                                                          request.getCreatedBy(),
+                                                          request.getMetadata(),
+                                                          teamSlackChannel);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -67,6 +64,17 @@ public class TeamController {
                 .toUri();
 
         return ResponseEntity.created(location).body(assembler.toResource(newTeam));
+    }
+
+    @PatchMapping("/{id}")
+    ResponseEntity<TeamResource> patch(@PathVariable String id,
+                                       @RequestBody TeamResource request) {
+        log.info("Trying to patch Team with: {}", request);
+        if (!id.isEmpty() && !request.getMetadata().isEmpty()) {
+            teamService.updateMetadata(id, request.getMetadata());
+        }
+        return ResponseEntity.accepted().body(assembler.toResource(
+                teamPersistenceHandler.findByTeamId(id)));
     }
 
     @PutMapping("/{id}")
@@ -83,6 +91,10 @@ public class TeamController {
                     request.getMembers().stream()
                             .map(TeamMemberResourceBase::getMemberId)
                             .collect(toList()));
+        }
+
+        if (!request.getMetadata().isEmpty()) {
+            teamService.setMetadata(id, request.getMetadata());
         }
 
         if (request.getSlack() != null) {
@@ -245,6 +257,9 @@ public class TeamController {
                                 .setSlack(
                                         new Slack(slackDetails
                                                 .getTeamChannel())));
+                MetadataResourceAssembler metadataResourceAssembler = new MetadataResourceAssembler();
+                List<MetadataResource> metadata = entity.getMetadata().stream().map(metadataResourceAssembler::toResource).collect(toList());
+                resource.setMetadata(metadata);
                 return resource;
             } else {
                 return null;

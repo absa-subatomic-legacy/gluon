@@ -16,6 +16,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataEntryResource;
+import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
+import za.co.absa.subatomic.infrastructure.metadata.MetadataEntity;
+import za.co.absa.subatomic.infrastructure.metadata.MetadataEntry;
+
+import static java.util.stream.Collectors.toList;
+
 @Component
 public class TeamPersistenceHandler {
 
@@ -37,10 +46,24 @@ public class TeamPersistenceHandler {
     public TeamEntity createTeam(String name, String description,
                                  String openShiftCloud,
                                  String slackTeamChannel,
-                                 String createdById) {
+                                 String createdById,
+                                 List<MetadataResource> metadataResources) {
 
         TeamMemberEntity createdBy = this.teamMemberRepository
                 .findByMemberId(createdById);
+
+        List<MetadataEntity> metadataEntities;
+
+        metadataEntities = metadataResources
+                .stream()
+                .map(temp -> {
+                    List<MetadataEntry> metadataEntries = temp.getMetadataEntries()
+                            .stream()
+                            .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())
+                            .collect(toList());
+                    return MetadataEntity.builder().metadataEntries(metadataEntries).description(temp.getDescription()).build();
+                })
+                .collect(Collectors.toList());
 
         TeamEntity teamEntity = TeamEntity.builder()
                 .teamId(UUID.randomUUID().toString())
@@ -49,6 +72,7 @@ public class TeamPersistenceHandler {
                 .openShiftCloud(openShiftCloud)
                 .createdBy(createdBy)
                 .owners(Collections.singleton(createdBy))
+                .metadata(metadataEntities)
                 .build();
 
         if (slackTeamChannel != null) {
@@ -264,6 +288,56 @@ public class TeamPersistenceHandler {
     public TeamEntity updateOpenShiftCloud(TeamEntity team,
                                            String openShiftCloud) {
         team.setOpenShiftCloud(openShiftCloud);
+        return this.teamRepository.save(team);
+    }
+
+    @Transactional
+    public TeamEntity updateTeamMetadata(TeamEntity team, List<MetadataResource> metadata) {
+        for (MetadataResource metadataResource : metadata) {
+            List<MetadataEntity> teamMetadata = team.getMetadata();
+            Optional<MetadataEntity> firstMatchingMetadataEntity = teamMetadata.stream().filter(metadataEntity -> metadataEntity.getDescription().equals(metadataResource.getDescription())).findFirst();
+            if (firstMatchingMetadataEntity.isPresent()) {
+                MetadataEntity matchedMetadataEntity = firstMatchingMetadataEntity.get();
+                for (MetadataEntryResource metadataEntryResource : metadataResource.getMetadataEntries()) {
+                    Optional<MetadataEntry> firstMatchedEntry = matchedMetadataEntity.getMetadataEntries().stream().filter(metadataEntry -> metadataEntry.getKey().equals(metadataEntryResource.getKey())).findFirst();
+                    if (firstMatchedEntry.isPresent()) {
+                        // update the value
+                        firstMatchedEntry.get().setValue(metadataEntryResource.getValue());
+                    } else {
+                        // add the key and value
+                        matchedMetadataEntity.getMetadataEntries().add(MetadataEntry.builder().key(metadataEntryResource.getKey()).value(metadataEntryResource.getValue()).build());
+                    }
+                }
+            } else {
+                // Override entire object
+                List<MetadataEntry> metadataEntries = metadataResource.getMetadataEntries()
+                        .stream()
+                        .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())
+                        .collect(toList());
+                MetadataEntity metadataEntity = MetadataEntity.builder().metadataEntries(metadataEntries).description(metadataResource.getDescription()).build();
+                team.getMetadata().add(metadataEntity);
+            }
+        }
+        return this.teamRepository.save(team);
+    }
+
+    @Transactional
+    public TeamEntity setTeamMetadata(TeamEntity team, List<MetadataResource> metadata) {
+        List<MetadataEntity> metadataEntities;
+
+        metadataEntities = metadata
+                .stream()
+                .map(temp -> {
+                    List<MetadataEntry> metadataEntries = temp.getMetadataEntries()
+                            .stream()
+                            .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())
+                            .collect(toList());
+                    return MetadataEntity.builder().metadataEntries(metadataEntries).description(temp.getDescription()).build();
+                })
+                .collect(Collectors.toList());
+
+        team.setMetadata(metadataEntities);
+
         return this.teamRepository.save(team);
     }
 
