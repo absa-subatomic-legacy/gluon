@@ -94,7 +94,7 @@ public class TeamService {
             ));
         }
 
-        this.teamPersistenceHandler.updateTeamMetadata(existingTeam, metadata, true);
+        this.teamPersistenceHandler.setTeamMetadata(existingTeam, metadata);
     }
 
     public void updateMetadata(String teamId,
@@ -107,7 +107,7 @@ public class TeamService {
             ));
         }
 
-        this.teamPersistenceHandler.updateTeamMetadata(existingTeam, metadata, false);
+        this.teamPersistenceHandler.updateTeamMetadata(existingTeam, metadata);
     }
 
 

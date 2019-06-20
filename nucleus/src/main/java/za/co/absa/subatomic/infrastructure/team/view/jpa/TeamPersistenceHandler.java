@@ -292,54 +292,52 @@ public class TeamPersistenceHandler {
     }
 
     @Transactional
-    public TeamEntity updateTeamMetadata(TeamEntity team, List<MetadataResource> metadata, boolean overwrite) {
-
-        if (overwrite == true) {
-
-            List<MetadataEntity> metadataEntities;
-
-            metadataEntities = metadata
-                    .stream()
-                    .map(temp -> {
-                        List<MetadataEntry> metadataEntries = temp.getMetadataEntries()
-                                .stream()
-                                .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())
-                                .collect(toList());
-                        return MetadataEntity.builder().metadataEntries(metadataEntries).description(temp.getDescription()).build();
-                    })
-                    .collect(Collectors.toList());
-
-            team.setMetadata(metadataEntities);
-
-            return this.teamRepository.save(team);
-        } else {
-
-            for (MetadataResource metadataResource : metadata) {
-                List<MetadataEntity> teamMetadata = team.getMetadata();
-                Optional<MetadataEntity> firstMatchingMetadataEntity = teamMetadata.stream().filter(metadataEntity -> metadataEntity.getDescription().equals(metadataResource.getDescription())).findFirst();
-                if (firstMatchingMetadataEntity.isPresent()) {
-                    MetadataEntity matchedMetadataEntity = firstMatchingMetadataEntity.get();
-                    for (MetadataEntryResource metadataEntryResource : metadataResource.getMetadataEntries()) {
-                        Optional<MetadataEntry> firstMatchedEntry = matchedMetadataEntity.getMetadataEntries().stream().filter(metadataEntry -> metadataEntry.getKey().equals(metadataEntryResource.getKey())).findFirst();
-                        if (firstMatchedEntry.isPresent()) {
-                            // update the value
-                            firstMatchedEntry.get().setValue(metadataEntryResource.getValue());
-                        } else {
-                            // add the key and value
-                            matchedMetadataEntity.getMetadataEntries().add(MetadataEntry.builder().key(metadataEntryResource.getKey()).value(metadataEntryResource.getValue()).build());
-                        }
+    public TeamEntity updateTeamMetadata(TeamEntity team, List<MetadataResource> metadata) {
+        for (MetadataResource metadataResource : metadata) {
+            List<MetadataEntity> teamMetadata = team.getMetadata();
+            Optional<MetadataEntity> firstMatchingMetadataEntity = teamMetadata.stream().filter(metadataEntity -> metadataEntity.getDescription().equals(metadataResource.getDescription())).findFirst();
+            if (firstMatchingMetadataEntity.isPresent()) {
+                MetadataEntity matchedMetadataEntity = firstMatchingMetadataEntity.get();
+                for (MetadataEntryResource metadataEntryResource : metadataResource.getMetadataEntries()) {
+                    Optional<MetadataEntry> firstMatchedEntry = matchedMetadataEntity.getMetadataEntries().stream().filter(metadataEntry -> metadataEntry.getKey().equals(metadataEntryResource.getKey())).findFirst();
+                    if (firstMatchedEntry.isPresent()) {
+                        // update the value
+                        firstMatchedEntry.get().setValue(metadataEntryResource.getValue());
+                    } else {
+                        // add the key and value
+                        matchedMetadataEntity.getMetadataEntries().add(MetadataEntry.builder().key(metadataEntryResource.getKey()).value(metadataEntryResource.getValue()).build());
                     }
-                } else {
-                    // Override entire object
-                    List<MetadataEntry> metadataEntries = metadataResource.getMetadataEntries()
+                }
+            } else {
+                // Override entire object
+                List<MetadataEntry> metadataEntries = metadataResource.getMetadataEntries()
+                        .stream()
+                        .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())
+                        .collect(toList());
+                MetadataEntity metadataEntity = MetadataEntity.builder().metadataEntries(metadataEntries).description(metadataResource.getDescription()).build();
+                team.getMetadata().add(metadataEntity);
+            }
+        }
+        return this.teamRepository.save(team);
+    }
+
+    @Transactional
+    public TeamEntity setTeamMetadata(TeamEntity team, List<MetadataResource> metadata) {
+        List<MetadataEntity> metadataEntities;
+
+        metadataEntities = metadata
+                .stream()
+                .map(temp -> {
+                    List<MetadataEntry> metadataEntries = temp.getMetadataEntries()
                             .stream()
                             .map(temp2 -> MetadataEntry.builder().key(temp2.getKey()).value(temp2.getValue()).build())
                             .collect(toList());
-                    MetadataEntity metadataEntity = MetadataEntity.builder().metadataEntries(metadataEntries).description(metadataResource.getDescription()).build();
-                    team.getMetadata().add(metadataEntity);
-                }
-            }
-        }
+                    return MetadataEntity.builder().metadataEntries(metadataEntries).description(temp.getDescription()).build();
+                })
+                .collect(Collectors.toList());
+
+        team.setMetadata(metadataEntities);
+
         return this.teamRepository.save(team);
     }
 
