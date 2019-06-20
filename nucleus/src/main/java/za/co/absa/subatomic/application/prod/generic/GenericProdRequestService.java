@@ -71,7 +71,7 @@ public class GenericProdRequestService {
                 .findByTeamMemberId(actionedByMemberId);
         ReleaseDeploymentPipelineEntity deploymentPipeline = this.releaseDeploymentPipelineRepository
                 .findByPipelineId(deploymentPipelineId);
-        Set<TeamEntity> memberAssociatedTeams = this.teamService.getPersistenceHandler()
+        Set<TeamEntity> memberAssociatedTeams = this.teamService.getTeamPersistenceHandler()
                 .findByMemberOrOwnerMemberId(actionedByMemberId);
 
         if (projectEntity.getTeams().stream()

@@ -101,8 +101,8 @@ public class ApplicationPersistenceHandler {
     }
 
     @Transactional(readOnly = true)
-    public ApplicationEntity findByNameAndProjectProjectId(String name,
-            String projectId) {
+    public ApplicationEntity findByNameAndProjectId(String name,
+                                                    String projectId) {
         return applicationRepository.findByNameAndProjectProjectId(name,
                 projectId);
     }
