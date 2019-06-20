@@ -1,5 +1,6 @@
 package za.co.absa.subatomic.adapter.metadata.rest;
 
+        import java.util.ArrayList;
         import java.util.List;
         import org.springframework.hateoas.ResourceSupport;
         import lombok.Data;
@@ -11,5 +12,5 @@ public class MetadataResource extends ResourceSupport {
 
     String description;
 
-    List<MetadataEntryResource> metadataEntries;
+    List<MetadataEntryResource> metadataEntries = new ArrayList<>();
 }

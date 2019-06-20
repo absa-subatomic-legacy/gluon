@@ -30,7 +30,6 @@ import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.member.TeamMemberAutomationHandler;
-import za.co.absa.subatomic.infrastructure.metadata.MetadataEntry;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -61,9 +60,6 @@ public class TeamControllerTest {
 
     private TeamMemberResource mainMember;
 
-    private List<MetadataResource> metadataResourceListTeam1;
-    private List<MetadataResource> metadataResourceListTeam2;
-
     @Autowired
     private RestTemplate restTemplate;
 
@@ -75,6 +71,10 @@ public class TeamControllerTest {
     private MockRestServiceServer mockServer;
 
     private Gson gson = new Gson();
+
+    private TeamResource team1;
+
+    private TeamResource team2;
 
     @Before
     @Transactional
@@ -98,28 +98,25 @@ public class TeamControllerTest {
 
         mainMember = Objects.requireNonNull(member.getBody());
 
-        metadataResourceListTeam1 = new ArrayList();
-        metadataResourceListTeam2 = new ArrayList();
-
         TeamResource team1 = new TeamResource();
         team1.setName("Team 1");
         team1.setDescription("Team 1 Description");
         team1.setCreatedBy(mainMember.getMemberId());
         team1.setOpenShiftCloud("12323");
-//        team1.setMetadata("");
         team1.setSlack(new za.co.absa.subatomic.adapter.team.rest.Slack("team1"));
 
-        teamController.create(team1);
+        ResponseEntity<TeamResource> teamResourceResponseEntity1 = teamController.create(team1);
+        this.team1 = Objects.requireNonNull(teamResourceResponseEntity1.getBody());
 
         TeamResource team2 = new TeamResource();
         team2.setName("Team 2");
         team2.setDescription("Team 2 Description");
         team2.setCreatedBy(mainMember.getMemberId());
         team2.setOpenShiftCloud("12323");
-        team2.setMetadata(metadataResourceListTeam2);
         team2.setSlack(new za.co.absa.subatomic.adapter.team.rest.Slack("team2"));
 
-        teamController.create(team2);
+        ResponseEntity<TeamResource> teamResourceResponseEntity2 = teamController.create(team2);
+        this.team2 = Objects.requireNonNull(teamResourceResponseEntity2.getBody());
     }
 
     @Test
@@ -135,7 +132,7 @@ public class TeamControllerTest {
             assertThat(e.getDescription()).isNotEmpty();
             assertThat(e.getCreatedBy()).isNotEmpty();
             assertThat(e.getOpenShiftCloud()).isNotEmpty();
-            assertThat(e.getMetadata()).isNotEmpty();
+            assertThat(e.getMetadata()).isEmpty();
             assertThat(e.getSlack().getTeamChannel()).isNotEmpty();
         });
     }
@@ -176,14 +173,12 @@ public class TeamControllerTest {
                 .andExpect(content().json(gson.toJson(jsonObject)))
                 .andRespond(withStatus(HttpStatus.ACCEPTED));
 
-
         // ------------ Perform actions ------------
         // create the team
         TeamResource team = new TeamResource();
         team.setName("Team For Slack Test");
         team.setDescription("Team Description");
         team.setCreatedBy(mainMember.getMemberId());
-        team.setMetadata(metadataResourceListTeam1);
         team.setOpenShiftCloud("12323");
 
         ResponseEntity<TeamResource> teamResourceResponseEntity = this.createTeam(team);
@@ -199,45 +194,69 @@ public class TeamControllerTest {
         mockServer.verify();
     }
 
-//    @Test
-//    public void when_team1MetadataIsUpdated_expect_team1MetadataWillChange() throws URISyntaxException {
-//        // ------------ Prepare Mocks and expected results ------------
-//        mockServer.reset();
-//        // expect something to happen
-//        mockServer.expect(ExpectedCount.once(),
-//                requestTo(new URI(this.atomistConfiguration.getTeamCreatedEventUrl())))
-//                .andExpect(method(HttpMethod.POST))
-//                .andRespond(withStatus(HttpStatus.ACCEPTED));
-//
-//        // expect the teamSlackChannel created event fired and assert the correct json body is sent
-//        mockServer.expect(ExpectedCount.once(),
-//                requestTo(new URI(this.atomistConfiguration.getTeamSetupCompletedEventUrl())))
-//                .andExpect(method(HttpMethod.POST))
-//                .andExpect(content().json(gson.toJson(jsonObject)))
-//                .andRespond(withStatus(HttpStatus.ACCEPTED));
-//
-//        // ------------ Perform actions ------------
-//
-//        // ------------ Verify correct process was called ------------
-//        mockServer.verify();
-//    }
-//
-//    @Test
-//    public void when_team1MetadataIsExtended_expect_team1MetadataWillBeExtended() {
-//        // ------------ Prepare Mocks and expected results ------------
-//        mockServer.reset();
-//        // expect something to happen
-//        mockServer.expect();
-//        // expect the teamSlackChannel created event fired and assert the correct json body is sent
-//        mockServer.expect(ExpectedCount.once(),
-//                requestTo(new URI(this.atomistConfiguration.getTeamSetupCompletedEventUrl())))
-//                .andExpect(method(HttpMethod.POST))
-//                .andExpect(content().json(gson.toJson(jsonObject)))
-//                .andRespond(withStatus(HttpStatus.ACCEPTED));
-//
-//        // ------------ Perform actions ------------
-//
-//        // ------------ Verify correct process was called ------------
-//        mockServer.verify();
-//    }
+    @Test
+    public void when_putMetadata_expect_TeamMetaDataToBeOverridden() {
+        // expect something to happen
+        TeamResource teamResource = new TeamResource();
+
+        MetadataResource metaData = new MetadataResource();
+        metaData.setDescription("Test");
+
+        MetadataEntryResource metadataEntryResource = new MetadataEntryResource("a", "1");
+
+        metaData.getMetadataEntries().add(metadataEntryResource);
+        teamResource.getMetadata().add(metaData);
+
+        // ------------ Perform actions ------------
+        transactionTemplate.execute(transactionStatus -> teamController.update(team1.getTeamId(), teamResource));
+
+        TeamResource body = Objects.requireNonNull(transactionTemplate.execute(transactionStatus -> teamController.get(team1.getTeamId())));
+
+        // ------------ Verify correct process was called ------------
+        assertThat(body.getMetadata().size()).isEqualTo(1);
+        assertThat(body.getMetadata().get(0).getDescription()).isEqualTo("Test");
+        assertThat(body.getMetadata().get(0).getMetadataEntries().get(0).getKey()).isEqualTo("a");
+        assertThat(body.getMetadata().get(0).getMetadataEntries().get(0).getValue()).isEqualTo("1");
+    }
+
+    @Test
+    public void when_team1MetadataIsExtended_expect_team1MetadataWillBeExtended() {
+        // expect something to happen
+        TeamResource teamResource = new TeamResource();
+
+        MetadataResource metaData = new MetadataResource();
+        metaData.setDescription("Test");
+
+        MetadataEntryResource metadataEntryResource = new MetadataEntryResource("a", "1");
+
+        metaData.getMetadataEntries().add(metadataEntryResource);
+        teamResource.getMetadata().add(metaData);
+
+        // ------------ Perform actions ------------
+        transactionTemplate.execute(transactionStatus -> teamController.patch(team1.getTeamId(), teamResource));
+
+        TeamResource bodyBefore = Objects.requireNonNull(transactionTemplate.execute(transactionStatus -> teamController.get(team1.getTeamId())));
+
+        // ------------ Verify correct process was called ------------
+        assertThat(bodyBefore.getMetadata().size()).isEqualTo(1);
+        assertThat(bodyBefore.getMetadata().get(0).getDescription()).isEqualTo("Test");
+        assertThat(bodyBefore.getMetadata().get(0).getMetadataEntries().get(0).getKey()).isEqualTo("a");
+        assertThat(bodyBefore.getMetadata().get(0).getMetadataEntries().get(0).getValue()).isEqualTo("1");
+
+        // ------------ Perform actions ------------
+        metadataEntryResource.setValue("2");
+
+        metaData.getMetadataEntries().add(metadataEntryResource);
+        teamResource.getMetadata().add(metaData);
+
+        transactionTemplate.execute(transactionStatus -> teamController.patch(team1.getTeamId(), teamResource));
+
+        TeamResource bodyAfter = Objects.requireNonNull(transactionTemplate.execute(transactionStatus -> teamController.get(team1.getTeamId())));
+
+        // ------------ Verify correct process was called ------------
+        assertThat(bodyAfter.getMetadata().size()).isEqualTo(1);
+        assertThat(bodyAfter.getMetadata().get(0).getDescription()).isEqualTo("Test");
+        assertThat(bodyAfter.getMetadata().get(0).getMetadataEntries().get(0).getKey()).isEqualTo("a");
+        assertThat(bodyAfter.getMetadata().get(0).getMetadataEntries().get(0).getValue()).isEqualTo("2");
+    }
 }
