@@ -1,5 +1,12 @@
 package za.co.absa.subatomic.infrastructure.team.view.jpa;
 
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import za.co.absa.subatomic.domain.exception.InvalidRequestException;
+import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
+
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,14 +16,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataEntryResource;
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
 import za.co.absa.subatomic.domain.exception.InvalidRequestException;
-import za.co.absa.subatomic.domain.team.MembershipRequestStatus;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.metadata.MetadataEntity;
 import za.co.absa.subatomic.infrastructure.metadata.MetadataEntry;
@@ -212,6 +214,22 @@ public class TeamPersistenceHandler {
     }
 
     @Transactional
+    public void removeTeamOwner(String teamId,
+                                String memberId) {
+
+        TeamEntity team = teamRepository.findByTeamId(teamId);
+
+        TeamMemberEntity member = this.teamMemberRepository
+                .findByMemberId(memberId);
+
+        member.getTeams().remove(team);
+        teamMemberRepository.save(member);
+
+        team.getOwners().remove(member);
+        teamRepository.save(team);
+    }
+
+    @Transactional
     public MembershipRequestEntity closeMembershipRequest(
             String membershipRequestId, MembershipRequestStatus status,
             String closedById) {
@@ -249,6 +267,21 @@ public class TeamPersistenceHandler {
         team.getMembershipRequests().add(membershipRequestEntity);
         teamRepository.save(team);
         return membershipRequestEntity;
+    }
+
+    @Transactional
+    public void deleteTeam(String teamId) {
+        TeamEntity team = this.teamRepository.findByTeamId(teamId);
+
+        for (TeamMemberEntity member : team.getMembers()) {
+            this.removeTeamMember(team.getTeamId(), member.getMemberId());
+        }
+
+        for (TeamMemberEntity owner : team.getOwners()) {
+            this.removeTeamOwner(team.getTeamId(), owner.getMemberId());
+        }
+
+        this.teamRepository.delete(team);
     }
 
     @Transactional

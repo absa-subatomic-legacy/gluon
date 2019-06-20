@@ -1,21 +1,20 @@
 package za.co.absa.subatomic.infrastructure.project.view.jpa;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import za.co.absa.subatomic.domain.project.BitbucketProject;
 import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
 import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Component
 public class ProjectPersistenceHandler {
@@ -33,11 +32,11 @@ public class ProjectPersistenceHandler {
     private ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository;
 
     public ProjectPersistenceHandler(ProjectRepository projectRepository,
-            BitbucketProjectRepository bitbucketProjectRepository,
-            DevDeploymentEnvironmentRepository devDeploymentEnvironmentRepository,
-            DevDeploymentPipelineRepository devDeploymentPipelineRepository,
-            ReleaseDeploymentEnvironmentRepository releaseDeploymentEnvironmentRepository,
-            ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository) {
+                                     BitbucketProjectRepository bitbucketProjectRepository,
+                                     DevDeploymentEnvironmentRepository devDeploymentEnvironmentRepository,
+                                     DevDeploymentPipelineRepository devDeploymentPipelineRepository,
+                                     ReleaseDeploymentEnvironmentRepository releaseDeploymentEnvironmentRepository,
+                                     ReleaseDeploymentPipelineRepository releaseDeploymentPipelineRepository) {
         this.projectRepository = projectRepository;
         this.bitbucketProjectRepository = bitbucketProjectRepository;
         this.devDeploymentEnvironmentRepository = devDeploymentEnvironmentRepository;
@@ -48,9 +47,9 @@ public class ProjectPersistenceHandler {
 
     @Transactional
     public ProjectEntity createProject(String name, String description,
-            TeamMemberEntity createdBy, TeamEntity owningTeam,
-            TenantEntity owningTenant, DeploymentPipeline devDeploymentPipeline,
-            List<? extends DeploymentPipeline> releaseDeploymentPipelines) {
+                                       TeamMemberEntity createdBy, TeamEntity owningTeam,
+                                       TenantEntity owningTenant, DeploymentPipeline devDeploymentPipeline,
+                                       List<? extends DeploymentPipeline> releaseDeploymentPipelines) {
         Set<TeamEntity> associatedTeams = new HashSet<>();
 
         associatedTeams.add(owningTeam);
@@ -82,7 +81,7 @@ public class ProjectPersistenceHandler {
 
     @Transactional
     public ProjectEntity linkBitbucketProject(String projectId,
-            BitbucketProject bitbucketProject, TeamMemberEntity createdBy) {
+                                              BitbucketProject bitbucketProject, TeamMemberEntity createdBy) {
 
         BitbucketProjectEntity bitbucketProjectEntity = BitbucketProjectEntity
                 .builder()
@@ -105,7 +104,7 @@ public class ProjectPersistenceHandler {
 
     @Transactional
     public ProjectEntity linkTeamsToProject(String projectId,
-            List<TeamEntity> teamEntities) {
+                                            List<TeamEntity> teamEntities) {
 
         ProjectEntity project = projectRepository
                 .findByProjectId(projectId);
@@ -116,8 +115,27 @@ public class ProjectPersistenceHandler {
     }
 
     @Transactional
+    public ProjectEntity unlinkTeamsFromProject(String projectId,
+                                                List<TeamEntity> teamEntities) {
+
+        ProjectEntity project = projectRepository
+                .findByProjectId(projectId);
+
+        return this.unlinkTeamsFromProject(project, teamEntities);
+    }
+
+    @Transactional
+    public ProjectEntity unlinkTeamsFromProject(ProjectEntity project,
+                                                List<TeamEntity> teamEntities) {
+
+        project.getTeams().removeAll(teamEntities);
+
+        return projectRepository.save(project);
+    }
+
+    @Transactional
     public ProjectEntity updateDevDeploymentPipeline(String projectId,
-            DeploymentPipeline updatedPipeline) {
+                                                     DeploymentPipeline updatedPipeline) {
         ProjectEntity project = projectRepository
                 .findByProjectId(projectId);
 
@@ -166,7 +184,7 @@ public class ProjectPersistenceHandler {
 
     @Transactional
     public ProjectEntity updateReleaseDeploymentPipelines(String projectId,
-            List<? extends DeploymentPipeline> updatedPipelines) {
+                                                          List<? extends DeploymentPipeline> updatedPipelines) {
         ProjectEntity project = projectRepository
                 .findByProjectId(projectId);
 
@@ -189,8 +207,7 @@ public class ProjectPersistenceHandler {
                 pipelineEntity = this
                         .pipelineToReleaseDeploymentPipelineEntity(
                                 updatedPipeline);
-            }
-            else if (updatedPipeline.getEnvironments() != null) {
+            } else if (updatedPipeline.getEnvironments() != null) {
                 // Update the existing deployment pipeline environments
                 pipelineEntity = this.updateReleaseDeploymentPipeline(
                         pipelineEntity,
@@ -306,8 +323,7 @@ public class ProjectPersistenceHandler {
                             deploymentPipeline.getEnvironments(),
                             devDeploymentPipelineEntity));
             devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
-        }
-        else {
+        } else {
             devDeploymentPipelineEntity = devDeploymentPipelineEntityBuilder
                     .build();
             devDeploymentPipelineRepository.save(devDeploymentPipelineEntity);
@@ -449,7 +465,7 @@ public class ProjectPersistenceHandler {
             if (releaseDeploymentPipelineEntity.getPipelineId()
                     .equals(updatedPipeline.getPipelineId())
                     || releaseDeploymentPipelineEntity.getTag()
-                            .equals(updatedPipeline.getTag())) {
+                    .equals(updatedPipeline.getTag())) {
                 pipelineEntity = releaseDeploymentPipelineEntity;
                 pipelineEntity.setName(
                         updatedPipeline.getName());

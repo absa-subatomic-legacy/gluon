@@ -11,6 +11,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.client.ExpectedCount;
@@ -24,16 +25,25 @@ import za.co.absa.subatomic.adapter.member.rest.TeamMemberController;
 import za.co.absa.subatomic.adapter.member.rest.TeamMemberResource;
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataEntryResource;
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
+import za.co.absa.subatomic.adapter.project.rest.ProjectResource;
+import za.co.absa.subatomic.application.member.TeamMemberService;
+import za.co.absa.subatomic.application.project.ProjectService;
+import za.co.absa.subatomic.application.tenant.TenantService;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
 import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.member.TeamMemberAutomationHandler;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
@@ -44,6 +54,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class TeamControllerTest {
 
     @MockBean
@@ -53,12 +64,21 @@ public class TeamControllerTest {
     TeamController teamController;
 
     @Autowired
+    ProjectService projectService;
+
+    @Autowired
+    TeamMemberService teamMemberService;
+
+    @Autowired
     TeamMemberController teamMemberController;
+
+    @Autowired
+    TenantService tenantService;
 
     @Autowired
     AtomistConfigurationProperties atomistConfiguration;
 
-    private TeamMemberResource mainMember;
+    private static TeamMemberResource mainMember;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -194,6 +214,49 @@ public class TeamControllerTest {
         mockServer.verify();
     }
 
+
+    @Test
+    public void when_deleteTeam_expect_teamDeleted() throws URISyntaxException {
+        // ------------ Prepare Mocks and expected results ------------
+        mockServer.reset();
+
+        mockServer.expect(ExpectedCount.once(),
+                requestTo(new URI(this.atomistConfiguration.getProjectCreatedEventUrl())))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withStatus(HttpStatus.ACCEPTED));
+
+        ProjectResource projectResource = new ProjectResource();
+        projectResource.setCreatedBy(mainMember.getMemberId());
+        projectResource.setName("Test");
+        projectResource.setTeams(Collections.singletonList(team1));
+        projectResource.setDescription("Test");
+        projectResource.setOwningTenant(this.tenantService.findAll().get(0).getTenantId());
+        projectResource.setReleaseDeploymentPipelines(new ArrayList<>());
+
+        transactionTemplate.execute(transactionStatus -> this.projectService.newProject(projectResource));
+
+        transactionTemplate.execute(transactionStatus -> teamController.deleteTeam(team1.getTeamId()));
+
+        Collection<TeamResource> teamResources = transactionTemplate.execute(transactionStatus -> teamController.list("", "", "", "", mainMember.getMemberId()).getContent());
+
+        TeamResource teamResource = teamController.get(team1.getTeamId());
+
+        ProjectEntity projectResult = projectService.getProjectPersistenceHandler().findByName("Test");
+
+        TeamMemberEntity teamMemberEntity = teamMemberService.getTeamMemberPersistenceHandler().findByTeamMemberId(mainMember.getMemberId());
+
+        //Assert only expected team was deleted
+        assertThat(Objects.requireNonNull(teamResources).size()).isEqualTo(1);
+        assertThat(teamResource).isNull();
+
+        //Assert owned project was deleted
+        assertThat(projectResult).isNull();
+
+        //Assert that the team member was not deleted
+        assertThat(teamMemberEntity).isNotNull();
+
+        mockServer.verify();
+    }
     @Test
     public void when_putMetadata_expect_TeamMetaDataToBeOverridden() {
         // expect something to happen

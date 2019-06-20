@@ -53,7 +53,7 @@ public class TeamEntity {
     @ManyToMany
     private Set<TeamMemberEntity> owners = new HashSet<>();
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.REMOVE)
     private Set<MembershipRequestEntity> membershipRequests = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL)

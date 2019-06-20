@@ -196,16 +196,28 @@ public class TeamController {
     }
 
     @DeleteMapping("/{teamId}/members/{memberId}")
-    ResponseEntity delete(@PathVariable String teamId,
-                          @PathVariable String memberId,
-                          @RequestParam("requestedById") String requestedById) {
-
-        log.info("Trying to delete member " + memberId + " from team " + teamId
+    ResponseEntity removeTeamMember(@PathVariable String teamId,
+                                    @PathVariable String memberId,
+                                    @RequestParam("requestedById") String requestedById) {
+        // TODO: this functionality should be implemented by PUT probably
+        log.info("Trying to removeTeamMember member " + memberId + " from team " + teamId
                 + " by requestor " + requestedById);
 
         if (!teamId.isEmpty() && !memberId.isEmpty()
                 && !requestedById.isEmpty()) {
             teamService.removeTeamMember(teamId, memberId, requestedById);
+            return ResponseEntity.accepted().build();
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{teamId}")
+    ResponseEntity deleteTeam(@PathVariable String teamId) {
+        log.info("Trying to delete Team " + teamId);
+
+        if (!teamId.isEmpty()) {
+            teamService.deleteTeam(teamId);
             return ResponseEntity.accepted().build();
         } else {
             return ResponseEntity.badRequest().build();
