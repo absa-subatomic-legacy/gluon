@@ -1,12 +1,11 @@
 package za.co.absa.subatomic.infrastructure.member.view.jpa;
 
-import java.util.List;
-import java.util.UUID;
-
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import za.co.absa.subatomic.domain.member.TeamMember;
+
+import java.util.List;
+import java.util.UUID;
 
 @Component
 public class TeamMemberPersistenceHandler {
@@ -40,7 +39,7 @@ public class TeamMemberPersistenceHandler {
 
     @Transactional
     public TeamMemberEntity addSlackDetails(String memberId, String screenName,
-            String userId) {
+                                            String userId) {
         TeamMemberEntity teamMember = teamMemberRepository
                 .findByMemberId(memberId);
         teamMember.setSlackDetails(new SlackDetailsEmbedded(
@@ -93,6 +92,12 @@ public class TeamMemberPersistenceHandler {
     public TeamMemberEntity findBySlackScreenName(String slackScreenName) {
         return teamMemberRepository
                 .findBySlackDetailsScreenName(slackScreenName);
+    }
+
+    @Transactional(readOnly = true)
+    public TeamMemberEntity findBySlackUserId(String slackUserId) {
+        return teamMemberRepository
+                .findBySlackDetailsUserId(slackUserId);
     }
 
     @Transactional(readOnly = true)
