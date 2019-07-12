@@ -13,6 +13,8 @@ public interface TeamMemberRepository
 
     TeamMemberEntity findBySlackDetailsScreenName(String slackScreenName);
 
+    TeamMemberEntity findBySlackDetailsUserId(String slackUserId);
+
     TeamMemberEntity findByDomainUsername(String domainUsername);
 
     TeamMemberEntity findByDomainUsernameEndingWith(String domainUsername);
