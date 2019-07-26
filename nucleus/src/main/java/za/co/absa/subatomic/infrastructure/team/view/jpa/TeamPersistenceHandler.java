@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
 
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataEntryResource;
 import za.co.absa.subatomic.adapter.metadata.rest.MetadataResource;
-import za.co.absa.subatomic.domain.exception.InvalidRequestException;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.metadata.MetadataEntity;
 import za.co.absa.subatomic.infrastructure.metadata.MetadataEntry;
 
@@ -372,13 +370,13 @@ public class TeamPersistenceHandler {
     }
 
     @Transactional(readOnly = true)
-    public Set<TeamEntity> findByMemberOrOwnerSlackScreenName(
-            String slackScreenName) {
+    public Set<TeamEntity> findByMemberOrOwnerSlackUserId(
+            String slackUserId) {
         Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
         teamsWithMemberOrOwner.addAll(teamRepository
-                .findByMembers_SlackDetailsScreenName(slackScreenName));
+                .findByMembers_SlackDetailsUserId(slackUserId));
         teamsWithMemberOrOwner.addAll(teamRepository
-                .findByOwners_SlackDetailsScreenName(slackScreenName));
+                .findByOwners_SlackDetailsUserId(slackUserId));
         return teamsWithMemberOrOwner;
     }
 

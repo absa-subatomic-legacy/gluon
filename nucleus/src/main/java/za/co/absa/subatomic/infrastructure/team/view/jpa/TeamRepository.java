@@ -13,10 +13,10 @@ public interface TeamRepository extends JpaRepository<TeamEntity, Long> {
     List<TeamEntity> findBySlackDetailsTeamChannel(String teamChannel);
 
     @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
-    List<TeamEntity> findByMembers_SlackDetailsScreenName(String screenName);
+    List<TeamEntity> findByMembers_SlackDetailsUserId(String slackUserId);
 
     @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
-    List<TeamEntity> findByOwners_SlackDetailsScreenName(String screenName);
+    List<TeamEntity> findByOwners_SlackDetailsUserId(String slackUserId);
 
     @SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
     List<TeamEntity> findByMembers_MemberId(String teamMemberId);
