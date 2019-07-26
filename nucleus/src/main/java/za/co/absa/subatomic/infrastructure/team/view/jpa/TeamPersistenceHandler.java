@@ -371,12 +371,12 @@ public class TeamPersistenceHandler {
 
     @Transactional(readOnly = true)
     public Set<TeamEntity> findByMemberOrOwnerSlackUserId(
-            String slackScreenName) {
+            String slackUserId) {
         Set<TeamEntity> teamsWithMemberOrOwner = new HashSet<>();
         teamsWithMemberOrOwner.addAll(teamRepository
-                .findByMembers_SlackDetailsUserId(slackScreenName));
+                .findByMembers_SlackDetailsUserId(slackUserId));
         teamsWithMemberOrOwner.addAll(teamRepository
-                .findByOwners_SlackDetailsUserId(slackScreenName));
+                .findByOwners_SlackDetailsUserId(slackUserId));
         return teamsWithMemberOrOwner;
     }
 
