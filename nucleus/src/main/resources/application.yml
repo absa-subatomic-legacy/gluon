@@ -4,9 +4,9 @@ spring:
     driverClassName: org.h2.Driver
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create-drop
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
@@ -16,7 +16,7 @@ spring:
       path: /h2-console
   data.rest.detection-strategy: visibility
   flyway:
-    enabled: true
+    enabled: false
 gluon:
   encryption:
     encryptionKey: "REPLACE_THIS"

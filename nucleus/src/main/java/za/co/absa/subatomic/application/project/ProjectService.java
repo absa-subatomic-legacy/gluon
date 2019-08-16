@@ -1,12 +1,6 @@
 package za.co.absa.subatomic.application.project;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.springframework.stereotype.Service;
-
 import za.co.absa.subatomic.adapter.project.rest.ProjectResource;
 import za.co.absa.subatomic.adapter.team.rest.TeamResourceBase;
 import za.co.absa.subatomic.application.member.TeamMemberService;
@@ -24,6 +18,11 @@ import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectPersistenceHa
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamPersistenceHandler;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
+
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Service
 public class ProjectService {
@@ -74,8 +73,7 @@ public class ProjectService {
         TenantEntity owningTenantEntity;
         if (tenantId == null) {
             owningTenantEntity = tenantService.findByName("Default");
-        }
-        else {
+        } else {
             owningTenantEntity = tenantService.findByTenantId(tenantId);
             if (owningTenantEntity == null) {
                 throw new InvalidRequestException(MessageFormat.format(
@@ -102,12 +100,12 @@ public class ProjectService {
     }
 
     public String linkExistingBitbucketProject(String projectId,
-            String bitbucketProjectId,
-            String bitbucketProjectName,
-            String projectKey,
-            String description,
-            String url,
-            String actionedBy) {
+                                               String bitbucketProjectId,
+                                               String bitbucketProjectName,
+                                               String projectKey,
+                                               String description,
+                                               String url,
+                                               String actionedBy) {
         assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
 
         BitbucketProject bitbucketProject = new BitbucketProject(
@@ -146,8 +144,15 @@ public class ProjectService {
                 teamMemberEntity);
     }
 
+    public void addAdditionalEnvironments(String projectId, List<String> newEnvironmentNames, String requestedBy) {
+
+        assertMemberBelongsToAnAssociatedTeam(projectId, requestedBy);
+
+        this.projectPersistenceHandler.addAdditionalEnvironments(projectId, newEnvironmentNames);
+    }
+
     public String linkProjectToTeams(String projectId, String actionedBy,
-            List<TeamResourceBase> teamsToLink) {
+                                     List<TeamResourceBase> teamsToLink) {
         TeamMemberEntity actionedByEntity = teamMemberService
                 .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(actionedBy);
@@ -172,7 +177,7 @@ public class ProjectService {
     }
 
     public void updateDevDeploymentPipeline(String projectId, String actionedBy,
-            DeploymentPipeline deploymentPipeline) {
+                                            DeploymentPipeline deploymentPipeline) {
 
         assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
 
@@ -182,8 +187,8 @@ public class ProjectService {
     }
 
     public void updateReleaseDeploymentPipelines(String projectId,
-            String actionedBy,
-            List<? extends DeploymentPipeline> deploymentPipelines) {
+                                                 String actionedBy,
+                                                 List<? extends DeploymentPipeline> deploymentPipelines) {
 
         assertMemberBelongsToAnAssociatedTeam(projectId, actionedBy);
 
@@ -198,7 +203,7 @@ public class ProjectService {
     }
 
     private void assertMemberBelongsToAnAssociatedTeam(String projectId,
-            String memberId) {
+                                                       String memberId) {
         TeamMemberEntity memberEntity = teamMemberService
                 .getTeamMemberPersistenceHandler()
                 .findByTeamMemberId(memberId);
@@ -206,7 +211,7 @@ public class ProjectService {
     }
 
     private void assertMemberBelongsToAnAssociatedTeam(String projectId,
-            TeamMemberEntity memberEntity) {
+                                                       TeamMemberEntity memberEntity) {
         Collection<TeamEntity> projectAssociatedTeams = this.projectPersistenceHandler
                 .findTeamsAssociatedToProject(
                         projectId);

@@ -276,6 +276,21 @@ public class ProjectPersistenceHandler {
     }
 
     @Transactional
+    public ProjectEntity addAdditionalEnvironments(String projectId,
+                                                   List<String> environmentNames) {
+        ProjectEntity projectEntity = projectRepository
+                .findByProjectId(projectId);
+
+        for (String environmentName : environmentNames) {
+            AdditionalEnvironmentEntity newEnvironment = AdditionalEnvironmentEntity.builder().displayName(environmentName).build();
+
+            projectEntity.getAdditionalEnvironmentEntities().add(newEnvironment);
+        }
+
+        return projectRepository.save(projectEntity);
+    }
+
+    @Transactional
     public void deleteProject(String projectId) {
         projectRepository
                 .deleteByProjectId(projectId);
