@@ -1,12 +1,12 @@
 package za.co.absa.subatomic.adapter.project.rest;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import za.co.absa.subatomic.adapter.team.rest.TeamResourceBase;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -27,4 +27,6 @@ public class ProjectResource extends ProjectResourceBase {
     private DeploymentPipelineResource devDeploymentPipeline;
 
     private List<DeploymentPipelineResource> releaseDeploymentPipelines;
+
+    private List<AdditionalEnvironmentResource> additionalEnvironments;
 }

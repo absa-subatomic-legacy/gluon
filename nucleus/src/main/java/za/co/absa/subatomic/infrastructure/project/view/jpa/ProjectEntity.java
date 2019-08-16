@@ -1,9 +1,15 @@
 package za.co.absa.subatomic.infrastructure.project.view.jpa;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
+import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
+import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -16,17 +22,10 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import za.co.absa.subatomic.infrastructure.application.view.jpa.ApplicationEntity;
-import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
-import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
-import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "project")
@@ -74,4 +73,7 @@ public class ProjectEntity {
 
     @OneToMany
     private List<ReleaseDeploymentPipelineEntity> releaseDeploymentPipelines;
+
+    @OneToMany(cascade = {CascadeType.ALL})
+    private List<AdditionalEnvironmentEntity> additionalEnvironmentEntities;
 }

@@ -1,12 +1,12 @@
 package za.co.absa.subatomic.infrastructure.atomist.resource.project;
 
-import java.util.List;
-
 import lombok.Getter;
 import lombok.Setter;
 import za.co.absa.subatomic.domain.project.TeamId;
 import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -28,6 +28,8 @@ public class AtomistProject extends AtomistProjectBase {
         private AtomistDeploymentPipeline devDeploymentPipeline;
 
         private List<AtomistDeploymentPipeline> releaseDeploymentPipelines;
+
+        private List<AtomistAdditionalEnvironment> additionalEnvironments;
 
         public Builder projectId(final String projectId) {
             this.projectId = projectId;
@@ -73,6 +75,12 @@ public class AtomistProject extends AtomistProjectBase {
             return this;
         }
 
+        public Builder additionalEnvironments(
+                final List<AtomistAdditionalEnvironment> additionalEnvironments) {
+            this.additionalEnvironments = additionalEnvironments;
+            return this;
+        }
+
         public AtomistProject build() {
             AtomistProject project = new AtomistProject();
             project.setProjectId(this.projectId);
@@ -84,6 +92,7 @@ public class AtomistProject extends AtomistProjectBase {
             project.setDevDeploymentPipeline(this.devDeploymentPipeline);
             project.setReleaseDeploymentPipelines(
                     this.releaseDeploymentPipelines);
+            project.setAdditionalEnvironments(this.additionalEnvironments);
             return project;
         }
 
@@ -92,4 +101,6 @@ public class AtomistProject extends AtomistProjectBase {
     private AtomistDeploymentPipeline devDeploymentPipeline;
 
     private List<AtomistDeploymentPipeline> releaseDeploymentPipelines;
+
+    private List<AtomistAdditionalEnvironment> additionalEnvironments;
 }

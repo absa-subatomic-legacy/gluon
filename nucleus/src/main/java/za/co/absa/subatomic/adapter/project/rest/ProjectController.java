@@ -1,13 +1,5 @@
 package za.co.absa.subatomic.adapter.project.rest;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.hateoas.Resources;
@@ -15,6 +7,7 @@ import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,13 +16,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import za.co.absa.subatomic.adapter.team.rest.TeamController;
 import za.co.absa.subatomic.adapter.team.rest.TeamResourceBaseAssembler;
 import za.co.absa.subatomic.application.project.ProjectService;
 import za.co.absa.subatomic.domain.project.DeploymentPipeline;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.BitbucketProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/projects")
@@ -61,7 +61,7 @@ public class ProjectController {
 
     @PutMapping("/{id}")
     ResponseEntity<ProjectResource> update(@PathVariable String id,
-            @RequestBody ProjectResource request) {
+                                           @RequestBody ProjectResource request) {
         if (request.getBitbucketProject() != null) {
             if (StringUtils.isNoneBlank(
                     request.getBitbucketProject().getBitbucketProjectId(),
@@ -76,12 +76,10 @@ public class ProjectController {
                         request.getBitbucketProject().getUrl(),
                         request.getCreatedBy());
             }
-        }
-        else if (!request.getTeams().isEmpty()) {
+        } else if (!request.getTeams().isEmpty()) {
             projectService.linkProjectToTeams(id, request.getCreatedBy(),
                     request.getTeams());
-        }
-        else if (request.getProjectEnvironment() != null) {
+        } else if (request.getProjectEnvironment() != null) {
             projectService.newProjectEnvironment(id,
                     request.getProjectEnvironment().getRequestedBy());
         }
@@ -98,6 +96,26 @@ public class ProjectController {
         // environment creation.
         if (request.getDevDeploymentPipeline() != null
                 || request.getReleaseDeploymentPipelines() != null) {
+            projectService.newProjectEnvironment(id, request.getCreatedBy());
+        }
+
+        return ResponseEntity.accepted()
+                .body(assembler.toResource(projectService
+                        .getProjectPersistenceHandler().findByProjectId(id)));
+    }
+
+    @PatchMapping("/{id}")
+    ResponseEntity<ProjectResource> patch(@PathVariable String id,
+                                          @RequestBody ProjectResource request) {
+        if (request.getAdditionalEnvironments() != null) {
+            projectService.addAdditionalEnvironments(
+                    id,
+                    request.getAdditionalEnvironments().stream().map(
+                            AdditionalEnvironmentResource::getDisplayName
+                    ).collect(Collectors.toList()),
+                    request.getCreatedBy());
+        }
+        if (request.getAdditionalEnvironments() != null) {
             projectService.newProjectEnvironment(id, request.getCreatedBy());
         }
 
@@ -210,9 +228,15 @@ public class ProjectController {
                     }
                 }
 
+                resource.setAdditionalEnvironments(new ArrayList<>());
+                if (entity.getAdditionalEnvironmentEntities() != null) {
+                    resource.setAdditionalEnvironments(entity.getAdditionalEnvironmentEntities().stream().map(
+                            additionalEnvironmentEntity -> AdditionalEnvironmentResource.builder().displayName(additionalEnvironmentEntity.getDisplayName()).build()
+                    ).collect(Collectors.toList()));
+                }
+
                 return resource;
-            }
-            else {
+            } else {
                 return null;
             }
         }

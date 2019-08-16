@@ -1,29 +1,28 @@
 package za.co.absa.subatomic.infrastructure.project;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 import za.co.absa.subatomic.domain.member.TeamMemberSlackIdentity;
 import za.co.absa.subatomic.domain.project.TeamId;
 import za.co.absa.subatomic.domain.project.TenantId;
 import za.co.absa.subatomic.domain.team.TeamMemberId;
 import za.co.absa.subatomic.domain.team.TeamSlackIdentity;
 import za.co.absa.subatomic.infrastructure.AtomistConfigurationProperties;
-import za.co.absa.subatomic.infrastructure.atomist.resource.AtomistMemberBase;
-import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProject;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectBase;
 import za.co.absa.subatomic.infrastructure.atomist.resource.project.AtomistProjectMapper;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeam;
+import za.co.absa.subatomic.infrastructure.atomist.resource.team.AtomistTeamMapper;
 import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
 import za.co.absa.subatomic.infrastructure.tenant.view.jpa.TenantEntity;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -34,14 +33,14 @@ public class ProjectAutomationHandler {
     private AtomistConfigurationProperties atomistConfigurationProperties;
 
     public ProjectAutomationHandler(RestTemplate restTemplate,
-            AtomistConfigurationProperties atomistConfigurationProperties) {
+                                    AtomistConfigurationProperties atomistConfigurationProperties) {
         this.restTemplate = restTemplate;
         this.atomistConfigurationProperties = atomistConfigurationProperties;
     }
 
     public void projectCreated(ProjectEntity projectEntity,
-            TeamEntity teamEntity,
-            TeamMemberEntity teamMemberEntity, TenantEntity tenantEntity) {
+                               TeamEntity teamEntity,
+                               TeamMemberEntity teamMemberEntity, TenantEntity tenantEntity) {
 
         AtomistProject projectCreated = new AtomistProjectMapper()
                 .createAtomistProject(projectEntity);
@@ -94,8 +93,8 @@ public class ProjectAutomationHandler {
     }
 
     public void bitbucketProjectLinkedToProject(ProjectEntity projectEntity,
-            za.co.absa.subatomic.domain.project.BitbucketProject bitbucketProject,
-            TeamMemberEntity createdBy) {
+                                                za.co.absa.subatomic.domain.project.BitbucketProject bitbucketProject,
+                                                TeamMemberEntity createdBy) {
 
         TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (createdBy.getSlackDetails() != null) {
@@ -147,7 +146,7 @@ public class ProjectAutomationHandler {
     }
 
     public void requestProjectEnvironment(ProjectEntity projectEntity,
-            TeamMemberEntity createdBy) {
+                                          TeamMemberEntity createdBy) {
 
         TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (createdBy.getSlackDetails() != null) {
@@ -165,51 +164,14 @@ public class ProjectAutomationHandler {
                     tenantEntity.getName(), tenantEntity.getDescription());
         }
 
-        ProjectEnvironmentsRequestedWithDetails bitbucketProjectRequested = new ProjectEnvironmentsRequestedWithDetails(
+        ProjectEnvironmentsRequestedWithDetails projectEnvironmentsRequested = new ProjectEnvironmentsRequestedWithDetails(
                 new AtomistProjectMapper()
                         .createAtomistProject(projectEntity),
                 null,
                 projectEntity.getTeams().stream()
-                        .map(teamEntity -> {
-                            AtomistTeam team = new AtomistTeam(
-                                    teamEntity.getTeamId(),
-                                    teamEntity.getName(),
-                                    teamEntity.getOpenShiftCloud(),
-                                    new TeamSlackIdentity(
-                                            teamEntity.getSlackDetails()
-                                                    .getTeamChannel()));
-                            team.getOwners().addAll(
-                                    teamEntity.getOwners().stream()
-                                            .map(memberEntity -> new AtomistMemberBase(
-                                                    memberEntity
-                                                            .getFirstName(),
-                                                    memberEntity
-                                                            .getDomainUsername(),
-                                                    new TeamMemberSlackIdentity(
-                                                            memberEntity
-                                                                    .getSlackDetails()
-                                                                    .getScreenName(),
-                                                            memberEntity
-                                                                    .getSlackDetails()
-                                                                    .getUserId())))
-                                            .collect(Collectors.toList()));
-                            team.getMembers().addAll(
-                                    teamEntity.getMembers().stream()
-                                            .map(memberEntity -> new AtomistMemberBase(
-                                                    memberEntity
-                                                            .getFirstName(),
-                                                    memberEntity
-                                                            .getDomainUsername(),
-                                                    new TeamMemberSlackIdentity(
-                                                            memberEntity
-                                                                    .getSlackDetails()
-                                                                    .getScreenName(),
-                                                            memberEntity
-                                                                    .getSlackDetails()
-                                                                    .getUserId())))
-                                            .collect(Collectors.toList()));
-                            return team;
-                        })
+                        .map(teamEntity ->
+                                new AtomistTeamMapper().createAtomistTeam(teamEntity)
+                        )
                         .collect(Collectors.toList()),
                 tenant,
                 new CreatedBy(
@@ -221,12 +183,12 @@ public class ProjectAutomationHandler {
 
         log.info(
                 "OpenShift project environments were requested [{}], sending event to Atomist: {}",
-                projectEntity.getProjectId(), bitbucketProjectRequested);
+                projectEntity.getProjectId(), projectEnvironmentsRequested);
 
         ResponseEntity<String> response = restTemplate.postForEntity(
                 atomistConfigurationProperties
                         .getProjectEnvironmentsRequestedEventUrl(),
-                bitbucketProjectRequested,
+                projectEnvironmentsRequested,
                 String.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
@@ -236,7 +198,7 @@ public class ProjectAutomationHandler {
     }
 
     public void teamsLinkedToProject(ProjectEntity projectEntity,
-            TeamMemberEntity teamMemberEntity, List<TeamEntity> teamEntities) {
+                                     TeamMemberEntity teamMemberEntity, List<TeamEntity> teamEntities) {
 
         TeamMemberSlackIdentity teamMemberSlackIdentity = null;
         if (teamMemberEntity.getSlackDetails() != null) {
