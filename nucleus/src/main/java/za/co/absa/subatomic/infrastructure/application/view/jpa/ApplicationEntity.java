@@ -46,6 +46,8 @@ public class ApplicationEntity {
 
     private String description;
 
+    private String jenkinsFolder;
+
     @Enumerated(EnumType.STRING)
     private ApplicationType applicationType;
 

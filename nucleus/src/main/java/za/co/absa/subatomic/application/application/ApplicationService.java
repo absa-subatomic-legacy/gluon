@@ -85,6 +85,11 @@ public class ApplicationService {
     }
 
     @Transactional
+    public void setApplicationJenkinsfolder(String applicationId, String jenkinsFolder) {
+        this.applicationPersistenceHandler.setApplicationJenkinsfolder(applicationId, jenkinsFolder);
+    }
+
+    @Transactional
     public void deleteApplication(String applicationId) {
         ApplicationEntity applicationEntity = applicationRepository
                 .findByApplicationId(applicationId);

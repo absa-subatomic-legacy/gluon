@@ -1,12 +1,7 @@
 package za.co.absa.subatomic.infrastructure.application.view.jpa;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import za.co.absa.subatomic.adapter.application.rest.BitbucketRepository;
 import za.co.absa.subatomic.domain.application.Application;
 import za.co.absa.subatomic.domain.application.ApplicationType;
@@ -15,6 +10,10 @@ import za.co.absa.subatomic.infrastructure.member.view.jpa.TeamMemberRepository;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectEntity;
 import za.co.absa.subatomic.infrastructure.project.view.jpa.ProjectRepository;
 import za.co.absa.subatomic.infrastructure.team.view.jpa.TeamEntity;
+
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 @Component
 public class ApplicationPersistenceHandler {
@@ -26,8 +25,8 @@ public class ApplicationPersistenceHandler {
     private ApplicationRepository applicationRepository;
 
     public ApplicationPersistenceHandler(ProjectRepository projectRepository,
-            TeamMemberRepository teamMemberRepository,
-            ApplicationRepository applicationRepository) {
+                                         TeamMemberRepository teamMemberRepository,
+                                         ApplicationRepository applicationRepository) {
         this.projectRepository = projectRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.applicationRepository = applicationRepository;
@@ -48,6 +47,7 @@ public class ApplicationPersistenceHandler {
                 .applicationId(UUID.randomUUID().toString())
                 .name(application.getName())
                 .description(application.getDescription())
+                .jenkinsFolder(".")
                 .applicationType(application.getApplicationType())
                 .project(projectEntity)
                 .createdBy(createdBy)
@@ -66,6 +66,13 @@ public class ApplicationPersistenceHandler {
         projectRepository.save(projectEntity);
 
         return applicationEntity;
+    }
+
+    @Transactional
+    public void setApplicationJenkinsfolder(String applicationId, String jenkinsFolder) {
+        ApplicationEntity application = applicationRepository.findByApplicationId(applicationId);
+        application.setJenkinsFolder(jenkinsFolder);
+        applicationRepository.save(application);
     }
 
     @Transactional
@@ -95,7 +102,7 @@ public class ApplicationPersistenceHandler {
 
     @Transactional(readOnly = true)
     public ApplicationEntity findByNameAndProjectName(String name,
-            String projectName) {
+                                                      String projectName) {
         return applicationRepository.findByNameAndProjectName(name,
                 projectName);
     }
