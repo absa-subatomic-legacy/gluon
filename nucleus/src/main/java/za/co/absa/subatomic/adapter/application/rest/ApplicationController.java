@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -55,6 +56,22 @@ public class ApplicationController {
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(applicationEntity.getApplicationId())
+                .toUri();
+
+        return ResponseEntity.created(location).build();
+    }
+
+    @PutMapping("/{id}")
+    ResponseEntity<ApplicationResource> update(@PathVariable String id,
+                                               @RequestBody ApplicationResource request) {
+
+        if (StringUtils.isNotEmpty(request.getJenkinsFolder())) {
+            applicationService.setApplicationJenkinsfolder(id, request.getJenkinsFolder());
+        }
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(id)
                 .toUri();
 
         return ResponseEntity.created(location).build();
@@ -135,6 +152,7 @@ public class ApplicationController {
                 resource.setApplicationId(entity.getApplicationId());
                 resource.setName(entity.getName());
                 resource.setDescription(entity.getDescription());
+                resource.setJenkinsFolder(entity.getJenkinsFolder());
                 resource.setApplicationType(entity.getApplicationType());
                 resource.setProjectId(entity.getProject().getProjectId());
                 resource.setCreatedAt(entity.getCreatedAt());

@@ -21,6 +21,8 @@ public class ApplicationResource extends ResourceSupport
 
     private String description;
 
+    private String jenkinsFolder;
+
     private ApplicationType applicationType;
 
     private String projectId;
