@@ -1,7 +1,9 @@
 package za.co.absa.subatomic.adapter.project.rest;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import za.co.absa.subatomic.domain.project.DeploymentEnvironment;
 import za.co.absa.subatomic.domain.project.DeploymentPipeline;
@@ -18,7 +20,7 @@ public class DeploymentPipelineResourceAssembler {
 
         if (pipeline.getEnvironments() != null) {
             for (DeploymentEnvironment environment : pipeline
-                    .getEnvironments()) {
+                    .getEnvironments().stream().sorted(Comparator.comparingInt(DeploymentEnvironment::getPositionInPipeline)).collect(Collectors.toList())) {
                 environments
                         .add(this.toDeploymentEnvironmentResource(environment));
             }
