@@ -88,9 +88,15 @@ See the Postman [reference documentation](https://www.getpostman.com/docs/postma
 for more information.
 
 ## Deployment
-Notes on how to deploy this on a live system.
+To build a release version of the Gluon use the command:
 
-Preferred method is to run in a Docker image. Refer to note on Docker under development.
+```console
+$ ./mvnw spring-boot:run -pl nucleus -Dspring.profiles.active=local -Drelease=true  
+```
+
+This will use Postgres instead of h2 drivers, and will exclude the HAL browser dependency from the release.
+
+Preferred method of deployment is to run in a Docker image. Refer to note on Docker under development.
 
 ## Contributing
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of 
